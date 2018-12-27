@@ -36,7 +36,7 @@ func TestSplitByDay(t *testing.T) {
 }
 
 func TestSplitByMonth(t *testing.T) {
-	buckets := SplitByDay([]*store.Frame{
+	buckets := SplitByMonth([]*store.Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),
@@ -57,7 +57,7 @@ func TestSplitByMonth(t *testing.T) {
 }
 
 func TestSplitByYear(t *testing.T) {
-	buckets := SplitByDay([]*store.Frame{
+	buckets := SplitByYear([]*store.Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),

@@ -9,8 +9,8 @@ import (
 )
 
 type Bucket struct {
-	From   time.Time      `json:"from"`
-	To     time.Time      `json:"to"`
+	From   *time.Time     `json:"from,omitempty"`
+	To     *time.Time     `json:"to,omitempty"`
 	Frames []*store.Frame `json:"frames,omitempty"`
 }
 
@@ -19,7 +19,7 @@ func (b *Bucket) Title() string {
 }
 
 func NewBucket(from, to time.Time) *Bucket {
-	return &Bucket{From: from, To: to}
+	return &Bucket{From: &from, To: &to}
 }
 
 func SplitByDay(frames []*store.Frame) []*Bucket {

@@ -21,7 +21,7 @@ type ResultBucket struct {
 
 type BucketReport struct {
 	store  *store.Store
-	source *frames.Bucket
+	source []*store.Frame
 
 	Results []*ResultBucket `json:"results"`
 
@@ -41,16 +41,18 @@ type BucketReport struct {
 
 func NewBucketReport(frameList []*store.Frame) *BucketReport {
 	report := &BucketReport{
-		source: &frames.Bucket{Frames: frameList},
+		source: frameList,
 	}
 	return report
 }
 
 func (b *BucketReport) Update() {
-	b.source.Frames = frames.FilterFrames(b.source.Frames, b.FromDate, b.ToDate)
+	b.source = frames.FilterFrames(b.source, b.FromDate, b.ToDate)
 
 	buckets := []*ResultBucket{{
-		Source: b.source,
+		Source: &frames.Bucket{
+			Frames: b.source,
+		},
 	}}
 
 	if b.GroupByYear {
@@ -65,7 +67,7 @@ func (b *BucketReport) Update() {
 		splitLeafBuckets(buckets, frames.SplitByDay)
 	}
 
-	updateBuckets(b, buckets)
+	buckets = updateBuckets(b, buckets)
 	b.Results = buckets
 }
 
@@ -77,8 +79,8 @@ func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*
 			splitBuckets := splitter(b.Source.Frames)
 			for _, s := range splitBuckets {
 				b.Results = append(b.Results, &ResultBucket{
-					From:   &s.From,
-					To:     &s.To,
+					From:   s.From,
+					To:     s.To,
 					Source: s,
 				})
 			}
@@ -87,7 +89,7 @@ func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*
 }
 
 // depth first update of the buckets to aggregate stats from sub-buckets
-func updateBuckets(report *BucketReport, buckets []*ResultBucket) {
+func updateBuckets(report *BucketReport, buckets []*ResultBucket) []*ResultBucket {
 	for _, bucket := range buckets {
 		for _, sub := range bucket.Results {
 			updateBuckets(report, sub.Results)
@@ -106,4 +108,6 @@ func updateBuckets(report *BucketReport, buckets []*ResultBucket) {
 			bucket.Duration += dateUtil.RoundDuration(d, report.RoundingFrames, report.RoundFramesTo)
 		}
 	}
+
+	return buckets
 }
