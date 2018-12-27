@@ -71,7 +71,7 @@ func Split(frames []*store.Frame, lowerBucketBound func(time.Time) time.Time, up
 	})
 
 	rangeStart := lowerBucketBound(*frames[0].Start)
-	rangeEnd := upperBucketBound(*frames[0].Start)
+	rangeEnd := upperBucketBound(*frames[0].End)
 
 	bucket := NewBucket(rangeStart, rangeEnd)
 	buckets := []*Bucket{bucket}

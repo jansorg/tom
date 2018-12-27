@@ -113,7 +113,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				// }
 
 				for _, r := range results {
-					fmt.Printf("%s: %s\n", r.Source, r.Source)
+					printReport(r)
 				}
 			}
 		},
@@ -150,4 +150,21 @@ func parseDate(dateString *string) (*time.Time, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+func printReport(report *report.ResultBucket) {
+	if report.From != nil {
+		fmt.Print(report.From.String())
+		fmt.Print(" - ")
+	}
+	if report.To != nil {
+		fmt.Println(report.To.String())
+	}
+
+	fmt.Printf("Duration: %s\n", report.Duration.String())
+	fmt.Printf("Exact Duration: %s\n", report.ExactDuration.String())
+
+	for _, r := range report.Results {
+		printReport(r)
+	}
 }
