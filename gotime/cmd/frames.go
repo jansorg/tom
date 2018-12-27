@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"../context"
 )
 
-func newFramesCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "frames",
 		Short: "Print a listing of all frames",

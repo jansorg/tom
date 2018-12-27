@@ -3,10 +3,11 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
+	"../context"
 	"../store"
 )
 
-func newCreateProjectCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "project",
 		Short: "create a new project",

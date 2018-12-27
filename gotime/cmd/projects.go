@@ -5,9 +5,11 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"../context"
 )
 
-func newProjectsCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "projects",
 		Short: "Print a listing of all projects",

@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"../context"
 )
 
-func newResetCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newResetCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmdReset = &cobra.Command{
 		Use:       "reset [all | projects | tags | frames]",
 		Short:     "resets the local database. Removes projects, tags and frames",

@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"../context"
 )
 
-func newCreateCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCreateCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "create",
 		Short: "create new content",
@@ -12,8 +14,8 @@ func newCreateCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Comm
 		},
 	}
 
-	newCreateProjectCommand(context, cmd)
-	newCreateTagCommand(context, cmd)
+	newCreateProjectCommand(ctx, cmd)
+	newCreateTagCommand(ctx, cmd)
 
 	parent.AddCommand(cmd)
 	return cmd

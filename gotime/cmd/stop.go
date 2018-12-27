@@ -6,10 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"../context"
 	"../store"
 )
 
-func newStopCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	all := false
 	notes := ""
 

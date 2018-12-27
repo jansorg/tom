@@ -6,10 +6,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"../context"
 	"../store"
 )
 
-func newStartCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newStartCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	createOnTheFly := false
 	allowMultiple := false
 	var notes string

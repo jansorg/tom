@@ -31,17 +31,24 @@ type Frame struct {
 }
 
 func (f *Frame) IsStopped() bool {
-	return !f.End.IsZero()
+	return f.End != nil && !f.End.IsZero()
 }
 
 func (f *Frame) IsActive() bool {
-	return f.End.IsZero()
+	return f.End == nil || f.End.IsZero()
 }
 
 func (f *Frame) Stop() {
 	now := time.Now()
 	f.End = &now
 	f.Updated = &now
+}
+
+func (f *Frame) Duration() time.Duration {
+	if f.IsStopped() {
+		return f.End.Sub(*f.Start)
+	}
+	return time.Duration(0)
 }
 
 func NewStartedFrame(project Project) Frame {
