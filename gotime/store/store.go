@@ -51,6 +51,14 @@ func (f *Frame) Duration() time.Duration {
 	return time.Duration(0)
 }
 
+func (f *Frame) IsBefore(other *Frame) bool {
+	return f.Start != nil && other.Start != nil && f.Start.Before(*other.Start)
+}
+
+func (f *Frame) IsAfter(other *Frame) bool {
+	return !f.IsBefore(other) && f.Start != nil && other.Start != nil && f.Start.After(*other.Start)
+}
+
 func NewStartedFrame(project Project) Frame {
 	now := time.Now()
 	return Frame{

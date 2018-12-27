@@ -9,8 +9,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"../context"
-	"../store"
+	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
 var cfgFile string

@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"../context"
+	"github.com/jansorg/gotime/gotime/context"
 )
 
 func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

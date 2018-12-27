@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"../context"
+	"github.com/jansorg/gotime/gotime/context"
 )
 
 func newResetCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

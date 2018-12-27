@@ -1,6 +1,6 @@
 package context
 
-import "../store"
+import "github.com/jansorg/gotime/gotime/store"
 
 type GoTimeContext struct {
 	Store      store.Store

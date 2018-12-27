@@ -5,8 +5,8 @@ import (
 	"strings"
 	"time"
 
-	"../context"
-	"../store"
+	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
 type RoundingMode int8

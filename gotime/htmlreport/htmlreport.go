@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
-	"../report"
+	"github.com/jansorg/gotime/gotime/report"
 )
 
 type Report struct {

@@ -9,9 +9,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"../context"
-	"../htmlreport"
-	"../report"
+	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/htmlreport"
+	"github.com/jansorg/gotime/gotime/report"
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
