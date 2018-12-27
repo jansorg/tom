@@ -12,8 +12,13 @@ import (
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
-	var fromDate string
-	var toDate string
+	var fromDateString string
+	var toDateString string
+
+	var day int8
+	var month int8
+	var year int
+
 	var roundFrames time.Duration
 	var roundNearest bool
 	var roundTotal time.Duration
@@ -23,31 +28,39 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Use:   "report",
 		Short: "Reporting about the tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			frames := context.Store.Frames()
-			if fromDate != "" {
-				from, err := time.Parse(time.RFC3339Nano, fromDate)
+			var err error
+			var start time.Time
+			var end time.Time
+
+			if fromDateString != "" {
+				start, err = time.Parse(time.RFC3339Nano, fromDateString)
 				if err != nil {
 					fatal(err)
-				}
-
-				for i, frame := range frames {
-					if frame.Start != nil && frame.Start.Before(from) || frame.End != nil && frame.End.After(from) {
-						frames = append(frames[:i], frames[i+1:]...)
-					}
 				}
 			}
 
-			if toDate != "" {
-				to, err := time.Parse(time.RFC3339Nano, toDate)
+			if toDateString != "" {
+				end, err = time.Parse(time.RFC3339Nano, toDateString)
 				if err != nil {
 					fatal(err)
 				}
+			}
 
-				for i, frame := range frames {
-					if frame.Start != nil && frame.Start.Before(to) || frame.End != nil && frame.End.After(to) {
-						frames = append(frames[:i], frames[i+1:]...)
-					}
-				}
+			if cmd.Flag("day") != nil {
+				now := time.Now()
+				year, month, today := now.Date()
+				start = time.Date(year, month, today+int(day), 0, 0, 0, 0, now.Location())
+				end = time.Date(year, month, today+int(day), 24, 0, 0, 0, now.Location())
+			} else if cmd.Flag("month") != nil {
+				now := time.Now()
+				year, currentMonth, _ := now.Date()
+				start = time.Date(year, time.Month(int(currentMonth)+int(month)), 0, 0, 0, 0, 0, now.Location())
+				end = time.Date(year, time.Month(int(currentMonth)+int(month)+1), 0, 0, 0, 0, 0, now.Location())
+			} else if cmd.Flag("year") != nil {
+				now := time.Now()
+				currentYear, _, _ := now.Date()
+				start = time.Date(currentYear+year, time.January, 0, 0, 0, 0, 0, now.Location())
+				end = time.Date(currentYear+year, time.December, 24, 0, 0, 0, 0, now.Location())
 			}
 
 			var frameRoundingMode = report.RoundNone
@@ -75,7 +88,17 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				RoundTotalTo:      roundTotal,
 			}
 
-			result, err := frameReport.Calc(frames, context)
+			var usedStart *time.Time
+			if !start.IsZero() {
+				usedStart = &start
+			}
+
+			var usedEnd *time.Time
+			if !end.IsZero() {
+				usedEnd = &end
+			}
+
+			result, err := frameReport.Calc(usedStart, usedEnd, context)
 			if err != nil {
 				fatal(err)
 			}
@@ -87,15 +110,26 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 				fmt.Println(string(data))
 			} else {
-				for _, r := range result {
+				if result.From != nil {
+					fmt.Printf("From: %s\n", result.From.String())
+				}
+
+				if result.To != nil {
+					fmt.Printf("To: %s\n", result.To.String())
+				}
+
+				for _, r := range result.Items {
 					fmt.Printf("%s: %s\n", r.Name, r.Duration.String())
 				}
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&fromDate, "from", "f", "", "Optional start date")
-	cmd.Flags().StringVarP(&toDate, "to", "t", "", "Optional end date")
+	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
+	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
+	cmd.Flags().Int8VarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+	cmd.Flags().Int8VarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames", "r", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().BoolVarP(&roundNearest, "round-frames-nearest", "", false, "Round the durations of each frame to the nearest multiple. The default is to round up.")
