@@ -17,7 +17,7 @@ func NewReport(templatePath string) *Report {
 	}
 }
 
-func (r *Report) Render(results report.Results) (string, error) {
+func (r *Report) Render(results report.ResultBucket) (string, error) {
 	tmpl, err := template.ParseFiles(r.templatePath)
 	if err != nil {
 		return "", err

@@ -91,12 +91,12 @@ type Store interface {
 	FindTag(id string) (Tag, error)
 	FindTags(func(Tag) bool) []Tag
 
-	Frames() []Frame
+	Frames() []*Frame
 	AddFrame(frame Frame) (Frame, error)
 	UpdateFrame(frame Frame) (Frame, error)
 	RemoveFrame(id string) error
 	FindFrame(id string) (Frame, error)
-	FindFrames(func(Frame) bool) []Frame
+	FindFrames(func(Frame) bool) []*Frame
 }
 
 func NewStore(dir string) (Store, error) {
@@ -123,7 +123,7 @@ type DataStore struct {
 	mu       sync.Mutex
 	projects []Project
 	tags     []Tag
-	frames   []Frame
+	frames   []*Frame
 }
 
 func (d *DataStore) load() error {
@@ -206,7 +206,7 @@ func (d *DataStore) Reset(projects, tags, frames bool) error {
 		d.tags = []Tag{}
 	}
 	if frames {
-		d.frames = []Frame{}
+		d.frames = []*Frame{}
 	}
 
 	return d.saveLocked()
@@ -320,7 +320,7 @@ func (d *DataStore) FindTags(filter func(Tag) bool) []Tag {
 	return result
 }
 
-func (d *DataStore) Frames() []Frame {
+func (d *DataStore) Frames() []*Frame {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -332,7 +332,7 @@ func (d *DataStore) AddFrame(frame Frame) (Frame, error) {
 	defer d.mu.Unlock()
 
 	frame.Id = nextID()
-	d.frames = append(d.frames, frame)
+	d.frames = append(d.frames, &frame)
 	return frame, d.saveLocked()
 }
 
@@ -366,19 +366,19 @@ func (d *DataStore) FindFrame(id string) (Frame, error) {
 
 	for _, frame := range d.frames {
 		if frame.Id == id {
-			return frame, nil
+			return *frame, nil
 		}
 	}
 	return Frame{}, fmt.Errorf("frame %s not found", id)
 }
 
-func (d *DataStore) FindFrames(filter func(Frame) bool) []Frame {
+func (d *DataStore) FindFrames(filter func(Frame) bool) []*Frame {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var result []Frame
+	var result []*Frame
 	for _, frame := range d.frames {
-		if filter(frame) {
+		if filter(*frame) {
 			result = append(result, frame)
 		}
 	}

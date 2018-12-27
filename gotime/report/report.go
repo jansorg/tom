@@ -1,109 +1,81 @@
 package report
 
 import (
-	"sort"
-	"strings"
 	"time"
 
-	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/dateUtil"
+	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
-type RoundingMode int8
-
-const (
-	RoundNone RoundingMode = iota + 1
-	RoundNearest
-	RoundUp
-)
-
-type Results struct {
-	From  *time.Time `json:"from_date,omitempty"`
-	To    *time.Time `json:"to_date,omitempty"`
-	Items []Result   `json:"items"`
+type ResultBucket struct {
+	From    *time.Time      `json:"from,omitempty"`
+	To      *time.Time      `json:"to,omitempty"`
+	Results []*ResultBucket `json:"results"`
+	Source  *frames.Bucket  `json:"source"`
 }
 
-type Result struct {
-	Name          string        `json:"name"`
-	Duration      time.Duration `json:"duration"`
-	ExactDuration time.Duration `json:"exact_duration"`
+type BucketReport struct {
+	store  *store.Store
+	source *frames.Bucket
 
-	Projects []Result `json:"projects,omitempty"`
-	Tags     []Result `json:"tags,omitempty"`
+	Results []*ResultBucket `json:"results"`
+
+	FromDate *time.Time `json:"from,omitempty"`
+	ToDate   *time.Time `json:"to,omitempty"`
+
+	GroupByYear  bool `json:"groupByYear"`
+	GroupByMonth bool `json:"groupByMonth"`
+	GroupByDay   bool `json:"groupByDay"`
+
+	RoundingFrames dateUtil.RoundingMode `json:"roundingModeFrames"`
+	RoundFramesTo  time.Duration         `json:"roundFramesTo"`
+
+	RoundingTotals dateUtil.RoundingMode `json:"roundingModeTotals"`
+	RoundTotalsTo  time.Duration         `json:"roundTotalsTo"`
 }
 
-type TimeReport struct {
-	RoundFramesTo     time.Duration
-	FrameRoundingMode RoundingMode
-
-	RoundTotalTo      time.Duration
-	TotalRoundingMode RoundingMode
+func NewBucketReport(frameList []*store.Frame) *BucketReport {
+	report := &BucketReport{
+		source: &frames.Bucket{Frames: frameList},
+	}
+	return report
 }
 
-func round(value time.Duration, mode RoundingMode, roundTo time.Duration) time.Duration {
-	if mode == RoundNone {
-		return value
-	}
-
-	result := value.Round(roundTo)
-	if mode == RoundNearest {
-		return result
-	}
-
-	if result < value {
-		// round up if Go rounded down
-		result = result + roundTo
-	}
-	return result
-}
-
-func (t *TimeReport) Calc(start *time.Time, end *time.Time, ctx *context.GoTimeContext) (Results, error) {
-	projects := make(map[string]time.Duration)
-	projectsExact := make(map[string]time.Duration)
-	// tags := make(map[string]time.Duration)
-
-	frames := filterFrames(ctx.Store.Frames(), start, end)
-	for _, frame := range frames {
-		duration := frame.Duration()
-		projectsExact[frame.ProjectId] = projectsExact[frame.ProjectId] + duration
-
-		roundedDuration := round(duration, t.FrameRoundingMode, t.RoundFramesTo)
-		projects[frame.ProjectId] = projects[frame.ProjectId] + roundedDuration
-	}
-
-	var reports []Result
-
-	for k, v := range projects {
-		project, err := ctx.Store.FindProject(k)
-		if err != nil {
-			return Results{}, err
-		}
-
-		reports = append(reports, Result{
-			Name:          project.ShortName,
-			ExactDuration: projectsExact[k],
-			Duration:      round(v, t.TotalRoundingMode, t.RoundTotalTo),
-		})
-	}
-
-	sort.SliceStable(reports, func(i, j int) bool {
-		return strings.Compare(reports[i].Name, reports[j].Name) < 0
+func (b *BucketReport) Update() {
+	var buckets []*ResultBucket
+	buckets = append(buckets, &ResultBucket{
+		Source: b.source,
 	})
-	return Results{
-		From:  start,
-		To:    end,
-		Items: reports,
-	}, nil
+
+	if b.GroupByYear {
+		splitLeafBuckets(buckets, frames.SplitByYear)
+	}
+
+	if b.GroupByMonth {
+		splitLeafBuckets(buckets, frames.SplitByMonth)
+	}
+
+	if b.GroupByDay {
+		splitLeafBuckets(buckets, frames.SplitByDay)
+	}
+
+	b.Results = buckets
 }
 
-func filterFrames(frames []store.Frame, start *time.Time, end *time.Time) []store.Frame {
-	var result []store.Frame
-
-	for _, frame := range frames {
-		if frame.Start != nil && start != nil && !start.IsZero() && frame.Start.Before(*start) || frame.End != nil && end != nil && !end.IsZero() && frame.End.After(*end) {
-			continue
+func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*frames.Bucket) {
+	for _, b := range buckets {
+		if len(b.Results) != 0 {
+			splitLeafBuckets(b.Results, splitter)
+		} else {
+			splitBuckets := splitter(b.Source.Frames)
+			for _, s := range splitBuckets {
+				b.Results = append(b.Results, &ResultBucket{
+					From:   &s.From,
+					To:     &s.To,
+					Source: s,
+				})
+			}
 		}
-		result = append(result, frame)
 	}
-	return result
 }

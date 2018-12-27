@@ -35,7 +35,7 @@ func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobr
 				if notes != "" {
 					frame.Notes = notes
 				}
-				if _, err := context.Store.UpdateFrame(frame); err != nil {
+				if _, err := context.Store.UpdateFrame(*frame); err != nil {
 					fatal(err)
 				}
 			}

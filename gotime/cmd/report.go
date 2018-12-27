@@ -3,14 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
-	"github.com/jansorg/gotime/gotime/htmlreport"
+	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/report"
 )
 
@@ -22,30 +20,31 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	var month int8
 	var year int
 
-	var roundFrames time.Duration
-	var roundNearest bool
-	var roundTotal time.Duration
-	var roundTotalNearest bool
+	var splitModes []string
 
-	var htmlFile string
+	var roundFrames time.Duration
+	var roundTotals time.Duration
+
+	var roundModeFrames string
+	var roundModeTotal string
 
 	var cmd = &cobra.Command{
 		Use:   "report",
-		Short: "Reporting about the tracked time",
+		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
-			var start time.Time
-			var end time.Time
+			var start *time.Time
+			var end *time.Time
 
 			if fromDateString != "" {
-				start, err = time.Parse(time.RFC3339Nano, fromDateString)
+				start, err = parseDate(&fromDateString)
 				if err != nil {
 					fatal(err)
 				}
 			}
 
 			if toDateString != "" {
-				end, err = time.Parse(time.RFC3339Nano, toDateString)
+				end, err = parseDate(&toDateString)
 				if err != nil {
 					fatal(err)
 				}
@@ -54,93 +53,50 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			if cmd.Flag("day") != nil {
 				now := time.Now()
 				year, month, today := now.Date()
-				start = time.Date(year, month, today+int(day), 0, 0, 0, 0, now.Location())
-				end = time.Date(year, month, today+int(day), 24, 0, 0, 0, now.Location())
+				start = createDate(year, month, today, day)
+				end = createDate(year, month, today+int(day), 24)
 			} else if cmd.Flag("month") != nil {
 				now := time.Now()
 				year, currentMonth, _ := now.Date()
-				start = time.Date(year, time.Month(int(currentMonth)+int(month)), 0, 0, 0, 0, 0, now.Location())
-				end = time.Date(year, time.Month(int(currentMonth)+int(month)+1), 0, 0, 0, 0, 0, now.Location())
+				start = createDate(year, time.Month(int(currentMonth)+int(month)), 0, 0)
+				end = createDate(year, time.Month(int(currentMonth)+int(month)+1), 0, 0)
 			} else if cmd.Flag("year") != nil {
 				now := time.Now()
 				currentYear, _, _ := now.Date()
-				start = time.Date(currentYear+year, time.January, 0, 0, 0, 0, 0, now.Location())
-				end = time.Date(currentYear+year, time.December, 24, 0, 0, 0, 0, now.Location())
+				start = createDate(currentYear+year, time.January, 0, 0)
+				end = createDate(currentYear+year, time.December, 24, 0)
 			}
 
-			var frameRoundingMode = report.RoundNone
-			if roundFrames > 0 {
-				if roundNearest {
-					frameRoundingMode = report.RoundNearest
-				} else {
-					frameRoundingMode = report.RoundUp
-				}
-			}
+			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
+			var totalsRoundingNode = dateUtil.ParseRoundingMode(roundModeTotal)
 
-			var roundingModeTotal = report.RoundNone
-			if roundTotal > 0 {
-				if roundTotalNearest {
-					roundingModeTotal = report.RoundNearest
-				} else {
-					roundingModeTotal = report.RoundUp
-				}
-			}
+			frameReport := report.NewBucketReport(context.Store.Frames())
+			frameReport.FromDate = start
+			frameReport.ToDate = end
+			frameReport.RoundFramesTo = roundFrames
+			frameReport.RoundTotalsTo = roundTotals
+			frameReport.RoundingFrames = frameRoundingMode
+			frameReport.RoundingTotals = totalsRoundingNode
+			frameReport.Update()
 
-			frameReport := report.TimeReport{
-				FrameRoundingMode: frameRoundingMode,
-				RoundFramesTo:     roundFrames,
-				TotalRoundingMode: roundingModeTotal,
-				RoundTotalTo:      roundTotal,
-			}
-
-			var usedStart *time.Time
-			if !start.IsZero() {
-				usedStart = &start
-			}
-
-			var usedEnd *time.Time
-			if !end.IsZero() {
-				usedEnd = &end
-			}
-
-			result, err := frameReport.Calc(usedStart, usedEnd, context)
-			if err != nil {
-				fatal(err)
-			}
-
+			results := frameReport.Results
 			if context.JsonOutput {
-				data, err := json.MarshalIndent(result, "", "  ")
+				data, err := json.MarshalIndent(results, "", "  ")
 				if err != nil {
 					fatal(err)
 				}
 				fmt.Println(string(data))
-			} else if htmlFile != "" {
-				templatePath := filepath.Join("../templates", "reports/default.gohtml")
-				if templatePath, err = filepath.Abs(templatePath); err != nil {
-					fatal(err)
-				}
-				htmlReport := htmlreport.NewReport(templatePath)
-
-				content, err := htmlReport.Render(result)
-				if err != nil {
-					fatal(err)
-				}
-
-				err = ioutil.WriteFile(htmlFile, []byte(content), 0600)
-				if err != nil {
-					fatal(err)
-				}
 			} else {
-				if result.From != nil {
-					fmt.Printf("From: %s\n", result.From.String())
-				}
+				// if result.From != nil {
+				// 	fmt.Printf("From: %s\n", result.From.String())
+				// }
 
-				if result.To != nil {
-					fmt.Printf("To: %s\n", result.To.String())
-				}
+				// if result.To != nil {
+				// 	fmt.Printf("To: %s\n", result.To.String())
+				// }
 
-				for _, r := range result.Items {
-					fmt.Printf("%s: %s\n", r.Name, r.Duration.String())
+				for _, r := range results {
+					fmt.Printf("%s: %s\n", r.Source, r.Source)
 				}
 			}
 		},
@@ -152,14 +108,27 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flags().Int8VarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
-	cmd.Flags().DurationVarP(&roundFrames, "round-frames", "r", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().BoolVarP(&roundNearest, "round-frames-nearest", "", false, "Round the durations of each frame to the nearest multiple. The default is to round up.")
+	cmd.Flags().StringArrayVarP(&splitModes, "group", "", []string{"year"}, "Group frames into years, months and/or days. Possible values: year,month,day")
 
-	cmd.Flags().DurationVarP(&roundTotal, "round-total", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
-	cmd.Flags().BoolVarP(&roundTotalNearest, "round-total-nearest", "", false, "Round the overall duration of a project or tag the nearest multiple. The default is to round up.")
+	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "r", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
-	cmd.Flags().StringVarP(&htmlFile, "html", "", "", "Output the report as HTML into the given file")
+	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
+	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
 	parent.AddCommand(cmd)
 	return cmd
+}
+
+func createDate(year int, month time.Month, today int, day int8) *time.Time {
+	date := time.Date(year, month, today+int(day), 0, 0, 0, 0, time.Local)
+	return &date
+}
+
+func parseDate(dateString *string) (*time.Time, error) {
+	result, err := time.Parse(time.RFC3339Nano, *dateString)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
