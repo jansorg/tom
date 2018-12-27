@@ -4,12 +4,24 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cmdReset = &cobra.Command{
-	Use:   "reset",
-	Short: "resets the local database. Removes projects, tags and frames",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := Store.Reset(); err != nil {
-			fatal(err)
-		}
-	},
+func newResetCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+	var cmdReset = &cobra.Command{
+		Use:       "reset [all | projects | tags | frames]",
+		Short:     "resets the local database. Removes projects, tags and frames",
+		ValidArgs: []string{"all", "projects", "tags", "frames"},
+		Args:      cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			arg := args[0]
+			projects := arg == "all" || arg == "projects"
+			tags := arg == "all" || arg == "tags"
+			frames := arg == "all" || arg == "frames"
+
+			if err := context.Store.Reset(projects, tags, frames); err != nil {
+				fatal(err)
+			}
+		},
+	}
+
+	parent.AddCommand(cmdReset)
+	return cmdReset
 }

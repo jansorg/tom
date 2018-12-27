@@ -14,19 +14,25 @@ import (
 
 var cfgFile string
 var dataDir string
-var jsonOutput bool
 
-var Store store.Store
+type GoTimeContext struct {
+	Store      store.Store
+	JsonOutput bool
+}
+
+var context GoTimeContext
 
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "", "data directory (default is $HOME/.gotime)")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gotime.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&jsonOutput, "json", "j", false, "output JSON instead of plain text")
+	rootCmd.PersistentFlags().BoolVarP(&context.JsonOutput, "json", "j", false, "output JSON instead of plain text")
 
-	rootCmd.AddCommand(cmdProjects)
-	rootCmd.AddCommand(cmdCreate)
-	rootCmd.AddCommand(cmdReset)
+	newProjectsCommand(&context, rootCmd)
+	newCreateCommand(&context, rootCmd)
+	newStartCommand(&context, rootCmd)
+	newStopCommand(&context, rootCmd)
+	newResetCommand(&context, rootCmd)
 
 	viper.BindPFlag("data-dir", rootCmd.PersistentFlags().Lookup("data-dir"))
 }
@@ -59,10 +65,12 @@ func initConfig() {
 
 	dataDir := viper.GetString("data-dir")
 	os.MkdirAll(dataDir, 0700)
-	Store, err = store.NewStore(dataDir)
+	dataStore, err := store.NewStore(dataDir)
 	if err != nil {
 		fatal(err)
 	}
+
+	context.Store = dataStore
 }
 
 var rootCmd = &cobra.Command{

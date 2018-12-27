@@ -6,14 +6,14 @@ import (
 	"../store"
 )
 
-func newCreateProjectCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCreateTagCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "project",
-		Short: "create a new project",
+		Use:   "tag name...",
+		Short: "create a new tag",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
-				if _, err := context.Store.AddProject(store.Project{FullName: name, ShortName: name}); err != nil {
+				if _, err := context.Store.AddTag(store.Tag{Name: name}); err != nil {
 					fatal(err)
 				}
 			}

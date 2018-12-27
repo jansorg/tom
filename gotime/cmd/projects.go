@@ -7,22 +7,27 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cmdProjects = &cobra.Command{
-	Use:   "projects",
-	Short: "Print a listing of all projects",
-	Run: func(cmd *cobra.Command, args []string) {
-		projects := Store.Projects()
+func newProjectsCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "projects",
+		Short: "Print a listing of all projects",
+		Run: func(cmd *cobra.Command, args []string) {
+			projects := context.Store.Projects()
 
-		if jsonOutput {
-			if bytes, err := json.Marshal(projects); err != nil {
-				fatal(err)
+			if context.JsonOutput {
+				if bytes, err := json.Marshal(projects); err != nil {
+					fatal(err)
+				} else {
+					fmt.Println(string(bytes))
+				}
 			} else {
-				fmt.Println(string(bytes))
+				for _, p := range projects {
+					fmt.Println(p.Id)
+				}
 			}
-		} else {
-			for _, p := range projects {
-				fmt.Println(p.Id)
-			}
-		}
-	},
+		},
+	}
+
+	parent.AddCommand(cmd)
+	return cmd
 }

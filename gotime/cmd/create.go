@@ -4,13 +4,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var cmdCreate = &cobra.Command{
-	Use:   "create",
-	Short: "create new content",
-	Run: func(cmd *cobra.Command, args []string) {
-	},
-}
+func newCreateCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "create",
+		Short: "create new content",
+		Run: func(cmd *cobra.Command, args []string) {
+		},
+	}
 
-func init() {
-	cmdCreate.AddCommand(cmdCreateProject)
+	newCreateProjectCommand(context, cmd)
+	newCreateTagCommand(context, cmd)
+
+	parent.AddCommand(cmd)
+	return cmd
 }
