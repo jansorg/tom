@@ -29,6 +29,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&context.JsonOutput, "json", "j", false, "output JSON instead of plain text")
 
 	newProjectsCommand(&context, rootCmd)
+	newFramesCommand(&context, rootCmd)
 	newCreateCommand(&context, rootCmd)
 	newStartCommand(&context, rootCmd)
 	newStopCommand(&context, rootCmd)

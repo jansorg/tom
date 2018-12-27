@@ -12,6 +12,7 @@ import (
 func newStartCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
 	createOnTheFly := false
 	allowMultiple := false
+	var notes string
 
 	var cmd = &cobra.Command{
 		Use:   "start <project> [+tag1 +tag2]",
@@ -41,7 +42,9 @@ func newStartCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Comma
 				}
 			}
 
-			if _, err := context.Store.AddFrame(store.NewStartedFrame(project)); err != nil {
+			frame := store.NewStartedFrame(project)
+			frame.Notes = notes
+			if _, err := context.Store.AddFrame(frame); err != nil {
 				fatal(err)
 			}
 		},
@@ -54,6 +57,8 @@ func newStartCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Comma
 	cmd.Flags().BoolVarP(&allowMultiple, "allow-multiple", "", false, "Allow multiple active timers at the same time")
 	viper.BindPFlag("allow-multiple", cmd.Flags().Lookup("allow-multiple"))
 	viper.SetDefault("allow-multiple", "false")
+
+	cmd.Flags().StringVarP(&notes, "notes", "", "", "Optional notes for the new time frame")
 
 	parent.AddCommand(cmd)
 	return cmd

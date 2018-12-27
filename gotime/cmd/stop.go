@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -10,6 +11,7 @@ import (
 
 func newStopCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
 	all := false
+	notes := ""
 
 	var cmd = &cobra.Command{
 		Use:   "stop",
@@ -19,27 +21,30 @@ func newStopCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Comman
 				return f.IsActive()
 			})
 
-			if all {
-				for _, frame := range active {
-					frame.Stop()
-					if _, err := context.Store.UpdateFrame(frame); err != nil {
-						fatal(err)
-					}
+			sort.SliceStable(active, func(i, j int) bool {
+				return active[i].Start.After(*active[j].Start)
+			})
+
+			if !all && len(active) > 0 {
+				active = active[:1]
+			}
+
+			for _, frame := range active {
+				frame.Stop()
+				if notes != "" {
+					frame.Notes = notes
 				}
-			} else {
-				sort.SliceStable(active, func(i, j int) bool {
-					return active[i].Start.After(active[j].Start)
-				})
-				last := active[0]
-				last.Stop()
-				if _, err := context.Store.UpdateFrame(last); err != nil {
+				if _, err := context.Store.UpdateFrame(frame); err != nil {
 					fatal(err)
 				}
 			}
+
+			fmt.Printf("Stopped %d timers\n", len(active))
 		},
 	}
 
 	cmd.Flags().BoolVarP(&all, "all", "a", false, "Stops all running timers, not just the newest")
+	cmd.Flags().StringVarP(&notes, "notes", "n", "", "Optional notes to set for all stopped timers")
 
 	parent.AddCommand(cmd)
 	return cmd

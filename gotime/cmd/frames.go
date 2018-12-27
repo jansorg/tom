@@ -7,21 +7,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newProjectsCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newFramesCommand(context *GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "projects",
-		Short: "Print a listing of all projects",
+		Use:   "frames",
+		Short: "Print a listing of all frames",
 		Run: func(cmd *cobra.Command, args []string) {
-			projects := context.Store.Projects()
+			frames := context.Store.Frames()
 
 			if context.JsonOutput {
-				if bytes, err := json.MarshalIndent(projects, "", "  "); err != nil {
+				if bytes, err := json.MarshalIndent(frames, "", "  "); err != nil {
 					fatal(err)
 				} else {
 					fmt.Println(string(bytes))
 				}
 			} else {
-				for _, p := range projects {
+				for _, p := range frames {
 					fmt.Println(p.Id)
 				}
 			}

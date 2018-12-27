@@ -22,12 +22,12 @@ type Project struct {
 }
 
 type Frame struct {
-	Id        string    `json:"id"`
-	ProjectId string    `json:"project"`
-	Start     time.Time `json:"start"`
-	End       time.Time `json:"end,omitempty"`
-	Updated   time.Time `json:"updated,omitempty"`
-	Notes     string    `json:"notes"`
+	Id        string     `json:"id"`
+	ProjectId string     `json:"project"`
+	Start     *time.Time `json:"start,omitempty"`
+	End       *time.Time `json:"end,omitempty"`
+	Updated   *time.Time `json:"updated,omitempty"`
+	Notes     string     `json:"notes,omitempty"`
 }
 
 func (f *Frame) IsStopped() bool {
@@ -40,8 +40,8 @@ func (f *Frame) IsActive() bool {
 
 func (f *Frame) Stop() {
 	now := time.Now()
-	f.End = now
-	f.Updated = now
+	f.End = &now
+	f.Updated = &now
 }
 
 func NewStartedFrame(project Project) Frame {
@@ -49,8 +49,8 @@ func NewStartedFrame(project Project) Frame {
 	return Frame{
 		Id:        nextID(),
 		ProjectId: project.Id,
-		Start:     now,
-		Updated:   now,
+		Start:     &now,
+		Updated:   &now,
 	}
 }
 
