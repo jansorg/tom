@@ -70,6 +70,20 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
 			var totalsRoundingNode = dateUtil.ParseRoundingMode(roundModeTotal)
 
+			var groupYear, groupMonths, groupDays bool
+			for _, mode := range splitModes {
+				switch mode {
+				case "year":
+					groupYear = true
+				case "month":
+					groupMonths = true
+				case "day":
+					groupDays = true
+				default:
+					fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day", mode))
+				}
+			}
+
 			frameReport := report.NewBucketReport(context.Store.Frames())
 			frameReport.FromDate = start
 			frameReport.ToDate = end
@@ -77,6 +91,9 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.RoundTotalsTo = roundTotals
 			frameReport.RoundingFrames = frameRoundingMode
 			frameReport.RoundingTotals = totalsRoundingNode
+			frameReport.GroupByYear = groupYear
+			frameReport.GroupByMonth = groupMonths
+			frameReport.GroupByDay = groupDays
 			frameReport.Update()
 
 			results := frameReport.Results
@@ -108,9 +125,9 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flags().Int8VarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
-	cmd.Flags().StringArrayVarP(&splitModes, "group", "", []string{"year"}, "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.Flags().StringArrayVarP(&splitModes, "group", "", []string{}, "Group frames into years, months and/or days. Possible values: year,month,day")
 
-	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "r", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
 	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")

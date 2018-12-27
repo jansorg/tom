@@ -9,9 +9,9 @@ import (
 )
 
 type Bucket struct {
-	From   time.Time
-	To     time.Time
-	Frames []*store.Frame
+	From   time.Time      `json:"from"`
+	To     time.Time      `json:"to"`
+	Frames []*store.Frame `json:"frames,omitempty"`
 }
 
 func (b *Bucket) Title() string {
@@ -62,22 +62,27 @@ func SplitByYear(frames []*store.Frame) []*Bucket {
 }
 
 func Split(frames []*store.Frame, lowerBucketBound func(time.Time) time.Time, upperBucketBound func(time.Time) time.Time) []*Bucket {
+	if len(frames) == 0 {
+		return []*Bucket{}
+	}
+
 	sort.SliceStable(frames, func(i, j int) bool {
 		return frames[i].IsBefore(frames[j])
 	})
 
-	first := frames[0]
-	dayStart := lowerBucketBound(*first.Start)
-	dayEnd := upperBucketBound(*first.Start)
+	rangeStart := lowerBucketBound(*frames[0].Start)
+	rangeEnd := upperBucketBound(*frames[0].Start)
 
-	bucket := NewBucket(dayStart, dayEnd)
+	bucket := NewBucket(rangeStart, rangeEnd)
 	buckets := []*Bucket{bucket}
 
 	for _, f := range frames {
-		if f.Start != nil && f.Start.After(dayEnd) {
-			dayStart = dayEnd
-			dayEnd = upperBucketBound(dayStart)
-			bucket = NewBucket(dayStart, dayEnd)
+		if f.Start != nil && f.Start.After(rangeEnd) {
+			// fixme return no gaps
+			rangeStart = lowerBucketBound(*f.Start)
+			rangeEnd = upperBucketBound(*f.Start)
+
+			bucket = NewBucket(rangeStart, rangeEnd)
 			buckets = append(buckets, bucket)
 		}
 
