@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"../context"
+	"../htmlreport"
 	"../report"
-	"../report/html"
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -119,7 +119,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				if templatePath, err = filepath.Abs(templatePath); err != nil {
 					fatal(err)
 				}
-				htmlReport := html.NewReport(templatePath)
+				htmlReport := htmlreport.NewReport(templatePath)
 
 				content, err := htmlReport.Render(result)
 				if err != nil {

@@ -225,7 +225,17 @@ func (d *DataStore) UpdateProject(project Project) (Project, error) {
 }
 
 func (d *DataStore) RemoveProject(id string) error {
-	panic("implement me")
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	for i, p := range d.projects {
+		if p.Id == id {
+			d.projects = append(d.projects[:i], d.projects[i+1:]...)
+			return d.saveLocked()
+		}
+	}
+
+	return fmt.Errorf("project %s not found", id)
 }
 
 func (d *DataStore) FindProject(id string) (Project, error) {

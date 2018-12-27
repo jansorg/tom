@@ -27,6 +27,7 @@ func init() {
 	newProjectsCommand(&ctx, rootCmd)
 	newFramesCommand(&ctx, rootCmd)
 	newCreateCommand(&ctx, rootCmd)
+	newRemoveCommand(&ctx, rootCmd)
 	newStartCommand(&ctx, rootCmd)
 	newStopCommand(&ctx, rootCmd)
 	newReportCommand(&ctx, rootCmd)

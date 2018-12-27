@@ -1,10 +1,10 @@
-package html
+package htmlreport
 
 import (
 	"bytes"
 	"html/template"
 
-	".."
+	"../report"
 )
 
 type Report struct {
