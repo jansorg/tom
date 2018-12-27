@@ -3,12 +3,15 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"../context"
 	"../report"
+	"../report/html"
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -23,6 +26,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	var roundNearest bool
 	var roundTotal time.Duration
 	var roundTotalNearest bool
+
+	var htmlFile string
 
 	var cmd = &cobra.Command{
 		Use:   "report",
@@ -109,6 +114,22 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 					fatal(err)
 				}
 				fmt.Println(string(data))
+			} else if htmlFile != "" {
+				templatePath := filepath.Join("../templates", "reports/default.gohtml")
+				if templatePath, err = filepath.Abs(templatePath); err != nil {
+					fatal(err)
+				}
+				htmlReport := html.NewReport(templatePath)
+
+				content, err := htmlReport.Render(result)
+				if err != nil {
+					fatal(err)
+				}
+
+				err = ioutil.WriteFile(htmlFile, []byte(content), 0600)
+				if err != nil {
+					fatal(err)
+				}
 			} else {
 				if result.From != nil {
 					fmt.Printf("From: %s\n", result.From.String())
@@ -136,6 +157,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.Flags().DurationVarP(&roundTotal, "round-total", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
 	cmd.Flags().BoolVarP(&roundTotalNearest, "round-total-nearest", "", false, "Round the overall duration of a project or tag the nearest multiple. The default is to round up.")
+
+	cmd.Flags().StringVarP(&htmlFile, "html", "", "", "Output the report as HTML into the given file")
 
 	parent.AddCommand(cmd)
 	return cmd
