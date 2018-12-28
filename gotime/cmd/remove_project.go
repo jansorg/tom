@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
-	"github.com/jansorg/gotime/gotime/store"
 )
 
 func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -19,15 +18,10 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 			remvoedProjects := 0
 
 			for _, name := range args {
-				projects := context.Store.FindProjects(func(p store.Project) bool {
-					return p.Id == name || p.FullName == name
-				})
+				projects := context.Query.ProjectsByShortNameOrID(name)
 
 				for _, p := range projects {
-					frames := context.Store.FindFrames(func(frame store.Frame) bool {
-						return frame.ProjectId == p.Id
-					})
-
+					frames := context.Query.FramesByProject(p.ID)
 					for _, f := range frames {
 						if err := context.Store.RemoveFrame(f.Id); err != nil {
 							fatal(err)
@@ -35,7 +29,7 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 						remvoedFrames++
 					}
 
-					if err := context.Store.RemoveProject(p.Id); err != nil {
+					if err := context.Store.RemoveProject(p.ID); err != nil {
 						fatal(err)
 					}
 					remvoedProjects++

@@ -24,7 +24,7 @@ func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) 
 				fatal(err)
 			}
 
-			if err = importCSV(absPath, ctx.Store); err != nil {
+			if err = importCSV(absPath, ctx); err != nil {
 				fatal(err)
 			}
 		},
@@ -34,7 +34,10 @@ func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) 
 	return cmd
 }
 
-func importCSV(filePath string, dataStore store.Store) error {
+func importCSV(filePath string, ctx *context.GoTimeContext) error {
+	query := ctx.Query
+	dataStore := ctx.Store
+
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
@@ -70,24 +73,17 @@ func importCSV(filePath string, dataStore store.Store) error {
 			return err
 		}
 
-		projects := dataStore.FindProjects(func(project store.Project) bool {
-			return project.FullName == projectName
-		})
-
-		var project store.Project
-		if len(projects) == 0 {
+		project, err := query.ProjectByFullName(projectName)
+		if err != nil {
 			project, _ = dataStore.AddProject(store.Project{ShortName: projectName, FullName: projectName})
-		} else {
-			project = projects[0]
 		}
 
-		frame := store.Frame{
-			ProjectId: project.Id,
+		_, err = dataStore.AddFrame(store.Frame{
+			ProjectId: project.ID,
 			Notes:     notes,
 			Start:     &startTime,
 			End:       &endTime,
-		}
-		_, err = dataStore.AddFrame(frame)
+		})
 		if err != nil {
 			return err
 		}

@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
-	"github.com/jansorg/gotime/gotime/store"
 )
 
 func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -18,9 +17,7 @@ func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobr
 		Use:   "stop",
 		Short: "stops the newest active timer. If --all is specified, then all active timers are stopped.",
 		Run: func(cmd *cobra.Command, args []string) {
-			active := context.Store.FindFrames(func(f store.Frame) bool {
-				return f.IsActive()
-			})
+			active := context.Query.UnstoppedFrames()
 
 			sort.SliceStable(active, func(i, j int) bool {
 				return active[i].Start.After(*active[j].Start)

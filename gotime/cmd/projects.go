@@ -24,7 +24,7 @@ func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *
 				}
 			} else {
 				for _, p := range projects {
-					fmt.Println(p.Id)
+					fmt.Println(p.ID)
 				}
 			}
 		},

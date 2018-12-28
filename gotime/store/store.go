@@ -16,7 +16,7 @@ func nextID() string {
 }
 
 type Project struct {
-	Id        string `json:"id"`
+	ID        string `json:"id"`
 	ShortName string `json:"shortName"`
 	FullName  string `json:"fullName"`
 }
@@ -59,44 +59,44 @@ func (f *Frame) IsAfter(other *Frame) bool {
 	return !f.IsBefore(other) && f.Start != nil && other.Start != nil && f.Start.After(*other.Start)
 }
 
-func NewStartedFrame(project Project) Frame {
+func NewStartedFrame(project *Project) Frame {
 	now := time.Now()
 	return Frame{
 		Id:        nextID(),
-		ProjectId: project.Id,
+		ProjectId: project.ID,
 		Start:     &now,
 		Updated:   &now,
 	}
 }
 
 type Tag struct {
-	Id   string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type Store interface {
 	Reset(projects, tags, frames bool) error
 
-	Projects() []Project
-	AddProject(project Project) (Project, error)
-	UpdateProject(project Project) (Project, error)
+	Projects() []*Project
+	AddProject(project Project) (*Project, error)
+	UpdateProject(project Project) (*Project, error)
 	RemoveProject(id string) error
-	FindProject(id string) (Project, error)
-	FindProjects(func(Project) bool) []Project
+	FindFirstProject(func(*Project) bool) (*Project, error)
+	FindProjects(func(*Project) bool) []*Project
 
-	Tags() []Tag
-	AddTag(tag Tag) (Tag, error)
-	UpdateTag(tag Tag) (Tag, error)
+	Tags() []*Tag
+	AddTag(tag Tag) (*Tag, error)
+	UpdateTag(tag Tag) (*Tag, error)
 	RemoveTag(id string) error
-	FindTag(id string) (Tag, error)
-	FindTags(func(Tag) bool) []Tag
+	FindFirstTag(func(*Tag) bool) (*Tag, error)
+	FindTags(func(*Tag) bool) []*Tag
 
 	Frames() []*Frame
-	AddFrame(frame Frame) (Frame, error)
-	UpdateFrame(frame Frame) (Frame, error)
+	AddFrame(frame Frame) (*Frame, error)
+	UpdateFrame(frame Frame) (*Frame, error)
 	RemoveFrame(id string) error
-	FindFrame(id string) (Frame, error)
-	FindFrames(func(Frame) bool) []*Frame
+	FindFirstFrame(func(*Frame) bool) (*Frame, error)
+	FindFrames(func(*Frame) bool) []*Frame
 }
 
 func NewStore(dir string) (Store, error) {
@@ -121,8 +121,8 @@ type DataStore struct {
 	projectFile string
 
 	mu       sync.Mutex
-	projects []Project
-	tags     []Tag
+	projects []*Project
+	tags     []*Tag
 	frames   []*Frame
 }
 
@@ -200,10 +200,10 @@ func (d *DataStore) Reset(projects, tags, frames bool) error {
 	defer d.mu.Unlock()
 
 	if projects {
-		d.projects = []Project{}
+		d.projects = []*Project{}
 	}
 	if tags {
-		d.tags = []Tag{}
+		d.tags = []*Tag{}
 	}
 	if frames {
 		d.frames = []*Frame{}
@@ -212,24 +212,28 @@ func (d *DataStore) Reset(projects, tags, frames bool) error {
 	return d.saveLocked()
 }
 
-func (d *DataStore) Projects() []Project {
+func (d *DataStore) Projects() []*Project {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.projects
 }
 
-func (d *DataStore) AddProject(project Project) (Project, error) {
+func (d *DataStore) AddProject(project Project) (*Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	project.Id = nextID()
-	d.projects = append(d.projects, project)
-	return project, d.saveLocked()
+	project.ID = nextID()
+	d.projects = append(d.projects, &project)
+	return &project, d.saveLocked()
 }
 
-func (d *DataStore) UpdateProject(project Project) (Project, error) {
-	panic("implement me")
+func (d *DataStore) UpdateProject(project Project) (*Project, error) {
+	if err := d.RemoveProject(project.ID); err != nil {
+		return nil, err
+	}
+
+	return d.AddProject(project)
 }
 
 func (d *DataStore) RemoveProject(id string) error {
@@ -237,7 +241,7 @@ func (d *DataStore) RemoveProject(id string) error {
 	defer d.mu.Unlock()
 
 	for i, p := range d.projects {
-		if p.Id == id {
+		if p.ID == id {
 			d.projects = append(d.projects[:i], d.projects[i+1:]...)
 			return d.saveLocked()
 		}
@@ -246,23 +250,23 @@ func (d *DataStore) RemoveProject(id string) error {
 	return fmt.Errorf("project %s not found", id)
 }
 
-func (d *DataStore) FindProject(id string) (Project, error) {
+func (d *DataStore) FindFirstProject(filter func(*Project) bool) (*Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	for _, p := range d.projects {
-		if p.Id == id {
+		if filter(p) {
 			return p, nil
 		}
 	}
-	return Project{}, fmt.Errorf("project %s not found", id)
+	return nil, fmt.Errorf("no matching project found")
 }
 
-func (d *DataStore) FindProjects(filter func(Project) bool) []Project {
+func (d *DataStore) FindProjects(filter func(*Project) bool) []*Project {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var result []Project
+	var result []*Project
 	for _, p := range d.projects {
 		if filter(p) {
 			result = append(result, p)
@@ -271,47 +275,72 @@ func (d *DataStore) FindProjects(filter func(Project) bool) []Project {
 	return result
 }
 
-func (d *DataStore) Tags() []Tag {
+func (d *DataStore) Tags() []*Tag {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.tags
 }
 
-func (d *DataStore) AddTag(tag Tag) (Tag, error) {
+func (d *DataStore) AddTag(tag Tag) (*Tag, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	tag.Id = nextID()
-	d.tags = append(d.tags, tag)
-	return Tag{}, d.saveLocked()
+	tag.ID = nextID()
+	d.tags = append(d.tags, &tag)
+	return nil, d.saveLocked()
 }
 
-func (d *DataStore) UpdateTag(tag Tag) (Tag, error) {
-	panic("implement me")
+func (d *DataStore) UpdateTag(tag Tag) (*Tag, error) {
+	if err := d.RemoveTag(tag.ID); err != nil {
+		return nil, err
+	}
+
+	return d.AddTag(tag)
 }
 
 func (d *DataStore) RemoveTag(id string) error {
-	panic("implement me")
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	for i, t := range d.tags {
+		if t.ID == id {
+			d.tags = append(d.tags[:i], d.tags[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("tag %s not found", id)
 }
 
-func (d *DataStore) FindTag(id string) (Tag, error) {
+func (d *DataStore) FindTag(id string) (*Tag, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	for _, tag := range d.tags {
-		if tag.Id == id {
+		if tag.ID == id {
 			return tag, nil
 		}
 	}
-	return Tag{}, fmt.Errorf("tag %s not found", id)
+	return nil, fmt.Errorf("tag %s not found", id)
 }
 
-func (d *DataStore) FindTags(filter func(Tag) bool) []Tag {
+func (d *DataStore) FindFirstTag(filter func(*Tag) bool) (*Tag, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var result []Tag
+	for _, tag := range d.tags {
+		if filter(tag) {
+			return tag, nil
+		}
+	}
+	return nil, fmt.Errorf("no matching tag found")
+}
+
+func (d *DataStore) FindTags(filter func(*Tag) bool) []*Tag {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	var result []*Tag
 	for _, tag := range d.tags {
 		if filter(tag) {
 			result = append(result, tag)
@@ -327,22 +356,22 @@ func (d *DataStore) Frames() []*Frame {
 	return d.frames
 }
 
-func (d *DataStore) AddFrame(frame Frame) (Frame, error) {
+func (d *DataStore) AddFrame(frame Frame) (*Frame, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	frame.Id = nextID()
 	d.frames = append(d.frames, &frame)
-	return frame, d.saveLocked()
+	return &frame, d.saveLocked()
 }
 
-func (d *DataStore) UpdateFrame(frame Frame) (Frame, error) {
+func (d *DataStore) UpdateFrame(frame Frame) (*Frame, error) {
 	if frame.Id == "" {
-		return Frame{}, fmt.Errorf("id of frame undefined")
+		return nil, fmt.Errorf("id of frame undefined")
 	}
 
 	if err := d.RemoveFrame(frame.Id); err != nil {
-		return Frame{}, err
+		return nil, err
 	}
 	return d.AddFrame(frame)
 }
@@ -360,25 +389,25 @@ func (d *DataStore) RemoveFrame(id string) error {
 	return fmt.Errorf("frame %s not found", id)
 }
 
-func (d *DataStore) FindFrame(id string) (Frame, error) {
+func (d *DataStore) FindFirstFrame(filter func(*Frame) bool) (*Frame, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	for _, frame := range d.frames {
-		if frame.Id == id {
-			return *frame, nil
+		if filter(frame) {
+			return frame, nil
 		}
 	}
-	return Frame{}, fmt.Errorf("frame %s not found", id)
+	return nil, fmt.Errorf("no matching frame found")
 }
 
-func (d *DataStore) FindFrames(filter func(Frame) bool) []*Frame {
+func (d *DataStore) FindFrames(filter func(*Frame) bool) []*Frame {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	var result []*Frame
 	for _, frame := range d.frames {
-		if filter(*frame) {
+		if filter(frame) {
 			result = append(result, frame)
 		}
 	}

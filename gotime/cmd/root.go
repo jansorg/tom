@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/query"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
@@ -71,6 +72,7 @@ func initConfig() {
 	}
 
 	ctx.Store = dataStore
+	ctx.Query = query.NewStoreQuery(dataStore)
 }
 
 var rootCmd = &cobra.Command{

@@ -23,14 +23,12 @@ func newStartCommand(context *context.GoTimeContext, parent *cobra.Command) *cob
 			projectName := args[0]
 			// tags := args[1:]
 
-			projects := context.Store.FindProjects(func(p store.Project) bool {
-				return p.ShortName == projectName || p.Id == projectName
-			})
+			projects := context.Query.ProjectsByShortNameOrID(projectName)
 			if len(projects) > 1 {
 				fatal(fmt.Errorf("more than one project found for %s", projectName))
 			}
 
-			var project store.Project
+			var project *store.Project
 			if len(projects) == 1 {
 				project = projects[0]
 			} else {
