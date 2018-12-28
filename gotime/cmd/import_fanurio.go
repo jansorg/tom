@@ -81,7 +81,7 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 		fullProjectName := strings.Join([]string{clientName, projectName, taskName}, "/")
 		project, err := query.ProjectByFullName(fullProjectName)
 		if err != nil {
-			project, _ = dataStore.AddProject(store.Project{ShortName: fullProjectName, FullName: fullProjectName})
+			project, _ = dataStore.AddProject(store.Project{Name: fullProjectName})
 		}
 
 		_, err = dataStore.AddFrame(store.Frame{

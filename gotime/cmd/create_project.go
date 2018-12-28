@@ -14,7 +14,7 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
-				if _, err := context.Store.AddProject(store.Project{FullName: name, ShortName: name}); err != nil {
+				if _, err := context.Store.AddProject(store.Project{Name: name}); err != nil {
 					fatal(err)
 				}
 			}

@@ -70,7 +70,7 @@ type DataStore struct {
 
 func (d *DataStore) sortProjects() {
 	sort.SliceStable(d.projects, func(i, j int) bool {
-		return strings.Compare(d.projects[i].FullName, d.projects[j].FullName) < 0
+		return strings.Compare(d.projects[i].FullName(), d.projects[j].FullName()) < 0
 	})
 }
 
@@ -102,6 +102,9 @@ func (d *DataStore) loadLocked() error {
 	}
 	if err = json.Unmarshal(data, &d.projects); err != nil {
 		return err
+	}
+	for _, p := range d.projects {
+		p.store = d
 	}
 
 	if data, err = ioutil.ReadFile(d.tagFile); err != nil {
@@ -192,6 +195,7 @@ func (d *DataStore) AddProject(project Project) (*Project, error) {
 	defer d.mu.Unlock()
 
 	project.ID = nextID()
+	project.store = d
 	d.projects = append(d.projects, &project)
 	return &project, d.saveLocked()
 }

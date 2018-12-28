@@ -36,7 +36,7 @@ func newStartCommand(context *context.GoTimeContext, parent *cobra.Command) *cob
 					fatal(fmt.Errorf("project %s not found, on-the-fly is disabled", projectName))
 				}
 				var err error
-				if project, err = context.Store.AddProject(store.Project{ShortName: projectName, FullName: projectName}); err != nil {
+				if project, err = context.Store.AddProject(store.Project{Name: projectName}); err != nil {
 					fatal(err)
 				}
 			}
