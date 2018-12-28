@@ -96,25 +96,14 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.GroupByDay = groupDays
 			frameReport.Update()
 
-			results := frameReport.Results
 			if context.JsonOutput {
-				data, err := json.MarshalIndent(results, "", "  ")
+				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
 				if err != nil {
 					fatal(err)
 				}
 				fmt.Println(string(data))
 			} else {
-				// if result.From != nil {
-				// 	fmt.Printf("From: %s\n", result.From.String())
-				// }
-
-				// if result.To != nil {
-				// 	fmt.Printf("To: %s\n", result.To.String())
-				// }
-
-				for _, r := range results {
-					printReport(r)
-				}
+				printReport(frameReport.Result)
 			}
 		},
 	}

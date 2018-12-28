@@ -39,11 +39,11 @@ func SplitByMonth(frames []*store.Frame) []*Bucket {
 	return Split(frames,
 		func(date time.Time) time.Time {
 			y, m, _ := date.Date()
-			return time.Date(y, m, 0, 0, 0, 0, 0, date.Location())
+			return time.Date(y, m, 1, 0, 0, 0, 0, date.Location())
 		},
 		func(date time.Time) time.Time {
 			y, m, _ := date.Date()
-			return time.Date(y, m, 0, 0, 0, 0, 0, date.Location()).AddDate(0, 1, 0)
+			return time.Date(y, m, 1, 0, 0, 0, 0, date.Location()).AddDate(0, 1, 0)
 		},
 	)
 }
@@ -52,11 +52,11 @@ func SplitByYear(frames []*store.Frame) []*Bucket {
 	return Split(frames,
 		func(date time.Time) time.Time {
 			y, _, _ := date.Date()
-			return time.Date(y, time.January, 0, 0, 0, 0, 0, date.Location())
+			return time.Date(y, time.January, 1, 0, 0, 0, 0, date.Location())
 		},
 		func(date time.Time) time.Time {
 			y, _, _ := date.Date()
-			return time.Date(y, time.January, 0, 0, 0, 0, 0, date.Location()).AddDate(1, 0, 0)
+			return time.Date(y, time.January, 1, 0, 0, 0, 0, date.Location()).AddDate(1, 0, 0)
 		},
 	)
 }

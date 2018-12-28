@@ -23,7 +23,7 @@ type BucketReport struct {
 	store  *store.Store
 	source []*store.Frame
 
-	Results []*ResultBucket `json:"results"`
+	Result *ResultBucket `json:"result"`
 
 	FromDate *time.Time `json:"from,omitempty"`
 	ToDate   *time.Time `json:"to,omitempty"`
@@ -48,27 +48,25 @@ func NewBucketReport(frameList []*store.Frame) *BucketReport {
 
 func (b *BucketReport) Update() {
 	b.source = frames.FilterFrames(b.source, b.FromDate, b.ToDate)
-
-	buckets := []*ResultBucket{{
+	b.Result = &ResultBucket{
 		Source: &frames.Bucket{
 			Frames: b.source,
 		},
-	}}
+	}
 
 	if b.GroupByYear {
-		splitLeafBuckets(buckets, frames.SplitByYear)
+		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByYear)
 	}
 
 	if b.GroupByMonth {
-		splitLeafBuckets(buckets, frames.SplitByMonth)
+		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByMonth)
 	}
 
 	if b.GroupByDay {
-		splitLeafBuckets(buckets, frames.SplitByDay)
+		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByDay)
 	}
 
-	buckets = updateBuckets(b, buckets)
-	b.Results = buckets
+	updateBucket(b, b.Result)
 }
 
 func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*frames.Bucket) {
@@ -89,25 +87,32 @@ func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*
 }
 
 // depth first update of the buckets to aggregate stats from sub-buckets
-func updateBuckets(report *BucketReport, buckets []*ResultBucket) []*ResultBucket {
-	for _, bucket := range buckets {
-		for _, sub := range bucket.Results {
-			updateBuckets(report, sub.Results)
-			bucket.FrameCount += sub.FrameCount
-		}
-
-		bucket.FrameCount += int64(len(bucket.Source.Frames))
-		if len(bucket.Source.Frames) > 0 {
-			bucket.From = bucket.Source.Frames[0].Start
-			bucket.To = bucket.Source.Frames[len(bucket.Source.Frames)-1].End
-		}
-
-		for _, f := range bucket.Source.Frames {
-			d := f.Duration()
-			bucket.ExactDuration += d
-			bucket.Duration += dateUtil.RoundDuration(d, report.RoundingFrames, report.RoundFramesTo)
-		}
+func updateBucket(report *BucketReport, bucket *ResultBucket) {
+	bucket.FrameCount = int64(len(bucket.Source.Frames))
+	for _, sub := range bucket.Results {
+		updateBucket(report, sub)
+		bucket.FrameCount += sub.FrameCount
 	}
 
-	return buckets
+	for _, f := range bucket.Source.Frames {
+		d := f.Duration()
+		bucket.ExactDuration += d
+		bucket.Duration += dateUtil.RoundDuration(d, report.RoundingFrames, report.RoundFramesTo)
+	}
+
+	if len(bucket.Results) > 0 {
+		if bucket.From == nil {
+			bucket.From = bucket.Results[0].From
+		}
+		if bucket.To == nil {
+			bucket.To = bucket.Results[len(bucket.Results)-1].To
+		}
+	} else {
+		if bucket.From == nil {
+			bucket.From = bucket.Source.Frames[0].Start
+		}
+		if bucket.To == nil {
+			bucket.To = bucket.Source.Frames[len(bucket.Source.Frames)-1].End
+		}
+	}
 }
