@@ -10,7 +10,7 @@ import (
 )
 
 func TestSplitByDay(t *testing.T) {
-	buckets := SplitByDay([]*store.Frame{
+	buckets := NewFrameList([]*store.Frame{
 		{
 			Start: newDay(10, 12, 0),
 			End:   newDay(10, 13, 30),
@@ -27,7 +27,7 @@ func TestSplitByDay(t *testing.T) {
 			Start: newDay(13, 1, 0),
 			End:   newDay(13, 3, 0),
 		},
-	})
+	}).SplitByDay()
 
 	assert.EqualValues(t, 3, len(buckets))
 	assert.EqualValues(t, 2, len(buckets[0].Frames))
@@ -36,7 +36,7 @@ func TestSplitByDay(t *testing.T) {
 }
 
 func TestSplitByMonth(t *testing.T) {
-	buckets := SplitByMonth([]*store.Frame{
+	buckets := NewFrameList([]*store.Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),
@@ -49,7 +49,7 @@ func TestSplitByMonth(t *testing.T) {
 			Start: newDate(2018, time.February, 14, 12, 0),
 			End:   newDate(2018, time.February, 16, 12, 0),
 		},
-	})
+	}).SplitByMonth()
 
 	assert.EqualValues(t, 2, len(buckets))
 	assert.EqualValues(t, 1, len(buckets[0].Frames))
@@ -57,7 +57,7 @@ func TestSplitByMonth(t *testing.T) {
 }
 
 func TestSplitByYear(t *testing.T) {
-	buckets := SplitByYear([]*store.Frame{
+	buckets := NewFrameList([]*store.Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),
@@ -74,7 +74,7 @@ func TestSplitByYear(t *testing.T) {
 			Start: newDate(2018, time.March, 14, 12, 0),
 			End:   newDate(2018, time.April, 16, 12, 0),
 		},
-	})
+	}).SplitByYear()
 
 	assert.EqualValues(t, 2, len(buckets))
 	assert.EqualValues(t, 1, len(buckets[0].Frames))

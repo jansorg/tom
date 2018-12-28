@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
@@ -15,14 +16,14 @@ func Test_Report(t *testing.T) {
 	end := newDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*store.Frame{{Start: start, End: end}}
-	report := NewBucketReport(frameList)
+	report := NewBucketReport(frames.NewFrameList(frameList))
 	report.Update()
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
 	assert.EqualValues(t, 2*time.Hour, report.Result.ExactDuration)
-	assert.EqualValues(t, start, report.Result.Start)
-	assert.EqualValues(t, end, report.Result.End)
-	assert.EqualValues(t, frameList, report.source)
+	assert.EqualValues(t, start, report.Result.UsedDateRange.Start)
+	assert.EqualValues(t, end, report.Result.UsedDateRange.End)
+	assert.EqualValues(t, frameList, report.source.Frames)
 }
 
 func Test_ReportSplitYear(t *testing.T) {
@@ -39,33 +40,33 @@ func Test_ReportSplitYear(t *testing.T) {
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(frameList)
+	report := NewBucketReport(frames.NewSortedFrameList(frameList))
 	report.SplitOperations = []SplitOperation{SplitByYear}
 	report.Update()
 
 	require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
-	assert.EqualValues(t, 4, report.Result.FrameCount)
+	assert.EqualValues(t, 2, report.Result.FrameCount)
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration)
 	assert.EqualValues(t, 3*time.Hour, report.Result.ExactDuration)
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.End)
-	assert.EqualValues(t, frameList, report.source)
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange.Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange.End)
+	assert.EqualValues(t, frameList, report.source.Frames)
 
 	require.EqualValues(t, 2, len(report.Result.Results), "expected a sub-report for each year")
 
 	firstYear := report.Result.Results[0]
-	require.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.Start)
-	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.End)
-	require.EqualValues(t, 1, firstYear.FrameCount)
-	require.EqualValues(t, 2*time.Hour, firstYear.ExactDuration)
-	require.EqualValues(t, 2*time.Hour, firstYear.Duration)
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange.Start)
+	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.DateRange.End)
+	assert.EqualValues(t, 1, firstYear.FrameCount)
+	assert.EqualValues(t, 2*time.Hour, firstYear.ExactDuration)
+	assert.EqualValues(t, 2*time.Hour, firstYear.Duration)
 
 	secondYear := report.Result.Results[1]
-	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.Start)
-	require.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.End)
-	require.EqualValues(t, 1, secondYear.FrameCount)
-	require.EqualValues(t, 1*time.Hour, secondYear.ExactDuration)
-	require.EqualValues(t, 1*time.Hour, secondYear.Duration)
+	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.DateRange.Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.DateRange.End)
+	assert.EqualValues(t, 1, secondYear.FrameCount)
+	assert.EqualValues(t, 1*time.Hour, secondYear.ExactDuration)
+	assert.EqualValues(t, 1*time.Hour, secondYear.Duration)
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

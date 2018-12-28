@@ -10,6 +10,7 @@ import (
 
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
+	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/report"
 )
 
@@ -17,8 +18,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	var fromDateString string
 	var toDateString string
 
-	var day int8
-	var month int8
+	var day int
+	var month int
 	var year int
 
 	var splitModes []string
@@ -33,39 +34,31 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			var err error
-			var start *time.Time
-			var end *time.Time
+			var filterRange dateUtil.DateRange
 
 			if fromDateString != "" {
-				start, err = parseDate(&fromDateString)
+				start, err := parseDate(&fromDateString)
 				if err != nil {
 					fatal(err)
 				}
+				filterRange.Start = start
 			}
 
 			if toDateString != "" {
-				end, err = parseDate(&toDateString)
+				end, err := parseDate(&toDateString)
 				if err != nil {
 					fatal(err)
 				}
+				filterRange.End = end
 			}
 
-			if cmd.Flag("day") != nil {
-				now := time.Now()
-				year, month, today := now.Date()
-				start = createDate(year, month, today, day)
-				end = createDate(year, month, today+int(day), 24)
-			} else if cmd.Flag("month") != nil {
-				now := time.Now()
-				year, currentMonth, _ := now.Date()
-				start = createDate(year, time.Month(int(currentMonth)+int(month)), 0, 0)
-				end = createDate(year, time.Month(int(currentMonth)+int(month)+1), 0, 0)
-			} else if cmd.Flag("year") != nil {
-				now := time.Now()
-				currentYear, _, _ := now.Date()
-				start = createDate(currentYear+year, time.January, 0, 0)
-				end = createDate(currentYear+year, time.December, 24, 0)
+			// day, month, year params override the filter values
+			if cmd.Flag("day").Changed {
+				filterRange = dateUtil.NewDayRange(time.Now()).Shift(0, 0, day)
+			} else if cmd.Flag("month").Changed {
+				filterRange = dateUtil.NewMonthRange(time.Now()).Shift(0, month, 0)
+			} else if cmd.Flag("year").Changed {
+				filterRange = dateUtil.NewYearRange(time.Now()).Shift(year, 0, 0)
 			}
 
 			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
@@ -87,13 +80,13 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 			}
 
-			frameReport := report.NewBucketReport(context.Store.Frames())
-			frameReport.FromDate = start
-			frameReport.ToDate = end
+			storeFrames := context.Store.Frames()
+			frameReport := report.NewBucketReport(frames.NewFrameList(storeFrames))
+			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
 			frameReport.RoundTotalsTo = roundTotals
-			frameReport.RoundingFrames = frameRoundingMode
-			frameReport.RoundingTotals = totalsRoundingNode
+			frameReport.RoundingModeFrames = frameRoundingMode
+			frameReport.RoundingModeTotals = totalsRoundingNode
 			frameReport.SplitOperations = splitOperations
 			frameReport.Update()
 
@@ -111,8 +104,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.PersistentFlags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
 	cmd.PersistentFlags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
-	cmd.PersistentFlags().Int8VarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
-	cmd.PersistentFlags().Int8VarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	cmd.PersistentFlags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+	cmd.PersistentFlags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.PersistentFlags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
 	cmd.PersistentFlags().StringArrayVarP(&splitModes, "group", "", []string{}, "Group frames into years, months and/or days. Possible values: year,month,day")
@@ -129,11 +122,6 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	return cmd
 }
 
-func createDate(year int, month time.Month, today int, day int8) *time.Time {
-	date := time.Date(year, month, today+int(day), 0, 0, 0, 0, time.Local)
-	return &date
-}
-
 func parseDate(dateString *string) (*time.Time, error) {
 	result, err := time.Parse(time.RFC3339Nano, *dateString)
 	if err != nil {
@@ -142,23 +130,20 @@ func parseDate(dateString *string) (*time.Time, error) {
 	return &result, nil
 }
 
-//noinspection ALL
 func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level int) {
 	title := report.Title(ctx)
 	if title != "" {
 		printlnIndenting(level-1, title)
-	} else if (level == 1) {
+	} else if level == 1 {
 		printlnIndenting(level-1, "Overall")
 	}
 
-	if report.Start != nil && report.End != nil {
-		printfIndenting(level, "%s - %s\n", report.Start.String(), report.End.String())
-	} else if report.Start != nil {
-		printlnIndenting(level, report.Start.String())
-	} else if (report.End != nil) {
-		printfIndenting(level, report.End.String())
+	if !report.DateRange.Empty() {
+		printlnIndenting(level, report.DateRange.String())
 	}
-
+	if !report.UsedDateRange.Empty() {
+		printlnIndenting(level, report.UsedDateRange.String())
+	}
 	printfIndenting(level, "Duration: %s\n", report.Duration.String())
 	printfIndenting(level, "Exact Duration: %s\n", report.ExactDuration.String())
 	fmt.Println()
@@ -168,12 +153,12 @@ func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level 
 	}
 }
 
-func printlnIndenting(level int, value string) (int, error) {
+func printlnIndenting(level int, value string) {
 	fmt.Print(strings.Repeat("    ", level))
-	return fmt.Println(value)
+	fmt.Println(value)
 }
 
-func printfIndenting(level int, format string, a ...interface{}) (int, error) {
+func printfIndenting(level int, format string, a ...interface{}) {
 	fmt.Print(strings.Repeat("    ", level))
-	return fmt.Printf(format, a...)
+	fmt.Printf(format, a...)
 }
