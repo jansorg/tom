@@ -6,7 +6,8 @@ import (
 )
 
 type GoTimeContext struct {
-	Store      store.Store
-	Query      query.StoreQuery
-	JsonOutput bool
+	Store       store.Store
+	StoreHelper *store.StoreHelper
+	Query       query.StoreQuery
+	JsonOutput  bool
 }

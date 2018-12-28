@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/satori/uuid"
 )
@@ -17,6 +19,9 @@ func nextID() string {
 }
 
 type Store interface {
+	StartBatch()
+	StopBatch()
+
 	Reset(projects, tags, frames bool) error
 
 	Projects() []*Project
@@ -56,21 +61,38 @@ func NewStore(dir string) (Store, error) {
 }
 
 type DataStore struct {
-	path string
+	path      string
+	batchMode int32
 
 	tagFile     string
 	frameFile   string
 	projectFile string
 
-	mu       sync.Mutex
+	mu       sync.RWMutex
 	projects []*Project
 	tags     []*Tag
 	frames   []*Frame
 }
 
+func (d *DataStore) StartBatch() {
+	swapped := atomic.CompareAndSwapInt32(&d.batchMode, 0, 1)
+	if !swapped {
+		log.Fatal(fmt.Errorf("StartBatch() in batch mode"))
+	}
+}
+
+func (d *DataStore) StopBatch() {
+	swapped := atomic.CompareAndSwapInt32(&d.batchMode, 1, 0)
+	if !swapped {
+		log.Fatal(fmt.Errorf("StopBatch() called without prior StartBatch()"))
+	}
+
+	_ = d.save()
+}
+
 func (d *DataStore) sortProjects() {
 	sort.SliceStable(d.projects, func(i, j int) bool {
-		return strings.Compare(d.projects[i].FullName(), d.projects[j].FullName()) < 0
+		return strings.Compare(d.projects[i].FullName, d.projects[j].FullName) < 0
 	})
 }
 
@@ -104,7 +126,7 @@ func (d *DataStore) loadLocked() error {
 		return err
 	}
 	for _, p := range d.projects {
-		p.store = d
+		d.updateProjectInternals(p)
 	}
 
 	if data, err = ioutil.ReadFile(d.tagFile); err != nil {
@@ -129,6 +151,11 @@ func (d *DataStore) loadLocked() error {
 }
 
 func (d *DataStore) save() error {
+	if atomic.LoadInt32(&d.batchMode) == 1 {
+		return nil;
+	}
+
+	fmt.Println("saving...")
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.saveLocked()
@@ -195,16 +222,41 @@ func (d *DataStore) AddProject(project Project) (*Project, error) {
 	defer d.mu.Unlock()
 
 	project.ID = nextID()
-	project.store = d
+	d.updateProjectInternals(&project)
 	d.projects = append(d.projects, &project)
 	return &project, d.saveLocked()
+}
+
+func (d *DataStore) updateProjectInternals(p *Project) {
+	p.FullName = p.Name
+	if p.ParentID == "" {
+		return
+	}
+
+	parents := []string{p.Name}
+
+	id := p.ParentID
+	for id != "" {
+		parent, err := d.findFirstProjectLocked(func(current *Project) bool {
+			return current.ID == id
+		})
+
+		if err != nil {
+			log.Fatal(fmt.Errorf("unable to find project %s", id))
+		}
+
+		id = parent.ParentID
+		parents = append([]string{parent.Name}, parents...)
+	}
+
+	p.FullName = strings.Join(parents, "/")
 }
 
 func (d *DataStore) UpdateProject(project Project) (*Project, error) {
 	if err := d.RemoveProject(project.ID); err != nil {
 		return nil, err
 	}
-
+	// fixme keep id!
 	return d.AddProject(project)
 }
 
@@ -223,9 +275,13 @@ func (d *DataStore) RemoveProject(id string) error {
 }
 
 func (d *DataStore) FindFirstProject(filter func(*Project) bool) (*Project, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
+	return d.findFirstProjectLocked(filter)
+}
+
+func (d *DataStore) findFirstProjectLocked(filter func(*Project) bool) (*Project, error) {
 	for _, p := range d.projects {
 		if filter(p) {
 			return p, nil
@@ -297,8 +353,8 @@ func (d *DataStore) FindTag(id string) (*Tag, error) {
 }
 
 func (d *DataStore) FindFirstTag(filter func(*Tag) bool) (*Tag, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	for _, tag := range d.tags {
 		if filter(tag) {
@@ -362,8 +418,8 @@ func (d *DataStore) RemoveFrame(id string) error {
 }
 
 func (d *DataStore) FindFirstFrame(filter func(*Frame) bool) (*Frame, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	for _, frame := range d.frames {
 		if filter(frame) {
@@ -374,8 +430,8 @@ func (d *DataStore) FindFirstFrame(filter func(*Frame) bool) (*Frame, error) {
 }
 
 func (d *DataStore) FindFrames(filter func(*Frame) bool) []*Frame {
-	d.mu.Lock()
-	defer d.mu.Unlock()
+	d.mu.RLock()
+	defer d.mu.RUnlock()
 
 	var result []*Frame
 	for _, frame := range d.frames {

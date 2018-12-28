@@ -49,7 +49,7 @@ func (b *ResultBucket) Title(ctx *context.GoTimeContext) string {
 	if id, ok := b.SplitBy.(string); ok {
 		if value, err := ctx.Query.AnyByID(id); err == nil {
 			if p, ok := value.(*store.Project); ok {
-				return fmt.Sprintf("Project: %s", p.FullName())
+				return fmt.Sprintf("Project: %s", p.FullName)
 			}
 
 			if t, ok := value.(*store.Tag); ok {

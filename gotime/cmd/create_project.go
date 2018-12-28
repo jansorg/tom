@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
-	"github.com/jansorg/gotime/gotime/store"
 )
 
 func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -14,9 +15,12 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
-				if _, err := context.Store.AddProject(store.Project{Name: name}); err != nil {
+				project, err := context.StoreHelper.GetOrCreateNestedProject(name)
+				if err != nil {
 					fatal(err)
 				}
+
+				fmt.Printf("created project %s\n", project.FullName)
 			}
 		},
 	}

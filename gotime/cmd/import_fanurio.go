@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,13 +37,14 @@ func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) 
 }
 
 func importCSV(filePath string, ctx *context.GoTimeContext) error {
-	query := ctx.Query
-	dataStore := ctx.Store
-
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
+
+	// import in batch mode
+	ctx.Store.StartBatch()
+	defer ctx.Store.StopBatch()
 
 	reader := csv.NewReader(file)
 	reader.TrimLeadingSpace = true
@@ -54,6 +54,7 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 		return err
 	}
 
+	createdFrames := 0
 	for i, row := range rows {
 		if i == 0 {
 			continue
@@ -78,13 +79,12 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			return err
 		}
 
-		fullProjectName := strings.Join([]string{clientName, projectName, taskName}, "/")
-		project, err := query.ProjectByFullName(fullProjectName)
+		project, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(clientName, projectName, taskName)
 		if err != nil {
-			project, _ = dataStore.AddProject(store.Project{Name: fullProjectName})
+			return err
 		}
 
-		_, err = dataStore.AddFrame(store.Frame{
+		_, err = ctx.Store.AddFrame(store.Frame{
 			ProjectId: project.ID,
 			Notes:     notes,
 			Start:     &startTime,
@@ -93,13 +93,12 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 		if err != nil {
 			return err
 		}
+
+		createdFrames++
 	}
 
+	fmt.Printf("Imported %d frames\n", createdFrames)
 	return nil
-}
-
-func logError(err error) {
-	log.Printf("Import error: %v", err)
 }
 
 func parseTime(value string) (time.Time, error) {

@@ -73,6 +73,7 @@ func initConfig() {
 	}
 
 	ctx.Store = dataStore
+	ctx.StoreHelper = store.NewStoreHelper(dataStore)
 	ctx.Query = query.NewStoreQuery(dataStore)
 }
 

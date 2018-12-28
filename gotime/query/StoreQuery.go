@@ -58,7 +58,7 @@ func (q *defaultStoreQuery) ProjectByID(id string) (*store.Project, error) {
 
 func (q *defaultStoreQuery) ProjectByFullName(name string) (*store.Project, error) {
 	return q.store.FindFirstProject(func(p *store.Project) bool {
-		return p.FullName() == name
+		return p.FullName == name
 	})
 }
 
@@ -70,7 +70,7 @@ func (q *defaultStoreQuery) ProjectsByShortName(name string) []*store.Project {
 
 func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*store.Project {
 	return q.store.FindProjects(func(p *store.Project) bool {
-		return p.ID == nameOrID || p.FullName() == nameOrID
+		return p.ID == nameOrID || p.FullName == nameOrID
 	})
 }
 
