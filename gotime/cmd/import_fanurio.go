@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/csv"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,11 +59,13 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			continue
 		}
 
-		projectName := strings.TrimSpace(row[0])
-		notes := strings.TrimSpace(row[1])
-		dateString := row[2]
-		startString := row[3]
-		endString := row[4]
+		clientName := strings.TrimSpace(row[0])
+		projectName := strings.TrimSpace(row[1])
+		taskName := strings.TrimSpace(row[2])
+		notes := strings.TrimSpace(row[3])
+		dateString := row[4]
+		startString := row[5]
+		endString := row[6]
 
 		// Mon Jan 2 15:04:05 MST 2006
 		startTime, err := parseTime(fmt.Sprintf("%s %s", dateString, startString))
@@ -75,9 +78,10 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			return err
 		}
 
-		project, err := query.ProjectByFullName(projectName)
+		fullProjectName := strings.Join([]string{clientName, projectName, taskName}, "/")
+		project, err := query.ProjectByFullName(fullProjectName)
 		if err != nil {
-			project, _ = dataStore.AddProject(store.Project{ShortName: projectName, FullName: projectName})
+			project, _ = dataStore.AddProject(store.Project{ShortName: fullProjectName, FullName: fullProjectName})
 		}
 
 		_, err = dataStore.AddFrame(store.Frame{
@@ -92,6 +96,10 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 	}
 
 	return nil
+}
+
+func logError(err error) {
+	log.Printf("Import error: %v", err)
 }
 
 func parseTime(value string) (time.Time, error) {

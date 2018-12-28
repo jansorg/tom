@@ -34,6 +34,7 @@ func init() {
 	newReportCommand(&ctx, rootCmd)
 	newImportCommand(&ctx, rootCmd)
 	newResetCommand(&ctx, rootCmd)
+	newStatusCommand(&ctx, rootCmd)
 
 	viper.BindPFlag("data-dir", rootCmd.PersistentFlags().Lookup("data-dir"))
 }

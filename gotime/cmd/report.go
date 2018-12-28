@@ -17,6 +17,7 @@ import (
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var fromDateString string
 	var toDateString string
+	var projectID string
 
 	var day int
 	var month int
@@ -82,8 +83,20 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 			}
 
+			// proejct filter
+			if projectID != "" {
+				// if it's a name resolve it to the ID
+				if project, err := context.Query.ProjectByFullName(projectID); err == nil {
+					projectID = project.ID
+				}
+				if _, err := context.Query.ProjectByID(projectID); err != nil {
+					fatal(fmt.Errorf("project %s not found", projectID))
+				}
+			}
+
 			storeFrames := context.Store.Frames()
 			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames))
+			frameReport.ProjectID = projectID
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
 			frameReport.RoundTotalsTo = roundTotals
@@ -106,6 +119,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.PersistentFlags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
 	cmd.PersistentFlags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
+	cmd.PersistentFlags().StringVarP(&projectID, "project", "p", "", "Project filter. Only frames which belong to this project are used for the report.")
+
 	cmd.PersistentFlags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 	cmd.PersistentFlags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.PersistentFlags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")

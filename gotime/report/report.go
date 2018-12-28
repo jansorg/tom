@@ -25,6 +25,7 @@ type BucketReport struct {
 
 	Result *ResultBucket `json:"result"`
 
+	ProjectID   string             `json:"projectID,omitempty"`
 	FilterRange dateUtil.DateRange `json:"dateRange,omitempty"`
 
 	SplitOperations []SplitOperation `json:"splitOperations"`
@@ -45,6 +46,13 @@ func NewBucketReport(frameList *frames.FrameList) *BucketReport {
 
 func (b *BucketReport) Update() {
 	b.source.FilterByDatePtr(b.FilterRange.Start, b.FilterRange.End, false)
+
+	if b.ProjectID != "" {
+		b.source.Filter(func(frame *store.Frame) bool {
+			return frame.ProjectId == b.ProjectID
+		})
+	}
+
 	b.Result = &ResultBucket{
 		Source: b.source,
 	}
