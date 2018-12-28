@@ -59,6 +59,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start)
+				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByMonth:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
@@ -68,6 +69,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start)
+				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByDay:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
@@ -77,6 +79,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start)
+				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByProject:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
@@ -84,30 +87,20 @@ func (b *BucketReport) Update() {
 					return list.SplitByProject()
 				})
 			})
+			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
+				leaf.SplitBy = leaf.Source.First().ProjectId
+			})
 		default:
 			log.Fatal(fmt.Errorf("unknown split operation %d", op))
 		}
 	}
 
 	updateBucket(b, b.Result)
-}
 
-// func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*frames.Bucket) {
-// 	for _, b := range buckets {
-// 		if len(b.Results) != 0 {
-// 			splitLeafBuckets(b.Results, splitter)
-// 		} else {
-// 			splitBuckets := splitter(b.Source.Frames)
-// 			for _, s := range splitBuckets {
-// 				b.Results = append(b.Results, &ResultBucket{
-// 					Start:  s.Start,
-// 					End:    s.End,
-// 					Source: s,
-// 				})
-// 			}
-// 		}
-// 	}
-// }
+	if b.Result.DateRange.Empty() {
+		b.Result.DateRange = b.FilterRange
+	}
+}
 
 // depth first update of the buckets to aggregate stats from sub-buckets
 func updateBucket(report *BucketReport, bucket *ResultBucket) {

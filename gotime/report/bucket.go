@@ -1,11 +1,13 @@
 package report
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/frames"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
 type ResultBucket struct {
@@ -16,6 +18,7 @@ type ResultBucket struct {
 	Duration      time.Duration `json:"duration"`
 	ExactDuration time.Duration `json:"duration_exact"`
 
+	SplitBy interface{}
 	Source  *frames.FrameList `json:"source,omitempty"`
 	Results []*ResultBucket   `json:"results,omitempty"`
 }
@@ -43,19 +46,17 @@ func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
 }
 
 func (b *ResultBucket) Title(ctx *context.GoTimeContext) string {
-	// if b.Source != nil && b.Source.GroupedBy != nil {
-	// 	if id, ok := b.Source.GroupedBy.(string); ok {
-	// 		if value, err := ctx.Query.AnyByID(id); err == nil {
-	// 			if p, ok := value.(*store.Project); ok {
-	// 				return fmt.Sprintf("Project: %s", p.FullName)
-	// 			}
-	//
-	// 			if t, ok := value.(*store.Tag); ok {
-	// 				return fmt.Sprintf("Tag: %s", t.Name)
-	// 			}
-	// 		}
-	// 	}
-	// }
+	if id, ok := b.SplitBy.(string); ok {
+		if value, err := ctx.Query.AnyByID(id); err == nil {
+			if p, ok := value.(*store.Project); ok {
+				return fmt.Sprintf("Project: %s", p.FullName)
+			}
+
+			if t, ok := value.(*store.Tag); ok {
+				return fmt.Sprintf("Tag: %s", t.Name)
+			}
+		}
+	}
 
 	return ""
 }

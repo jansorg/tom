@@ -22,7 +22,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	var month int
 	var year int
 
-	var splitModes []string
+	var splitModes string
 
 	var roundFrames time.Duration
 	var roundTotals time.Duration
@@ -65,23 +65,25 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			var totalsRoundingNode = dateUtil.ParseRoundingMode(roundModeTotal)
 
 			var splitOperations []report.SplitOperation
-			for _, mode := range splitModes {
-				switch mode {
-				case "year":
-					splitOperations = append(splitOperations, report.SplitByYear)
-				case "month":
-					splitOperations = append(splitOperations, report.SplitByMonth)
-				case "day":
-					splitOperations = append(splitOperations, report.SplitByDay)
-				case "project":
-					splitOperations = append(splitOperations, report.SplitByProject)
-				default:
-					fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day", mode))
+			if splitModes != "" {
+				for _, mode := range strings.Split(splitModes, ",") {
+					switch mode {
+					case "year":
+						splitOperations = append(splitOperations, report.SplitByYear)
+					case "month":
+						splitOperations = append(splitOperations, report.SplitByMonth)
+					case "day":
+						splitOperations = append(splitOperations, report.SplitByDay)
+					case "project":
+						splitOperations = append(splitOperations, report.SplitByProject)
+					default:
+						fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day", mode))
+					}
 				}
 			}
 
 			storeFrames := context.Store.Frames()
-			frameReport := report.NewBucketReport(frames.NewFrameList(storeFrames))
+			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames))
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
 			frameReport.RoundTotalsTo = roundTotals
@@ -108,7 +110,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.PersistentFlags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.PersistentFlags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
-	cmd.PersistentFlags().StringArrayVarP(&splitModes, "group", "", []string{}, "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.PersistentFlags().StringVarP(&splitModes, "split-by", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
 
 	cmd.PersistentFlags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.PersistentFlags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
@@ -139,10 +141,10 @@ func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level 
 	}
 
 	if !report.DateRange.Empty() {
-		printlnIndenting(level, report.DateRange.String())
+		printfIndenting(level, "Dates: %s\n", report.DateRange.String())
 	}
 	if !report.UsedDateRange.Empty() {
-		printlnIndenting(level, report.UsedDateRange.String())
+		printfIndenting(level, "Range of tracked time: %s\n", report.UsedDateRange.String())
 	}
 	printfIndenting(level, "Duration: %s\n", report.Duration.String())
 	printfIndenting(level, "Exact Duration: %s\n", report.ExactDuration.String())

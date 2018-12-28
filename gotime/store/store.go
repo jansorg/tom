@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/satori/uuid"
@@ -48,7 +50,7 @@ func NewStore(dir string) (Store, error) {
 	}
 
 	if err := store.load(); err != nil {
-		// 	return nil, err
+		return nil, err
 	}
 	return store, nil
 }
@@ -64,6 +66,24 @@ type DataStore struct {
 	projects []*Project
 	tags     []*Tag
 	frames   []*Frame
+}
+
+func (d *DataStore) sortProjects() {
+	sort.SliceStable(d.projects, func(i, j int) bool {
+		return strings.Compare(d.projects[i].FullName, d.projects[j].FullName) < 0
+	})
+}
+
+func (d *DataStore) sortTags() {
+	sort.SliceStable(d.tags, func(i, j int) bool {
+		return strings.Compare(d.tags[i].Name, d.tags[j].Name) < 0
+	})
+}
+
+func (d *DataStore) sortFrames() {
+	sort.SliceStable(d.frames, func(i, j int) bool {
+		return d.frames[i].IsBefore(d.frames[j])
+	})
 }
 
 func (d *DataStore) load() error {
@@ -98,6 +118,10 @@ func (d *DataStore) loadLocked() error {
 		return err
 	}
 
+	d.sortProjects()
+	d.sortTags()
+	d.sortFrames()
+
 	return nil
 }
 
@@ -108,6 +132,10 @@ func (d *DataStore) save() error {
 }
 
 func (d *DataStore) saveLocked() error {
+	d.sortProjects()
+	d.sortTags()
+	d.sortFrames()
+
 	var data []byte
 	var err error
 
