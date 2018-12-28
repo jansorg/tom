@@ -9,17 +9,26 @@ import (
 )
 
 type Bucket struct {
-	From   *time.Time     `json:"from,omitempty"`
-	To     *time.Time     `json:"to,omitempty"`
-	Frames []*store.Frame `json:"frames,omitempty"`
+	Start     *time.Time     `json:"from,omitempty"`
+	End       *time.Time     `json:"to,omitempty"`
+	Frames    []*store.Frame `json:"frames,omitempty"`
+	GroupedBy interface{}    `json:"groupedBy,omitempty"`
 }
 
 func (b *Bucket) Title() string {
-	return fmt.Sprintf("%s - %s", b.From.String(), b.To.String())
+	if b.GroupedBy == nil {
+		return ""
+	}
+
+	if p, ok := b.GroupedBy.(*store.Project); ok {
+		return fmt.Sprintf("Project: %s", p.FullName)
+	}
+
+	return fmt.Sprintf("%v", b.GroupedBy)
 }
 
 func NewBucket(from, to time.Time) *Bucket {
-	return &Bucket{From: &from, To: &to}
+	return &Bucket{Start: &from, End: &to}
 }
 
 func SplitByDay(frames []*store.Frame) []*Bucket {
@@ -61,6 +70,20 @@ func SplitByYear(frames []*store.Frame) []*Bucket {
 	)
 }
 
+func SplitByProject(frames []*store.Frame) []*Bucket {
+	mapping := map[string][]*store.Frame{}
+
+	for _, f := range frames {
+		mapping[f.ProjectId] = append(mapping[f.ProjectId], f)
+	}
+
+	var result []*Bucket
+	for k, v := range mapping {
+		result = append(result, &Bucket{Frames: v, GroupedBy: k})
+	}
+	return result
+}
+
 func Split(frames []*store.Frame, lowerBucketBound func(time.Time) time.Time, upperBucketBound func(time.Time) time.Time) []*Bucket {
 	if len(frames) == 0 {
 		return []*Bucket{}
@@ -78,9 +101,8 @@ func Split(frames []*store.Frame, lowerBucketBound func(time.Time) time.Time, up
 
 	for _, f := range frames {
 		if f.Start != nil && f.Start.After(rangeEnd) {
-			// fixme return no gaps
 			rangeStart = lowerBucketBound(*f.Start)
-			rangeEnd = upperBucketBound(*f.Start)
+			rangeEnd = upperBucketBound(*f.End)
 
 			bucket = NewBucket(rangeStart, rangeEnd)
 			buckets = append(buckets, bucket)

@@ -1,8 +1,14 @@
 package query
 
-import "github.com/jansorg/gotime/gotime/store"
+import (
+	"fmt"
+
+	"github.com/jansorg/gotime/gotime/store"
+)
 
 type StoreQuery interface {
+	AnyByID(id string) (interface{}, error)
+
 	ProjectByID(id string) (*store.Project, error)
 	ProjectByFullName(name string) (*store.Project, error)
 	ProjectsByShortName(name string) []*store.Project
@@ -23,6 +29,25 @@ func NewStoreQuery(store store.Store) StoreQuery {
 
 type defaultStoreQuery struct {
 	store store.Store
+}
+
+func (q *defaultStoreQuery) AnyByID(id string) (interface{}, error) {
+	var v interface{}
+	var err error
+
+	if v, err = q.ProjectByID(id); err == nil {
+		return v, nil
+	}
+
+	if v, err = q.TagByID(id); err == nil {
+		return v, nil
+	}
+
+	if v, err = q.FrameByID(id); err == nil {
+		return v, nil
+	}
+
+	return nil, fmt.Errorf("no data found for id %s", id)
 }
 
 func (q *defaultStoreQuery) ProjectByID(id string) (*store.Project, error) {

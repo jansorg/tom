@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -70,15 +71,17 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
 			var totalsRoundingNode = dateUtil.ParseRoundingMode(roundModeTotal)
 
-			var groupYear, groupMonths, groupDays bool
+			var splitOperations []report.SplitOperation
 			for _, mode := range splitModes {
 				switch mode {
 				case "year":
-					groupYear = true
+					splitOperations = append(splitOperations, report.SplitByYear)
 				case "month":
-					groupMonths = true
+					splitOperations = append(splitOperations, report.SplitByMonth)
 				case "day":
-					groupDays = true
+					splitOperations = append(splitOperations, report.SplitByDay)
+				case "project":
+					splitOperations = append(splitOperations, report.SplitByProject)
 				default:
 					fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day", mode))
 				}
@@ -91,9 +94,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.RoundTotalsTo = roundTotals
 			frameReport.RoundingFrames = frameRoundingMode
 			frameReport.RoundingTotals = totalsRoundingNode
-			frameReport.GroupByYear = groupYear
-			frameReport.GroupByMonth = groupMonths
-			frameReport.GroupByDay = groupDays
+			frameReport.SplitOperations = splitOperations
 			frameReport.Update()
 
 			if context.JsonOutput {
@@ -103,7 +104,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 				fmt.Println(string(data))
 			} else {
-				printReport(frameReport.Result)
+				printReport(frameReport.Result, context, 1)
 			}
 		},
 	}
@@ -141,19 +142,38 @@ func parseDate(dateString *string) (*time.Time, error) {
 	return &result, nil
 }
 
-func printReport(report *report.ResultBucket) {
-	if report.From != nil {
-		fmt.Print(report.From.String())
-		fmt.Print(" - ")
-	}
-	if report.To != nil {
-		fmt.Println(report.To.String())
+//noinspection ALL
+func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level int) {
+	title := report.Title(ctx)
+	if title != "" {
+		printlnIndenting(level-1, title)
+	} else if (level == 1) {
+		printlnIndenting(level-1, "Overall")
 	}
 
-	fmt.Printf("Duration: %s\n", report.Duration.String())
-	fmt.Printf("Exact Duration: %s\n", report.ExactDuration.String())
+	if report.Start != nil && report.End != nil {
+		printfIndenting(level, "%s - %s\n", report.Start.String(), report.End.String())
+	} else if report.Start != nil {
+		printlnIndenting(level, report.Start.String())
+	} else if (report.End != nil) {
+		printfIndenting(level, report.End.String())
+	}
+
+	printfIndenting(level, "Duration: %s\n", report.Duration.String())
+	printfIndenting(level, "Exact Duration: %s\n", report.ExactDuration.String())
+	fmt.Println()
 
 	for _, r := range report.Results {
-		printReport(r)
+		printReport(r, ctx, level+1)
 	}
+}
+
+func printlnIndenting(level int, value string) (int, error) {
+	fmt.Print(strings.Repeat("    ", level))
+	return fmt.Println(value)
+}
+
+func printfIndenting(level int, format string, a ...interface{}) (int, error) {
+	fmt.Print(strings.Repeat("    ", level))
+	return fmt.Printf(format, a...)
 }

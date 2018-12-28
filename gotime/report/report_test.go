@@ -20,8 +20,8 @@ func Test_Report(t *testing.T) {
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
 	assert.EqualValues(t, 2*time.Hour, report.Result.ExactDuration)
-	assert.EqualValues(t, start, report.Result.From)
-	assert.EqualValues(t, end, report.Result.To)
+	assert.EqualValues(t, start, report.Result.Start)
+	assert.EqualValues(t, end, report.Result.End)
 	assert.EqualValues(t, frameList, report.source)
 }
 
@@ -40,29 +40,29 @@ func Test_ReportSplitYear(t *testing.T) {
 	}
 
 	report := NewBucketReport(frameList)
-	report.GroupByYear = true
+	report.SplitOperations = []SplitOperation{SplitByYear}
 	report.Update()
 
 	require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
 	assert.EqualValues(t, 4, report.Result.FrameCount)
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration)
 	assert.EqualValues(t, 3*time.Hour, report.Result.ExactDuration)
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.From)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.To)
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.End)
 	assert.EqualValues(t, frameList, report.source)
 
 	require.EqualValues(t, 2, len(report.Result.Results), "expected a sub-report for each year")
 
 	firstYear := report.Result.Results[0]
-	require.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.From)
-	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.To)
+	require.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.Start)
+	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.End)
 	require.EqualValues(t, 1, firstYear.FrameCount)
 	require.EqualValues(t, 2*time.Hour, firstYear.ExactDuration)
 	require.EqualValues(t, 2*time.Hour, firstYear.Duration)
 
 	secondYear := report.Result.Results[1]
-	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.From)
-	require.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.To)
+	require.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.Start)
+	require.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.End)
 	require.EqualValues(t, 1, secondYear.FrameCount)
 	require.EqualValues(t, 1*time.Hour, secondYear.ExactDuration)
 	require.EqualValues(t, 1*time.Hour, secondYear.Duration)

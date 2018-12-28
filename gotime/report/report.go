@@ -1,22 +1,52 @@
 package report
 
 import (
+	"fmt"
+	"log"
 	"time"
 
+	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
-type ResultBucket struct {
-	From          *time.Time `json:"from,omitempty"`
-	To            *time.Time `json:"to,omitempty"`
-	Duration      time.Duration
-	ExactDuration time.Duration
-	FrameCount    int64
+type SplitOperation int8
 
-	Results []*ResultBucket `json:"results"`
-	Source  *frames.Bucket  `json:"source"`
+const (
+	SplitByYear SplitOperation = iota + 1
+	SplitByMonth
+	SplitByDay
+	SplitByProject
+)
+
+type ResultBucket struct {
+	Start         *time.Time    `json:"start,omitempty"`
+	End           *time.Time    `json:"end,omitempty"`
+	Duration      time.Duration `json:"duration"`
+	ExactDuration time.Duration `json:"duration_exact"`
+	FrameCount    int64         `json:"frameCount"`
+
+	Source  *frames.Bucket  `json:"source,omitempty"`
+	Results []*ResultBucket `json:"results,omitempty"`
+}
+
+func (b *ResultBucket) Title(ctx *context.GoTimeContext) string {
+	if b.Source != nil && b.Source.GroupedBy != nil {
+		if id, ok := b.Source.GroupedBy.(string); ok {
+			if value, err := ctx.Query.AnyByID(id); err == nil {
+				if p, ok := value.(*store.Project); ok {
+					return fmt.Sprintf("Project: %s", p.FullName)
+				}
+
+				if t, ok := value.(*store.Tag); ok {
+					return fmt.Sprintf("Tag: %s", t.Name)
+				}
+			}
+		}
+	}
+
+	return ""
 }
 
 type BucketReport struct {
@@ -28,9 +58,7 @@ type BucketReport struct {
 	FromDate *time.Time `json:"from,omitempty"`
 	ToDate   *time.Time `json:"to,omitempty"`
 
-	GroupByYear  bool `json:"groupByYear"`
-	GroupByMonth bool `json:"groupByMonth"`
-	GroupByDay   bool `json:"groupByDay"`
+	SplitOperations []SplitOperation `json:"splitOperations"`
 
 	RoundingFrames dateUtil.RoundingMode `json:"roundingModeFrames"`
 	RoundFramesTo  time.Duration         `json:"roundFramesTo"`
@@ -54,16 +82,19 @@ func (b *BucketReport) Update() {
 		},
 	}
 
-	if b.GroupByYear {
-		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByYear)
-	}
-
-	if b.GroupByMonth {
-		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByMonth)
-	}
-
-	if b.GroupByDay {
-		splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByDay)
+	for _, op := range b.SplitOperations {
+		switch op {
+		case SplitByYear:
+			splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByYear)
+		case SplitByMonth:
+			splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByMonth)
+		case SplitByDay:
+			splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByDay)
+		case SplitByProject:
+			splitLeafBuckets([]*ResultBucket{b.Result}, frames.SplitByProject)
+		default:
+			log.Fatal(fmt.Errorf("unknown split operation %d", op))
+		}
 	}
 
 	updateBucket(b, b.Result)
@@ -77,8 +108,8 @@ func splitLeafBuckets(buckets []*ResultBucket, splitter func([]*store.Frame) []*
 			splitBuckets := splitter(b.Source.Frames)
 			for _, s := range splitBuckets {
 				b.Results = append(b.Results, &ResultBucket{
-					From:   s.From,
-					To:     s.To,
+					Start:  s.Start,
+					End:    s.End,
 					Source: s,
 				})
 			}
@@ -101,18 +132,18 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 	}
 
 	if len(bucket.Results) > 0 {
-		if bucket.From == nil {
-			bucket.From = bucket.Results[0].From
+		if bucket.Start == nil {
+			bucket.Start = bucket.Results[0].Start
 		}
-		if bucket.To == nil {
-			bucket.To = bucket.Results[len(bucket.Results)-1].To
+		if bucket.End == nil {
+			bucket.End = bucket.Results[len(bucket.Results)-1].End
 		}
 	} else {
-		if bucket.From == nil {
-			bucket.From = bucket.Source.Frames[0].Start
+		if bucket.Start == nil {
+			bucket.Start = bucket.Source.Frames[0].Start
 		}
-		if bucket.To == nil {
-			bucket.To = bucket.Source.Frames[len(bucket.Source.Frames)-1].End
+		if bucket.End == nil {
+			bucket.End = bucket.Source.Frames[len(bucket.Source.Frames)-1].End
 		}
 	}
 }
