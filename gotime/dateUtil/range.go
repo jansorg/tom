@@ -51,6 +51,43 @@ func (r DateRange) String() string {
 	return fmt.Sprintf("%s - %s", start, end)
 }
 
+func (r DateRange) ShortString() string {
+	var start, end string
+	if r.Start != nil {
+		start = ShortDateString(*r.Start)
+	}
+	if r.End != nil {
+		end = ShortDateString(*r.End)
+	}
+	return fmt.Sprintf("%s - %s", start, end)
+}
+
+func (r DateRange) MinimalString() string {
+	var y1, d1, y2, d2 int
+	var m1, m2 time.Month
+
+	var start, end string
+	if r.Start != nil {
+		start = ShortDateString(*r.Start)
+		y1, m1, d1 = r.Start.Date()
+	}
+	if r.End != nil {
+		end = ShortDateString(*r.End)
+		y2, m2, d2 = r.End.Date()
+	}
+
+	if y1 == y2 {
+		if m1 == m2 {
+			if d1 == d2 {
+				// print just the year
+				return fmt.Sprintf("%04d", y1)
+			}
+		}
+	}
+
+	return fmt.Sprintf("%s - %s", start, end)
+}
+
 func (r DateRange) Shift(years, months, days int) DateRange {
 	if r.Start != nil && !r.Start.IsZero() {
 		*r.Start = r.Start.AddDate(years, months, days)

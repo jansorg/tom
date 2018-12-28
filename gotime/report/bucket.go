@@ -11,8 +11,8 @@ import (
 )
 
 type ResultBucket struct {
-	DateRange     dateUtil.DateRange `json:"dateRange,omitempty"`
-	UsedDateRange dateUtil.DateRange `json:"usedDateRange,omitempty"`
+	DateRange        dateUtil.DateRange `json:"dateRange,omitempty"`
+	TrackedDateRange dateUtil.DateRange `json:"trackedTime,omitempty"`
 
 	FrameCount    int           `json:"frameCount"`
 	Duration      time.Duration `json:"duration"`

@@ -141,10 +141,10 @@ func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level 
 	}
 
 	if !report.DateRange.Empty() {
-		printfIndenting(level, "Dates: %s\n", report.DateRange.String())
+		printfIndenting(level, "Date range: %s\n", report.DateRange.ShortString())
 	}
-	if !report.UsedDateRange.Empty() {
-		printfIndenting(level, "Range of tracked time: %s\n", report.UsedDateRange.String())
+	if !report.TrackedDateRange.Empty() {
+		printfIndenting(level, "Tracked time: %s\n", report.TrackedDateRange.ShortString())
 	}
 	printfIndenting(level, "Duration: %s\n", report.Duration.String())
 	printfIndenting(level, "Exact Duration: %s\n", report.ExactDuration.String())

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/Azure/go-autorest/autorest/date"
 	"github.com/spf13/cobra"
@@ -56,19 +58,19 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			continue
 		}
 
-		projectName := row[0]
-		notes := row[1]
+		projectName := strings.TrimSpace(row[0])
+		notes := strings.TrimSpace(row[1])
 		dateString := row[2]
 		startString := row[3]
 		endString := row[4]
 
 		// Mon Jan 2 15:04:05 MST 2006
-		startTime, err := date.ParseTime("02.01.06 15:04:05", fmt.Sprintf("%s %s", dateString, startString))
+		startTime, err := parseTime(fmt.Sprintf("%s %s", dateString, startString))
 		if err != nil {
 			return err
 		}
 
-		endTime, err := date.ParseTime("02.01.06 15:04:05", fmt.Sprintf("%s %s", dateString, endString))
+		endTime, err := parseTime(fmt.Sprintf("%s %s", dateString, endString))
 		if err != nil {
 			return err
 		}
@@ -90,4 +92,12 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 	}
 
 	return nil
+}
+
+func parseTime(value string) (time.Time, error) {
+	d, err := date.ParseTime("02.01.06 15:04:05", value)
+	if err != nil {
+		d, err = date.ParseTime("02.01.06 15:04", value)
+	}
+	return d, err
 }

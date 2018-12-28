@@ -21,8 +21,8 @@ func Test_Report(t *testing.T) {
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
 	assert.EqualValues(t, 2*time.Hour, report.Result.ExactDuration)
-	assert.EqualValues(t, start, report.Result.UsedDateRange.Start)
-	assert.EqualValues(t, end, report.Result.UsedDateRange.End)
+	assert.EqualValues(t, start, report.Result.TrackedDateRange.Start)
+	assert.EqualValues(t, end, report.Result.TrackedDateRange.End)
 	assert.EqualValues(t, frameList, report.source.Frames)
 }
 

@@ -58,7 +58,9 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start)
+				if !leaf.Source.Empty() {
+					leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start)
+				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByMonth:
@@ -68,7 +70,9 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start)
+				if !leaf.Source.Empty() {
+					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start)
+				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByDay:
@@ -78,7 +82,9 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start)
+				if !leaf.Source.Empty() {
+					leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start)
+				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByProject:
@@ -88,7 +94,9 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitBy = leaf.Source.First().ProjectId
+				if !leaf.Source.Empty() {
+					leaf.SplitBy = leaf.Source.First().ProjectId
+				}
 			})
 		default:
 			log.Fatal(fmt.Errorf("unknown split operation %d", op))
@@ -120,11 +128,11 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 		first := bucket.Results[0]
 		last := bucket.Results[len(bucket.Results)-1]
 
-		if bucket.UsedDateRange.Start == nil {
-			bucket.UsedDateRange.Start = first.UsedDateRange.Start
+		if bucket.TrackedDateRange.Start == nil {
+			bucket.TrackedDateRange.Start = first.TrackedDateRange.Start
 		}
-		if bucket.UsedDateRange.End == nil {
-			bucket.UsedDateRange.End = last.UsedDateRange.End
+		if bucket.TrackedDateRange.End == nil {
+			bucket.TrackedDateRange.End = last.TrackedDateRange.End
 		}
 
 		if bucket.DateRange.Empty() {
@@ -132,11 +140,11 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 			bucket.DateRange.End = last.DateRange.End
 		}
 	} else if !bucket.Source.Empty() {
-		if bucket.UsedDateRange.Start == nil {
-			bucket.UsedDateRange.Start = bucket.Source.First().Start
+		if bucket.TrackedDateRange.Start == nil {
+			bucket.TrackedDateRange.Start = bucket.Source.First().Start
 		}
-		if bucket.UsedDateRange.End == nil {
-			bucket.UsedDateRange.End = bucket.Source.Last().End
+		if bucket.TrackedDateRange.End == nil {
+			bucket.TrackedDateRange.End = bucket.Source.Last().End
 		}
 	}
 }

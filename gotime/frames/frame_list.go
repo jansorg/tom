@@ -133,26 +133,31 @@ func (f *FrameList) SplitByDay() []*FrameList {
 	})
 }
 
+// Split splits all frames into one ore more parts
+// The part a frame belongs to is coputed by the key function
+// because the distribution of keys is not always in order a map has to be used here
 func (f *FrameList) Split(key func(f *store.Frame) interface{}) []*FrameList {
 	if f.Empty() {
 		return []*FrameList{}
 	}
 
-	var parts []*FrameList
-
-	splitKey := key(f.First())
-	list := NewEmptyFrameList()
-	parts = append(parts, list)
-
-	for _, frame := range f.Frames {
-		newKey := key(frame)
-		if newKey != splitKey {
-			list = NewEmptyFrameList()
-			parts = append(parts, list)
-			splitKey = newKey
-		}
-		list.Append(frame)
+	mapping := map[interface{}][]*store.Frame{}
+	for _, f := range f.Frames {
+		v := key(f)
+		mapping[v] = append(mapping[v], f)
 	}
 
+	var parts []*FrameList
+	for _, frames := range mapping {
+		parts = append(parts, NewSortedFrameList(frames))
+	}
+	sort.SliceStable(parts, func(i, j int) bool {
+		a:=parts[i]
+		b:=parts[j]
+		if a.Empty() {
+			return b.Empty()
+		}
+		return a.First().IsBefore(b.First())
+	})
 	return parts
 }

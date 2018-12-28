@@ -46,3 +46,7 @@ func RoundDuration(value time.Duration, mode RoundingMode, roundTo time.Duration
 	}
 	return result
 }
+
+func ShortDateString(date time.Time) string {
+	return date.Format("2006-01-02")
+}
