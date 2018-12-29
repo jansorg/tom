@@ -22,9 +22,9 @@
                 {{range $leafs}}
                     <tr>
                         <td>{{.Title}}</td>
-                        <td class="time">{{.Duration}}</td>
+                        <td class="time">{{minDuration .Duration}}</td>
                         {{if $showExact}}
-                            <td class="time">{{.ExactDuration}}</td>
+                            <td class="time">{{minDuration .ExactDuration}}</td>
                         {{end}}
                     </tr>
                 {{end}}
@@ -32,9 +32,9 @@
                 <tfoot class="subtotal">
                 <tr>
                     <th>{{i18n "Total"}}</th>
-                    <th class="time">{{$bucket.Duration}}</th>
+                    <th class="time">{{minDuration $bucket.Duration}}</th>
                     {{if $showExact}}
-                        <th class="time">{{$bucket.ExactDuration}}</th>
+                        <th class="time">{{minDuration $bucket.ExactDuration}}</th>
                     {{end}}
                 </tr>
                 </tfoot>
@@ -42,28 +42,9 @@
         {{end}}
 
         {{if .Empty}}
-            <div class="title range">{{.DateRange}}</div>
-            <table class="table-data">
-                <thead>
-                <tr>
-                    <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="time">{{i18n "Duration"}}</th>
-                    {{if $showExact}}
-                        <th class="time">{{i18n "Exact duration"}}</th>
-                    {{end}}
-                </tr>
-                </thead>
-                <tr>
-                    <td>{{i18n "Time:"}}</td>
-                    <td>{{.Duration}}</td>
-                </tr>
-                {{if .IsRounded}}
-                    <tr>
-                        <td>{{i18n "Exact time:"}}</td>
-                        <td>{{.ExactDuration}}</td>
-                    </tr>
-                {{end}}
-            </table>
+            {{if not .DateRange.Empty}}
+                <div class="title range">{{.DateRange}}</div>
+            {{end}}
         {{else}}
             <div class="buckets">
                 {{range .Results}}

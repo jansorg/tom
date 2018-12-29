@@ -25,10 +25,10 @@ func NewReport(templatePath string, ctx *context.GoTimeContext) *Report {
 func (r *Report) Render(results *report.BucketReport) (string, error) {
 	tmpl, err := template.New(filepath.Base(r.templatePath)).Funcs(map[string]interface{}{
 		"i18n": func(key string) string {
-			return r.ctx.Translator.Sprintf(key)
+			return r.ctx.LocalePrinter.Sprintf(key)
 		},
 		"formatNumber": func(n interface{}) string {
-			return r.ctx.NumberFormat.Sprint(n)
+			return r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
 			return date.Format("15:04:05")
@@ -39,8 +39,14 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		"formatDateTime": func(date time.Time) string {
 			return date.Format("2006-01-02 15:04:05")
 		},
-		"formatDuration": func(duration time.Duration) string {
-			return duration.String()
+		"minDuration": func(duration time.Duration) string {
+			return r.ctx.DurationPrinter.Minimal(duration)
+		},
+		"shortDuration": func(duration time.Duration) string {
+			return r.ctx.DurationPrinter.Short(duration)
+		},
+		"longDuration": func(duration time.Duration) string {
+			return r.ctx.DurationPrinter.Long(duration)
 		},
 	}).ParseFiles(r.templatePath, filepath.Join(filepath.Dir(r.templatePath), "commons.gohtml"))
 

@@ -17,12 +17,12 @@
         {{end}}
         <tr>
             <td>{{i18n "Tracked time:"}}</td>
-            <td class="time-left">{{formatDuration .Duration}}</td>
+            <td class="time-left">{{minDuration .Duration}}</td>
         </tr>
         {{if.IsRounded}}
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
-                <td class="time-left">{{formatDuration .ExactDuration}}</td>
+                <td class="time-left">{{minDuration .ExactDuration}}</td>
             </tr>
         {{end}}
         <tr>
@@ -91,6 +91,7 @@
             font-weight: var(--table-th-weight);
         }
 
+
         .table-data {
             width: var(--table-data-width);
         }
@@ -135,13 +136,20 @@
 
         th.time {
             text-align: right;
+            white-space: nowrap;
         }
 
         td.time {
             font-family: var(--time-font-family);
             font-weight: var(--time-font-weight);
-            /*font-size: 0.9em;*/
             text-align: right;
+            white-space: nowrap;
+        }
+
+        tfoot .time {
+            font-family: var(--time-font-family);
+            text-align: right;
+            white-space: nowrap;
         }
 
         .bucket .bucket .buckets {

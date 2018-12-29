@@ -78,9 +78,9 @@ func initConfig() {
 	ctx.StoreHelper = store.NewStoreHelper(dataStore)
 	ctx.Query = query.NewStoreQuery(dataStore)
 	ctx.Language = i18n.FindPreferredLanguages()
-	ctx.Translator = message.NewPrinter(ctx.Language)
-	ctx.NumberFormat = message.NewPrinter(ctx.Language)
+	ctx.LocalePrinter = message.NewPrinter(ctx.Language)
 	ctx.Locale = i18n.FindLocale(ctx.Language)
+	ctx.DurationPrinter = i18n.NewDurationPrinter(ctx.Language)
 }
 
 var rootCmd = &cobra.Command{

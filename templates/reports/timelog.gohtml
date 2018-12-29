@@ -34,7 +34,7 @@
                                 {{end}}
                             {{end}}
                         </td>
-                        <td class="time">{{.Duration}}</td>
+                        <td class="time">{{minDuration .Duration}}</td>
                         <td class="notes">{{.Notes}}</td>
                     </tr>
                 {{end}}
@@ -42,7 +42,7 @@
                 <tfoot class="subtotal">
                 <tr>
                     <th colspan="3">{{i18n "Total"}}</th>
-                    <th class="time">{{.Duration}}</th>
+                    <th class="time">{{minDuration .Duration}}</th>
                     <th></th>
                 </tr>
                 </tfoot>
