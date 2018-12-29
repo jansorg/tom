@@ -1,0 +1,15 @@
+{
+    "language": "de",
+    "messages": [
+        {
+            "id": "total",
+            "message": "total",
+            "translation": "Gesamt"
+        },
+        {
+            "id": "trackedTime",
+            "message": "trackedTime",
+            "translation": "Erfasste Zeit:"
+        }
+    ]
+}

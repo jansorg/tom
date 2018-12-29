@@ -15,6 +15,7 @@ type GoTimeContext struct {
 	Query        query.StoreQuery
 	JsonOutput   bool
 	Language     language.Tag
+	Translator   *message.Printer
 	NumberFormat *message.Printer
 	Locale       locales.Translator
 }

@@ -56,9 +56,9 @@ func userPreference() []language.Tag {
 func GetLocale() (string, error) {
 	// Check the LANG environment variable, common on UNIX.
 	// XXX: we can easily override as a nice feature/bug.
-	envlang, ok := os.LookupEnv("LANG")
+	envLang, ok := os.LookupEnv("LANG")
 	if ok {
-		return strings.Split(envlang, ".")[0], nil
+		return strings.Split(envLang, ".")[0], nil
 	}
 
 	// Exec powershell Get-Culture on Windows.

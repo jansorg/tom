@@ -24,6 +24,16 @@ func NewReport(templatePath string, ctx *context.GoTimeContext) *Report {
 
 func (r *Report) Render(results *report.BucketReport) (string, error) {
 	tmpl, err := template.New(filepath.Base(r.templatePath)).Funcs(map[string]interface{}{
+		"i18n": func(key string) string {
+			switch key {
+			case "total":
+				return r.ctx.Translator.Sprintf("total")
+			case "trackedTime":
+				s := r.ctx.Translator.Sprintf("trackedTime")
+				return s
+			}
+			return "***"+key
+		},
 		"formatNumber": func(n interface{}) string {
 			return r.ctx.NumberFormat.Sprint(n)
 		},
