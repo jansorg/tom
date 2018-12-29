@@ -8,13 +8,13 @@
 
     <div class="bucket">
         {{if $leafs}}
-            <table class="table-data">
+            <table class="table-odd">
                 <thead>
                 <tr>
                     <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="th-time">Duration</th>
+                    <th class="time">Duration</th>
                     {{if $showExact}}
-                        <th class="th-time">Exact Duration</th>
+                        <th class="time">Exact Duration</th>
                     {{end}}
                 </tr>
                 </thead>
@@ -47,9 +47,9 @@
                 <thead>
                 <tr>
                     <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="th-time">Duration</th>
+                    <th class="time">Duration</th>
                     {{if $showExact}}
-                        <th class="th-time">Exact Duration</th>
+                        <th class="time">Exact Duration</th>
                     {{end}}
                 </tr>
                 </thead>
@@ -86,6 +86,7 @@
     <title></title>
 
     {{template "commonCSS"}}
+    {{template "customCSS"}}
 </head>
 <body>
 {{template "Summary" .Result}}

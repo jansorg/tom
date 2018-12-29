@@ -25,31 +25,60 @@
 
 {{define "commonCSS"}}
     <style type="text/css">
+        :root {
+            --font-size: 12pt;
+            --font-family: "system-ui", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            --time-font-family: "Lucida Console", Monaco, monospace;
+
+            --color: black;
+            --bg-color: white;
+            --title-color: #3165b4;
+            --row-odd-color: #eeeeee;
+
+            --table-width: 70%;
+            --table-data-width: 95%;
+            --table-th-color: var(--color);
+            --table-th-bgcolor: var(--bg-color);
+            --table-th-weight: bold;
+            --table-th-fontsize: 0.8rem;
+
+            --summary-border-color: var(--row-odd-color);
+        }
+
         html {
-            font-family: "system-ui", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            font-size: var(--font-size);
+            color: var(--color);
+            background-color: var(--bg-color);
+            font-family: var(--font-family);
         }
 
         table {
-            width: 60%;
+            width: var(--table-width);
             border-collapse: collapse;
-        }
-
-        .table-data {
-
-        }
-
-        .table-data tr:nth-child(2n) td {
-            background-color: #f2f2f2;
-        }
-
-        .table-data th, .table-data td {
-            padding: 0.25rem;
         }
 
         th {
             white-space: nowrap;
             text-align: left;
-            padding: 0 1rem;
+        }
+
+        th, td {
+            padding: 0.25rem 1rem;
+        }
+
+        thead th {
+            background-color: var(--table-th-bgcolor);
+            color: var(--table-th-color);
+            font-size: var(--table-th-fontsize);
+            font-weight: var(--table-th-weight);
+        }
+
+        .table-data {
+            width: var(--table-data-width);
+        }
+
+        .table-odd tr:nth-child(2n-1) td {
+            background-color: var(--row-odd-color);
         }
 
         .th-wide {
@@ -57,18 +86,19 @@
             width: 99%;
         }
 
-        .th-time {
-            padding: 0 0 0 2rem;
+        .align-right {
             text-align: right;
         }
 
-        td {
-            padding: 0 1rem;
+        .title {
+            color: var(--title-color);
+            font-weight: bold;
+            font-size: 1rem;
         }
 
         .summary {
             width: auto;
-            border: 1px solid lightgray;
+            border: 1px solid var(--summary-border-color);
             margin: 0 0 3rem 0;
         }
 
@@ -82,17 +112,16 @@
 
         .subtotal td, .subtotal th {
             font-weight: bold;
-            border-top: 1px solid black;
+            border-top: 2px solid black;
         }
 
-        .time {
+        th.time {
             text-align: right;
-            font-family: "Lucida Console", Monaco, monospace;
         }
 
-        .title {
-            font-weight: bold;
-            size: 1.5em;
+        td.time {
+            font-family: var(--time-font-family);
+            text-align: right;
         }
 
         .bucket .bucket .buckets {
@@ -102,5 +131,16 @@
         .bucket {
             margin: 0 0 2rem 0;
         }
+
+        .start-day, .start-time, .stop-time {
+            white-space: nowrap;
+        }
+
+        .notes {
+            hyphens: auto;
+            -webkit-hyphens: auto;
+        }
     </style>
 {{end}}
+
+{{define "customCSS"}}{{end}}
