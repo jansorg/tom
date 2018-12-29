@@ -7,10 +7,12 @@ import (
 )
 
 func newResetCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+	valisArgs := []string{"all", "projects", "tags", "frames"}
+
 	var cmdReset = &cobra.Command{
 		Use:       "reset [all | projects | tags | frames]",
 		Short:     "resets the local database. Removes projects, tags and frames",
-		ValidArgs: []string{"all", "projects", "tags", "frames"},
+		ValidArgs: valisArgs,
 		Args:      cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			arg := args[0]

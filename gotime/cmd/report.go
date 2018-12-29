@@ -124,23 +124,27 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		},
 	}
 
-	cmd.PersistentFlags().StringVarP(&templatePath, "template", "", "", "Template to use for rendering. This may either be a full path to a template file or the name (wihtout extension) of a template shipped with gotime.")
+	templateAnnotations := make(map[string][]string)
+	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
+	cmd.Flags().StringVarP(&templatePath, "template", "", "", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
+	cmd.Flag("template").Annotations = templateAnnotations
 
-	cmd.PersistentFlags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
-	cmd.PersistentFlags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
-	cmd.PersistentFlags().StringVarP(&projectID, "project", "p", "", "Project filter. Only frames which belong to this project are used for the report.")
+	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
+	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
+	cmd.Flags().StringVarP(&projectID, "project", "p", "", "Project filter. Only frames which belong to this project are used for the report.")
 
-	cmd.PersistentFlags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
-	cmd.PersistentFlags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
-	cmd.PersistentFlags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
+	cmd.Flags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+	cmd.Flags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
-	cmd.PersistentFlags().StringVarP(&splitModes, "split", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.Flags().StringVarP(&splitModes, "split", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
 
-	cmd.PersistentFlags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
-	cmd.PersistentFlags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
-	cmd.PersistentFlags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
-	cmd.PersistentFlags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+	// fixme
+	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
+	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
 	parent.AddCommand(cmd)
 	return cmd

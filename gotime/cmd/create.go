@@ -9,9 +9,7 @@ import (
 func newCreateCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "create",
-		Short: "create new content",
-		Run: func(cmd *cobra.Command, args []string) {
-		},
+		Short: "create new content. See the available sub commands.",
 	}
 
 	newCreateProjectCommand(ctx, cmd)

@@ -23,22 +23,23 @@ var ctx context.GoTimeContext
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	rootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "", "data directory (default is $HOME/.gotime)")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gotime.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&ctx.JsonOutput, "json", "j", false, "output JSON instead of plain text")
+	RootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "", "data directory (default is $HOME/.gotime)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gotime.yaml)")
+	RootCmd.PersistentFlags().BoolVarP(&ctx.JsonOutput, "json", "j", false, "output JSON instead of plain text")
 
-	newProjectsCommand(&ctx, rootCmd)
-	newFramesCommand(&ctx, rootCmd)
-	newCreateCommand(&ctx, rootCmd)
-	newRemoveCommand(&ctx, rootCmd)
-	newStartCommand(&ctx, rootCmd)
-	newStopCommand(&ctx, rootCmd)
-	newReportCommand(&ctx, rootCmd)
-	newImportCommand(&ctx, rootCmd)
-	newResetCommand(&ctx, rootCmd)
-	newStatusCommand(&ctx, rootCmd)
+	newProjectsCommand(&ctx, RootCmd)
+	newFramesCommand(&ctx, RootCmd)
+	newCreateCommand(&ctx, RootCmd)
+	newRemoveCommand(&ctx, RootCmd)
+	newStartCommand(&ctx, RootCmd)
+	newStopCommand(&ctx, RootCmd)
+	newReportCommand(&ctx, RootCmd)
+	newImportCommand(&ctx, RootCmd)
+	newResetCommand(&ctx, RootCmd)
+	newStatusCommand(&ctx, RootCmd)
+	newCompletionCommand(&ctx, RootCmd)
 
-	viper.BindPFlag("data-dir", rootCmd.PersistentFlags().Lookup("data-dir"))
+	viper.BindPFlag("data-dir", RootCmd.PersistentFlags().Lookup("data-dir"))
 }
 
 func fatal(err ...interface{}) {
@@ -83,16 +84,14 @@ func initConfig() {
 	ctx.DurationPrinter = i18n.NewDurationPrinter(ctx.Language)
 }
 
-var rootCmd = &cobra.Command{
-	Use:   "gotime",
-	Short: "gotime is a command line application to track time.",
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
+var RootCmd = &cobra.Command{
+	Use:     "gotime",
+	Short:   "gotime is a command line application to track time.",
+	Version: "1.0.0",
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
