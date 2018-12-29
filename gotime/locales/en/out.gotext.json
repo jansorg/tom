@@ -2,16 +2,100 @@
     "language": "en",
     "messages": [
         {
-            "id": "total",
-            "message": "total",
+            "id": "Date",
+            "message": "Date",
+            "translation": "Date",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Start",
+            "message": "Start",
+            "translation": "Start",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "End",
+            "message": "End",
+            "translation": "End",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Duration",
+            "message": "Duration",
+            "translation": "Duration",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Notes",
+            "message": "Notes",
+            "translation": "Notes",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Total",
+            "message": "Total",
             "translation": "Total",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "trackedTime",
-            "message": "trackedTime",
-            "translation": "Tracked time",
+            "id": "Exact duration",
+            "message": "Exact duration",
+            "translation": "Exact duration",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Time:",
+            "message": "Time:",
+            "translation": "Time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Exact time:",
+            "message": "Exact time:",
+            "translation": "Exact time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Project",
+            "message": "Project",
+            "translation": "Project",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Time range:",
+            "message": "Time range:",
+            "translation": "Time range:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Tracked time:",
+            "message": "Tracked time:",
+            "translation": "Tracked time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Exact tracked time:",
+            "message": "Exact tracked time:",
+            "translation": "Exact tracked time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Frames:",
+            "message": "Frames:",
+            "translation": "Frames:",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         }

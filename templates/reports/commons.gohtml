@@ -5,28 +5,28 @@
         <tbody>
         {{if.IsProjectBucket}}
             <tr>
-                <td>Project</td>
+                <td>{{i18n "Project"}}</td>
                 <td class="title">{{.Title}}</td>
             </tr>
         {{end}}
         {{if not .DateRange.Empty}}
             <tr>
-                <td>Time range:</td>
+                <td>{{i18n "Time range:"}}</td>
                 <td class="time-range">{{.DateRange.MinimalString}}</td>
             </tr>
         {{end}}
         <tr>
-            <td>{{i18n "trackedTime"}}</td>
+            <td>{{i18n "Tracked time:"}}</td>
             <td class="time-left">{{formatDuration .Duration}}</td>
         </tr>
         {{if.IsRounded}}
             <tr>
-                <td>Exact tracked time:</td>
+                <td>{{i18n "Exact tracked time:"}}</td>
                 <td class="time-left">{{formatDuration .ExactDuration}}</td>
             </tr>
         {{end}}
         <tr>
-            <td>Frames:</td>
+            <td>{{i18n "Frames:"}}</td>
             <td>{{formatNumber .FrameCount}}</td>
         </tr>
         </tbody>

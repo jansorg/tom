@@ -2,14 +2,74 @@
     "language": "de",
     "messages": [
         {
-            "id": "total",
-            "message": "total",
+            "id": "Date",
+            "message": "Date",
+            "translation": "Datum"
+        },
+        {
+            "id": "Start",
+            "message": "Start",
+            "translation": "Beginn"
+        },
+        {
+            "id": "End",
+            "message": "End",
+            "translation": "Ende"
+        },
+        {
+            "id": "Duration",
+            "message": "Duration",
+            "translation": "Dauer"
+        },
+        {
+            "id": "Notes",
+            "message": "Notes",
+            "translation": "Anmerkungen"
+        },
+        {
+            "id": "Total",
+            "message": "Total",
             "translation": "Gesamt"
         },
         {
-            "id": "trackedTime",
-            "message": "trackedTime",
+            "id": "Exact duration",
+            "message": "Exact duration",
+            "translation": "Genaue Dauer"
+        },
+        {
+            "id": "Time:",
+            "message": "Time:",
+            "translation": "Zeit:"
+        },
+        {
+            "id": "Exact time:",
+            "message": "Exact time:",
+            "translation": "Genaue Zeit:"
+        },
+        {
+            "id": "Project",
+            "message": "Project",
+            "translation": "Projekt"
+        },
+        {
+            "id": "Time range:",
+            "message": "Time range:",
+            "translation": "Zeitbereich"
+        },
+        {
+            "id": "Tracked time:",
+            "message": "Tracked time:",
             "translation": "Erfasste Zeit:"
+        },
+        {
+            "id": "Exact tracked time:",
+            "message": "Exact tracked time:",
+            "translation": "Exakte erfasste Zeit:"
+        },
+        {
+            "id": "Frames:",
+            "message": "Frames:",
+            "translation": "Zeiteinheiten:"
         }
     ]
 }

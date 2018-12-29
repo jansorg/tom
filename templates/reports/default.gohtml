@@ -12,9 +12,9 @@
                 <thead>
                 <tr>
                     <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="time">Duration</th>
+                    <th class="time">{{i18n "Duration"}}</th>
                     {{if $showExact}}
-                        <th class="time">Exact Duration</th>
+                        <th class="time">{{i18n "Exact duration"}}</th>
                     {{end}}
                 </tr>
                 </thead>
@@ -31,7 +31,7 @@
                 </tbody>
                 <tfoot class="subtotal">
                 <tr>
-                    <th></th>
+                    <th>{{i18n "Total"}}</th>
                     <th class="time">{{$bucket.Duration}}</th>
                     {{if $showExact}}
                         <th class="time">{{$bucket.ExactDuration}}</th>
@@ -47,19 +47,19 @@
                 <thead>
                 <tr>
                     <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="time">Duration</th>
+                    <th class="time">{{i18n "Duration"}}</th>
                     {{if $showExact}}
-                        <th class="time">Exact Duration</th>
+                        <th class="time">{{i18n "Exact duration"}}</th>
                     {{end}}
                 </tr>
                 </thead>
                 <tr>
-                    <td>Time:</td>
+                    <td>{{i18n "Time:"}}</td>
                     <td>{{.Duration}}</td>
                 </tr>
                 {{if .IsRounded}}
                     <tr>
-                        <td>Exact Time:</td>
+                        <td>{{i18n "Exact time:"}}</td>
                         <td>{{.ExactDuration}}</td>
                     </tr>
                 {{end}}
