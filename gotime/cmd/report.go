@@ -134,7 +134,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.PersistentFlags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.PersistentFlags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 
-	cmd.PersistentFlags().StringVarP(&splitModes, "split-by", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.PersistentFlags().StringVarP(&splitModes, "split", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
 
 	cmd.PersistentFlags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.PersistentFlags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")

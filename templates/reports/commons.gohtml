@@ -9,6 +9,12 @@
                 <td class="title">{{.Title}}</td>
             </tr>
         {{end}}
+        {{if not .DateRange.Empty}}
+            <tr>
+                <td>Time range:</td>
+                <td class="time-range">{{.DateRange.MinimalString}}</td>
+            </tr>
+        {{end}}
         <tr>
             <td>Tracked time:</td>
             <td class="time-left">{{formatDuration .Duration}}</td>
@@ -28,7 +34,8 @@
         :root {
             --font-size: 12pt;
             --font-family: "system-ui", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            --time-font-family: "Lucida Console", Monaco, monospace;
+            --time-font-family: monospace;
+            --time-font-weight: normal;
 
             --color: black;
             --bg-color: white;
@@ -57,13 +64,20 @@
             border-collapse: collapse;
         }
 
+
+        th, td {
+            line-height: 1.25rem;
+            padding: 0.25rem 1rem;
+        }
+
         th {
             white-space: nowrap;
             text-align: left;
+            vertical-align: bottom;
         }
 
-        th, td {
-            padding: 0.25rem 1rem;
+        td {
+            vertical-align: top;
         }
 
         thead th {
@@ -93,12 +107,12 @@
         .title {
             color: var(--title-color);
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.2rem;
         }
 
         .summary {
             width: auto;
-            border: 1px solid var(--summary-border-color);
+            border: 3px solid var(--summary-border-color);
             margin: 0 0 3rem 0;
         }
 
@@ -121,6 +135,8 @@
 
         td.time {
             font-family: var(--time-font-family);
+            font-weight: var(--time-font-weight);
+            /*font-size: 0.9em;*/
             text-align: right;
         }
 
@@ -139,6 +155,30 @@
         .notes {
             hyphens: auto;
             -webkit-hyphens: auto;
+        }
+    </style>
+
+    <style type="text/css" media="print">
+        @page {
+            size: auto;
+            margin: 10mm;
+        }
+
+        table {
+            page-break-inside: auto
+        }
+
+        tr {
+            page-break-inside: avoid;
+            page-break-after: auto
+        }
+
+        thead {
+            display: table-header-group
+        }
+
+        tfoot {
+            display: table-footer-group
         }
     </style>
 {{end}}
