@@ -3,41 +3,52 @@ package dateUtil
 import (
 	"fmt"
 	"time"
+
+	"github.com/go-playground/locales"
 )
 
-func NewDateRange(start *time.Time, end *time.Time) DateRange {
-	dateRange := DateRange{Start: start, End: end}
+func NewDateRange(start *time.Time, end *time.Time, locale locales.Translator) DateRange {
+	if locale == nil {
+		panic("locale not set")
+	}
+
+	dateRange := DateRange{
+		Start:  start,
+		End:    end,
+		locale: locale,
+	}
 	dateRange.debug = dateRange.String()
 	return dateRange
 }
 
-func NewYearRange(date time.Time) DateRange {
+func NewYearRange(date time.Time, locale locales.Translator) DateRange {
 	start := time.Date(date.Year(), time.January, 1, 0, 0, 0, 0, date.Location())
 	end := start.AddDate(1, 0, 0)
 
-	return NewDateRange(&start, &end)
+	return NewDateRange(&start, &end, locale)
 }
 
-func NewMonthRange(date time.Time) DateRange {
+func NewMonthRange(date time.Time, locale locales.Translator) DateRange {
 	y, m, _ := date.Date()
 	start := time.Date(y, m, 1, 0, 0, 0, 0, date.Location())
 	end := start.AddDate(0, 1, 0)
 
-	return NewDateRange(&start, &end)
+	return NewDateRange(&start, &end, locale)
 }
 
-func NewDayRange(date time.Time) DateRange {
+func NewDayRange(date time.Time, locale locales.Translator) DateRange {
 	y, m, d := date.Date()
 	start := time.Date(y, m, d, 0, 0, 0, 0, date.Location())
 	end := start.AddDate(0, 0, 1)
 
-	return NewDateRange(&start, &end)
+	return NewDateRange(&start, &end, locale)
 }
 
 type DateRange struct {
-	Start *time.Time `json:"start"`
-	End   *time.Time `json:"end"`
-	debug string
+	Start  *time.Time `json:"start"`
+	End    *time.Time `json:"end"`
+	debug  string
+	locale locales.Translator
 }
 
 func (r DateRange) String() string {
@@ -87,7 +98,7 @@ func (r DateRange) MinimalString() string {
 
 	// return name of month and year if it's exactly spanning a month
 	if d1 == 1 && d2 == 1 && (y1 == y2 && m1 == m2-1 || y1 == y2-1 && m1 == time.December && m2 == time.January) {
-		return fmt.Sprintf("%s %d", m1.String(), y1)
+		return fmt.Sprintf("%s %d", r.locale.MonthWide(m1), y1)
 	}
 
 	if y1 == y2-1 && m1 == time.January && m2 == time.January && d1 == 1 && d2 == 1 {

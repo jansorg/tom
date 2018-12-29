@@ -62,9 +62,10 @@ func (b *BucketReport) Update() {
 	}
 
 	b.Result = &ResultBucket{
-		ctx:     b.ctx,
-		Source:  b.source,
-		SplitBy: b.ProjectID,
+		ctx:       b.ctx,
+		Source:    b.source,
+		SplitBy:   b.ProjectID,
+		DateRange: dateUtil.NewDateRange(nil, nil, b.ctx.Locale),
 	}
 
 	for _, op := range b.SplitOperations {
@@ -77,7 +78,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start)
+					leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -89,7 +90,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start)
+					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -101,7 +102,7 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start)
+					leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})

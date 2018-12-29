@@ -8,8 +8,10 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"golang.org/x/text/message"
 
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/i18n"
 	"github.com/jansorg/gotime/gotime/query"
 	"github.com/jansorg/gotime/gotime/store"
 )
@@ -75,6 +77,9 @@ func initConfig() {
 	ctx.Store = dataStore
 	ctx.StoreHelper = store.NewStoreHelper(dataStore)
 	ctx.Query = query.NewStoreQuery(dataStore)
+	ctx.Language = i18n.FindPreferredLanguages()
+	ctx.NumberFormat = message.NewPrinter(ctx.Language)
+	ctx.Locale = i18n.FindLocale(ctx.Language)
 }
 
 var rootCmd = &cobra.Command{

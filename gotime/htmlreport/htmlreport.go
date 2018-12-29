@@ -6,21 +6,27 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/report"
 )
 
 type Report struct {
 	templatePath string
+	ctx          *context.GoTimeContext
 }
 
-func NewReport(templatePath string) *Report {
+func NewReport(templatePath string, ctx *context.GoTimeContext) *Report {
 	return &Report{
 		templatePath: templatePath,
+		ctx:          ctx,
 	}
 }
 
 func (r *Report) Render(results *report.BucketReport) (string, error) {
 	tmpl, err := template.New(filepath.Base(r.templatePath)).Funcs(map[string]interface{}{
+		"formatNumber": func(n interface{}) string {
+			return r.ctx.NumberFormat.Sprint(n)
+		},
 		"formatTime": func(date time.Time) string {
 			return date.Format("15:04:05")
 		},

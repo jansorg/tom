@@ -38,7 +38,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			var filterRange dateUtil.DateRange
+			filterRange := dateUtil.NewDateRange(nil, nil, ctx.Locale)
 
 			if fromDateString != "" {
 				start, err := parseDate(&fromDateString)
@@ -58,11 +58,11 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 			// day, month, year params override the filter values
 			if cmd.Flag("day").Changed {
-				filterRange = dateUtil.NewDayRange(time.Now()).Shift(0, 0, day)
+				filterRange = dateUtil.NewDayRange(time.Now(), ctx.Locale).Shift(0, 0, day)
 			} else if cmd.Flag("month").Changed {
-				filterRange = dateUtil.NewMonthRange(time.Now()).Shift(0, month, 0)
+				filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale).Shift(0, month, 0)
 			} else if cmd.Flag("year").Changed {
-				filterRange = dateUtil.NewYearRange(time.Now()).Shift(year, 0, 0)
+				filterRange = dateUtil.NewYearRange(time.Now(), ctx.Locale).Shift(year, 0, 0)
 			}
 
 			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
@@ -86,7 +86,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 			}
 
-			// proejct filter
+			// project filter
 			if projectID != "" {
 				// if it's a name resolve it to the ID
 				if project, err := context.Query.ProjectByFullName(projectID); err == nil {
@@ -109,7 +109,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.Update()
 
 			if templatePath != "" {
-				if err:= printTemplate(context, templatePath, frameReport); err != nil {
+				if err := printTemplate(context, templatePath, frameReport); err != nil {
 					fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
 				}
 			} else if context.JsonOutput {
@@ -147,7 +147,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 }
 
 func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport) error {
-	t := htmlreport.NewReport(templatePath)
+	t := htmlreport.NewReport(templatePath, ctx)
 	out, err := t.Render(report)
 	if err != nil {
 		return err
