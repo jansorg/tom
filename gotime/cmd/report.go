@@ -11,6 +11,7 @@ import (
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/frames"
+	"github.com/jansorg/gotime/gotime/htmlreport"
 	"github.com/jansorg/gotime/gotime/report"
 )
 
@@ -30,6 +31,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	var roundModeFrames string
 	var roundModeTotal string
+
+	var templatePath string
 
 	var cmd = &cobra.Command{
 		Use:   "report",
@@ -95,7 +98,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			}
 
 			storeFrames := context.Store.Frames()
-			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames))
+			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames), context)
 			frameReport.ProjectID = projectID
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
@@ -105,7 +108,11 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.SplitOperations = splitOperations
 			frameReport.Update()
 
-			if context.JsonOutput {
+			if templatePath != "" {
+				if err:= printTemplate(context, templatePath, frameReport); err != nil {
+					fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
+				}
+			} else if context.JsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
 				if err != nil {
 					fatal(err)
@@ -116,6 +123,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			}
 		},
 	}
+
+	cmd.PersistentFlags().StringVarP(&templatePath, "template", "", "", "Template to use for rendering. This may either be a full path to a template file or the name (wihtout extension) of a template shipped with gotime.")
 
 	cmd.PersistentFlags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
 	cmd.PersistentFlags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
@@ -134,9 +143,18 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.PersistentFlags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
 	parent.AddCommand(cmd)
-	newReportHtmlCommand(context, cmd)
-
 	return cmd
+}
+
+func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport) error {
+	t := htmlreport.NewReport(templatePath)
+	out, err := t.Render(report)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(out)
+	return nil
 }
 
 func parseDate(dateString *string) (*time.Time, error) {
@@ -148,7 +166,7 @@ func parseDate(dateString *string) (*time.Time, error) {
 }
 
 func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level int) {
-	title := report.Title(ctx)
+	title := report.Title()
 	if title != "" {
 		printlnIndenting(level-1, title)
 	} else if level == 1 {

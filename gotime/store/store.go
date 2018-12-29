@@ -25,6 +25,8 @@ type Store interface {
 	Reset(projects, tags, frames bool) error
 
 	Projects() []*Project
+	ProjectByID(id string) (*Project, error)
+	ProjectIsChild(parentID, id string) bool
 	AddProject(project Project) (*Project, error)
 	UpdateProject(project Project) (*Project, error)
 	RemoveProject(id string) error
@@ -68,10 +70,11 @@ type DataStore struct {
 	frameFile   string
 	projectFile string
 
-	mu       sync.RWMutex
-	projects []*Project
-	tags     []*Tag
-	frames   []*Frame
+	mu          sync.RWMutex
+	projectsMap map[string]*Project
+	projects    []*Project
+	tags        []*Tag
+	frames      []*Frame
 }
 
 func (d *DataStore) StartBatch() {
@@ -125,6 +128,7 @@ func (d *DataStore) loadLocked() error {
 	if err = json.Unmarshal(data, &d.projects); err != nil {
 		return err
 	}
+	d.updateProjectsMapping()
 	for _, p := range d.projects {
 		d.updateProjectInternals(p)
 	}
@@ -217,6 +221,17 @@ func (d *DataStore) Projects() []*Project {
 	return d.projects
 }
 
+func (d *DataStore) ProjectByID(id string) (*Project, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	p, ok := d.projectsMap[id]
+	if !ok {
+		return nil, fmt.Errorf("no project found for %s", id)
+	}
+	return p, nil
+}
+
 func (d *DataStore) AddProject(project Project) (*Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -224,6 +239,8 @@ func (d *DataStore) AddProject(project Project) (*Project, error) {
 	project.ID = nextID()
 	d.updateProjectInternals(&project)
 	d.projects = append(d.projects, &project)
+	d.updateProjectsMapping()
+
 	return &project, d.saveLocked()
 }
 
@@ -267,6 +284,7 @@ func (d *DataStore) RemoveProject(id string) error {
 	for i, p := range d.projects {
 		if p.ID == id {
 			d.projects = append(d.projects[:i], d.projects[i+1:]...)
+			d.updateProjectsMapping()
 			return d.saveLocked()
 		}
 	}
@@ -301,6 +319,28 @@ func (d *DataStore) FindProjects(filter func(*Project) bool) []*Project {
 		}
 	}
 	return result
+}
+
+func (d *DataStore) ProjectIsChild(parentID, id string) bool {
+	if parentID == id {
+		return true
+	}
+
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	for id != "" {
+		if id == parentID {
+			return true
+		}
+
+		project, ok := d.projectsMap[id]
+		if !ok {
+			return false
+		}
+		id = project.ParentID
+	}
+	return false
 }
 
 func (d *DataStore) Tags() []*Tag {
@@ -440,4 +480,11 @@ func (d *DataStore) FindFrames(filter func(*Frame) bool) []*Frame {
 		}
 	}
 	return result
+}
+
+func (d *DataStore) updateProjectsMapping() {
+	d.projectsMap = map[string]*Project{}
+	for _, p := range d.projects {
+		d.projectsMap[p.ID] = p
+	}
 }

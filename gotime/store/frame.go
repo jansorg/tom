@@ -15,6 +15,17 @@ func (f *Frame) IsStopped() bool {
 	return f.End != nil && !f.End.IsZero()
 }
 
+func (f *Frame) IsSingleDay() bool {
+	if f.IsActive() {
+		return true
+	}
+
+	y1,m1,d1 := f.Start.Date()
+	y2,m2,d2 := f.Start.Date()
+
+	return y1 == y2 && m1 == m2 && d1 == d2
+}
+
 func (f *Frame) IsActive() bool {
 	return f.End == nil || f.End.IsZero()
 }

@@ -3,8 +3,11 @@ package report
 import (
 	"fmt"
 	"log"
+	"sort"
+	"strings"
 	"time"
 
+	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/store"
@@ -20,7 +23,7 @@ const (
 )
 
 type BucketReport struct {
-	store  *store.Store
+	ctx    *context.GoTimeContext
 	source *frames.FrameList
 
 	Result *ResultBucket `json:"result"`
@@ -37,11 +40,16 @@ type BucketReport struct {
 	RoundTotalsTo      time.Duration         `json:"roundTotalsTo"`
 }
 
-func NewBucketReport(frameList *frames.FrameList) *BucketReport {
+func NewBucketReport(frameList *frames.FrameList, context *context.GoTimeContext) *BucketReport {
 	report := &BucketReport{
+		ctx:    context,
 		source: frameList,
 	}
 	return report
+}
+
+func (b *BucketReport) IsRounding() bool {
+	return b.RoundFramesTo != 0 && b.RoundingModeFrames != dateUtil.RoundNone || b.RoundTotalsTo != 0 && b.RoundingModeTotals != dateUtil.RoundNone
 }
 
 func (b *BucketReport) Update() {
@@ -49,12 +57,14 @@ func (b *BucketReport) Update() {
 
 	if b.ProjectID != "" {
 		b.source.Filter(func(frame *store.Frame) bool {
-			return frame.ProjectId == b.ProjectID
+			return b.ctx.Store.ProjectIsChild(b.ProjectID, frame.ProjectId)
 		})
 	}
 
 	b.Result = &ResultBucket{
-		Source: b.source,
+		ctx:     b.ctx,
+		Source:  b.source,
+		SplitBy: b.ProjectID,
 	}
 
 	for _, op := range b.SplitOperations {
@@ -105,6 +115,11 @@ func (b *BucketReport) Update() {
 				if !leaf.Source.Empty() {
 					leaf.SplitBy = leaf.Source.First().ProjectId
 				}
+			})
+			sort.SliceStable(b.Result.Results, func(i, j int) bool {
+				a := b.Result.Results[i]
+				b := b.Result.Results[j]
+				return strings.Compare(strings.ToLower(a.Title()), strings.ToLower(b.Title())) < 0
 			})
 		default:
 			log.Fatal(fmt.Errorf("unknown split operation %d", op))

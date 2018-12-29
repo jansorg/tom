@@ -1,0 +1,73 @@
+{{- /*gotype: github.com/jansorg/gotime/gotime/report.BucketReport*/ -}}
+
+{{define "Bucket"}}
+    {{- /*gotype: github.com/jansorg/gotime/gotime/report.ResultBucket*/ -}}
+    {{$bucket := .}}
+    {{$leafs := .LeafChildren}}
+    {{$showExact := .HasRoundedChildren}}
+
+    <div class="bucket">
+        <div class="title">{{.Title}}</div>
+
+        {{if .Empty}}
+            <table class="table-data">
+                <thead>
+                <tr>
+                    <th class="th-date">Date</th>
+                    <th class="th-date">Start</th>
+                    <th class="th-date">End</th>
+                    <th class="th-time">Duration</th>
+                    <th class="th-wide">Notes</th>
+                </tr>
+                </thead>
+                <tbody>
+                {{range .Source.Frames}}
+                    <tr>
+                        <td class="start-day">{{formatDate .Start}}</td>
+                        <td class="start-time">{{formatTime .Start}}</td>
+                        <td class="stop-time">
+                            {{if .IsStopped}}
+                                {{if .IsSingleDay}}
+                                    {{formatTime .End}}
+                                {{else}}
+                                    {{formatDateTime .End}}
+                                {{end}}
+                            {{end}}
+                        </td>
+                        <td class="time">{{.Duration}}</td>
+                        <td class="notes">{{.Notes}}</td>
+                    </tr>
+                {{end}}
+                </tbody>
+                <tfoot class="subtotal">
+                <tr>
+                    <th colspan="3">Total</th>
+                    <th class="th-time">{{.Duration}}</th>
+                    <th></th>
+                </tr>
+                </tfoot>
+            </table>
+        {{else}}
+            {{range .Results}}
+                {{template "Bucket" .}}
+            {{end}}
+        {{end}}
+    </div>
+{{end}}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title></title>
+
+    {{template "commonCSS"}}
+</head>
+<body>
+{{template "Summary" .Result}}
+{{template "Bucket" .Result}}
+</body>
+</html>

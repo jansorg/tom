@@ -85,6 +85,15 @@ func (r DateRange) MinimalString() string {
 		}
 	}
 
+	// return name of month and year if it's exactly spanning a month
+	if d1 == 1 && d2 == 1 && (y1 == y2 && m1 == m2-1 || y1 == y2-1 && m1 == time.December && m2 == time.January) {
+		return fmt.Sprintf("%s %d", m1.String(), y1)
+	}
+
+	if y1 == y2-1 && m1 == time.January && m2 == time.January && d1 == 1 && d2 == 1 {
+		return fmt.Sprintf("%d", y1)
+	}
+
 	return fmt.Sprintf("%s - %s", start, end)
 }
 

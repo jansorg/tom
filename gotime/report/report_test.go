@@ -16,7 +16,7 @@ func Test_Report(t *testing.T) {
 	end := newDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*store.Frame{{Start: start, End: end}}
-	report := NewBucketReport(frames.NewFrameList(frameList))
+	report := NewBucketReport(frames.NewFrameList(frameList), nil)
 	report.Update()
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
@@ -40,7 +40,7 @@ func Test_ReportSplitYear(t *testing.T) {
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(frames.NewSortedFrameList(frameList))
+	report := NewBucketReport(frames.NewSortedFrameList(frameList), nil)
 	report.SplitOperations = []SplitOperation{SplitByYear}
 	report.Update()
 

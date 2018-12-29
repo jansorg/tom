@@ -21,6 +21,7 @@ type StoreQuery interface {
 	FramesByProject(id string) []*store.Frame
 	FramesByTag(id string) []*store.Frame
 	UnstoppedFrames() []*store.Frame
+	IsToplevelProject(id string) bool
 }
 
 func NewStoreQuery(store store.Store) StoreQuery {
@@ -51,9 +52,12 @@ func (q *defaultStoreQuery) AnyByID(id string) (interface{}, error) {
 }
 
 func (q *defaultStoreQuery) ProjectByID(id string) (*store.Project, error) {
-	return q.store.FindFirstProject(func(p *store.Project) bool {
-		return p.ID == id
-	})
+	return q.store.ProjectByID(id)
+}
+
+func (q *defaultStoreQuery) IsToplevelProject(id string) bool {
+	p, err := q.ProjectByID(id)
+	return err != nil && p.ParentID == ""
 }
 
 func (q *defaultStoreQuery) ProjectByFullName(name string) (*store.Project, error) {

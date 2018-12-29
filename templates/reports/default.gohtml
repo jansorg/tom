@@ -1,3 +1,81 @@
+{{- /*gotype: github.com/jansorg/gotime/gotime/report.BucketReport*/ -}}
+
+{{define "Bucket"}}
+    {{- /*gotype: github.com/jansorg/gotime/gotime/report.ResultBucket*/ -}}
+    {{$bucket := .}}
+    {{$leafs := .LeafChildren}}
+    {{$showExact := .HasRoundedChildren}}
+
+    <div class="bucket">
+        {{if $leafs}}
+            <table class="table-data">
+                <thead>
+                <tr>
+                    <th class="th-wide"><span class="title">{{.Title}}</span></th>
+                    <th class="th-time">Duration</th>
+                    {{if $showExact}}
+                        <th class="th-time">Exact Duration</th>
+                    {{end}}
+                </tr>
+                </thead>
+                <tbody>
+                {{range $leafs}}
+                    <tr>
+                        <td>{{.Title}}</td>
+                        <td class="time">{{.Duration}}</td>
+                        {{if $showExact}}
+                            <td class="time">{{.ExactDuration}}</td>
+                        {{end}}
+                    </tr>
+                {{end}}
+                </tbody>
+                <tfoot class="subtotal">
+                <tr>
+                    <th></th>
+                    <th class="time">{{$bucket.Duration}}</th>
+                    {{if $showExact}}
+                        <th class="time">{{$bucket.ExactDuration}}</th>
+                    {{end}}
+                </tr>
+                </tfoot>
+            </table>
+        {{end}}
+
+        {{if .Empty}}
+            <div class="title range">{{.DateRange}}</div>
+            <table class="table-data">
+                <thead>
+                <tr>
+                    <th class="th-wide"><span class="title">{{.Title}}</span></th>
+                    <th class="th-time">Duration</th>
+                    {{if $showExact}}
+                        <th class="th-time">Exact Duration</th>
+                    {{end}}
+                </tr>
+                </thead>
+                <tr>
+                    <td>Time:</td>
+                    <td>{{.Duration}}</td>
+                </tr>
+                {{if .IsRounded}}
+                    <tr>
+                        <td>Exact Time:</td>
+                        <td>{{.ExactDuration}}</td>
+                    </tr>
+                {{end}}
+            </table>
+        {{else}}
+            <div class="buckets">
+                {{range .Results}}
+                    {{if not .Empty}}
+                        {{template "Bucket" .}}
+                    {{end}}
+                {{end}}
+            </div>
+        {{end}}
+    </div>
+{{end}}
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,11 +84,11 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title></title>
+
+    {{template "commonCSS"}}
 </head>
 <body>
-{{range .Items}}
-    {{.Name}}
-    {{.Duration}}
-{{end}}
+{{template "Summary" .Result}}
+{{template "Bucket" .Result}}
 </body>
 </html>
