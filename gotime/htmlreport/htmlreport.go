@@ -27,6 +27,10 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		"i18n": func(key string) string {
 			return r.ctx.LocalePrinter.Sprintf(key)
 		},
+		"langBase": func() string {
+			base, _ := r.ctx.Language.Base()
+			return base.String()
+		},
 		"formatNumber": func(n interface{}) string {
 			return r.ctx.LocalePrinter.Sprint(n)
 		},

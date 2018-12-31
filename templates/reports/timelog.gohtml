@@ -7,11 +7,13 @@
     {{$showExact := .HasRoundedChildren}}
 
     <div class="bucket">
-        <div class="title">{{.Title}}</div>
-
         {{if .Empty}}
             <table class="table-data table-odd">
                 <thead>
+                <tr>
+                    {{/*embedded title to keep title and tables together in printed PDFs*/}}
+                    <th colspan="5" class="title">{{.Title}}</th>
+                </tr>
                 <tr>
                     <th class="date">{{i18n "Date"}}</th>
                     <th class="date">{{i18n "Start"}}</th>
@@ -48,6 +50,7 @@
                 </tfoot>
             </table>
         {{else}}
+            <div class="title">{{.Title}}</div>
             {{range .Results}}
                 {{template "Bucket" .}}
             {{end}}
