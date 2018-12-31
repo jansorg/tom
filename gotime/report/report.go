@@ -28,8 +28,9 @@ type BucketReport struct {
 
 	Result *ResultBucket `json:"result"`
 
-	ProjectID   string             `json:"projectID,omitempty"`
-	FilterRange dateUtil.DateRange `json:"dateRange,omitempty"`
+	IncludeActiveFrames bool               `json:"includeActiveFrames"`
+	ProjectIDs          []string           `json:"projectIDs,omitempty"`
+	FilterRange         dateUtil.DateRange `json:"dateRange,omitempty"`
 
 	SplitOperations []SplitOperation `json:"splitOperations"`
 
@@ -55,16 +56,20 @@ func (b *BucketReport) IsRounding() bool {
 func (b *BucketReport) Update() {
 	b.source.FilterByDatePtr(b.FilterRange.Start, b.FilterRange.End, false)
 
-	if b.ProjectID != "" {
+	if len(b.ProjectIDs) > 0 {
+		// sort IDs to use binary search
+		sort.Strings(b.ProjectIDs)
 		b.source.Filter(func(frame *store.Frame) bool {
-			return b.ctx.Store.ProjectIsChild(b.ProjectID, frame.ProjectId)
+			i := sort.SearchStrings(b.ProjectIDs, frame.ProjectId)
+			return i <= len(b.ProjectIDs) && b.ProjectIDs[i] == frame.ProjectId
 		})
 	}
 
 	b.Result = &ResultBucket{
-		ctx:       b.ctx,
-		Source:    b.source,
-		SplitBy:   b.ProjectID,
+		ctx:    b.ctx,
+		Source: b.source,
+		// fixme
+		// SplitBy:   b.ProjectID,
 		DateRange: dateUtil.NewDateRange(nil, nil, b.ctx.Locale),
 	}
 

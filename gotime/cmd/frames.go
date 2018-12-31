@@ -24,7 +24,7 @@ func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				}
 			} else {
 				for _, p := range frames {
-					fmt.Println(p.Id)
+					fmt.Println(p.ID)
 				}
 			}
 		},

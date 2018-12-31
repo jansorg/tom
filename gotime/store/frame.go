@@ -3,7 +3,7 @@ package store
 import "time"
 
 type Frame struct {
-	Id        string     `json:"id"`
+	ID        string     `json:"id"`
 	ProjectId string     `json:"project"`
 	Start     *time.Time `json:"start,omitempty"`
 	End       *time.Time `json:"end,omitempty"`
@@ -54,7 +54,7 @@ func (f *Frame) IsAfter(other *Frame) bool {
 func NewStartedFrame(project *Project) Frame {
 	now := time.Now()
 	return Frame{
-		Id:        nextID(),
+		ID:        nextID(),
 		ProjectId: project.ID,
 		Start:     &now,
 		Updated:   &now,

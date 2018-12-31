@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -19,6 +20,7 @@ func nextID() string {
 }
 
 type Store interface {
+	DirPath() string
 	StartBatch()
 	StopBatch()
 
@@ -49,6 +51,10 @@ type Store interface {
 }
 
 func NewStore(dir string) (Store, error) {
+	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
+		return nil, fmt.Errorf("directory %s does not exist", dir)
+	}
+
 	store := &DataStore{
 		path:        dir,
 		projectFile: filepath.Join(dir, "projects.json"),
@@ -56,7 +62,7 @@ func NewStore(dir string) (Store, error) {
 		frameFile:   filepath.Join(dir, "frames.json"),
 	}
 
-	if err := store.load(); err != nil {
+	if err := store.loadLocked(); err != nil {
 		return nil, err
 	}
 	return store, nil
@@ -75,6 +81,10 @@ type DataStore struct {
 	projects    []*Project
 	tags        []*Tag
 	frames      []*Frame
+}
+
+func (d *DataStore) DirPath() string {
+	return filepath.Dir(d.projectFile)
 }
 
 func (d *DataStore) StartBatch() {
@@ -122,31 +132,38 @@ func (d *DataStore) loadLocked() error {
 	var data []byte
 	var err error
 
-	if data, err = ioutil.ReadFile(d.projectFile); err != nil {
-		return err
+	if fileExists(d.projectFile) {
+		if data, err = ioutil.ReadFile(d.projectFile); err != nil {
+			return err
+		}
+		if err = json.Unmarshal(data, &d.projects); err != nil {
+			return err
+		}
 	}
-	if err = json.Unmarshal(data, &d.projects); err != nil {
-		return err
+
+	if fileExists(d.tagFile) {
+		if data, err = ioutil.ReadFile(d.tagFile); err != nil {
+			return err
+		}
+		if err = json.Unmarshal(data, &d.tags); err != nil {
+			return err
+		}
 	}
+
+	if fileExists(d.frameFile) {
+		if data, err = ioutil.ReadFile(d.frameFile); err != nil {
+			return err
+		}
+		if err = json.Unmarshal(data, &d.frames); err != nil {
+			return err
+		}
+	}
+
+	// update internal data
 	d.updateProjectsMapping()
 	for _, p := range d.projects {
 		d.updateProjectInternals(p)
 	}
-
-	if data, err = ioutil.ReadFile(d.tagFile); err != nil {
-		return err
-	}
-	if err = json.Unmarshal(data, &d.tags); err != nil {
-		return err
-	}
-
-	if data, err = ioutil.ReadFile(d.frameFile); err != nil {
-		return err
-	}
-	if err = json.Unmarshal(data, &d.frames); err != nil {
-		return err
-	}
-
 	d.sortProjects()
 	d.sortTags()
 	d.sortFrames()
@@ -356,7 +373,7 @@ func (d *DataStore) AddTag(tag Tag) (*Tag, error) {
 
 	tag.ID = nextID()
 	d.tags = append(d.tags, &tag)
-	return nil, d.saveLocked()
+	return &tag, d.saveLocked()
 }
 
 func (d *DataStore) UpdateTag(tag Tag) (*Tag, error) {
@@ -428,17 +445,17 @@ func (d *DataStore) AddFrame(frame Frame) (*Frame, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	frame.Id = nextID()
+	frame.ID = nextID()
 	d.frames = append(d.frames, &frame)
 	return &frame, d.saveLocked()
 }
 
 func (d *DataStore) UpdateFrame(frame Frame) (*Frame, error) {
-	if frame.Id == "" {
+	if frame.ID == "" {
 		return nil, fmt.Errorf("id of frame undefined")
 	}
 
-	if err := d.RemoveFrame(frame.Id); err != nil {
+	if err := d.RemoveFrame(frame.ID); err != nil {
 		return nil, err
 	}
 	return d.AddFrame(frame)
@@ -449,7 +466,7 @@ func (d *DataStore) RemoveFrame(id string) error {
 	defer d.mu.Unlock()
 
 	for i, frame := range d.frames {
-		if frame.Id == id {
+		if frame.ID == id {
 			d.frames = append(d.frames[:i], d.frames[i+1:]...)
 			return d.saveLocked()
 		}

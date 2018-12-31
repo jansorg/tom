@@ -6,17 +6,23 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
 
 	"github.com/jansorg/gotime/gotime/frames"
 	"github.com/jansorg/gotime/gotime/store"
+	"github.com/jansorg/gotime/gotime/testSetup"
 )
 
 func Test_Report(t *testing.T) {
+	ctx, err := testSetup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer testSetup.CleanupTestContext(ctx)
+
 	start := newDate(2018, time.March, 10, 10, 0)
 	end := newDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*store.Frame{{Start: start, End: end}}
-	report := NewBucketReport(frames.NewFrameList(frameList), nil)
+	report := NewBucketReport(frames.NewFrameList(frameList), ctx)
 	report.Update()
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
@@ -27,6 +33,10 @@ func Test_Report(t *testing.T) {
 }
 
 func Test_ReportSplitYear(t *testing.T) {
+	ctx, err := testSetup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer testSetup.CleanupTestContext(ctx)
+
 	// two hours
 	start := newDate(2018, time.March, 10, 10, 0)
 	end := newDate(2018, time.March, 10, 12, 0)
@@ -40,7 +50,7 @@ func Test_ReportSplitYear(t *testing.T) {
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(frames.NewSortedFrameList(frameList), nil)
+	report := NewBucketReport(frames.NewSortedFrameList(frameList), ctx)
 	report.SplitOperations = []SplitOperation{SplitByYear}
 	report.Update()
 

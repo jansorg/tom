@@ -16,9 +16,11 @@ import (
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+	var includeActiveFrames bool
+
 	var fromDateString string
 	var toDateString string
-	var projectID string
+	var projectFilter []string
 
 	var day int
 	var month int
@@ -87,19 +89,23 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			}
 
 			// project filter
-			if projectID != "" {
+			var projectIDs []string
+			// resolve names or IDs to IDs only
+			for _, nameOrID := range projectFilter {
+				id := ""
 				// if it's a name resolve it to the ID
-				if project, err := context.Query.ProjectByFullName(projectID); err == nil {
-					projectID = project.ID
+				if project, err := context.Query.ProjectByFullName(nameOrID); err == nil {
+					id = project.ID
+				} else if _, err := context.Query.ProjectByID(nameOrID); err != nil {
+					fatal(fmt.Errorf("project %s not found", projectFilter))
 				}
-				if _, err := context.Query.ProjectByID(projectID); err != nil {
-					fatal(fmt.Errorf("project %s not found", projectID))
-				}
+				projectIDs = append(projectIDs, id)
 			}
 
 			storeFrames := context.Store.Frames()
 			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames), context)
-			frameReport.ProjectID = projectID
+			frameReport.IncludeActiveFrames = includeActiveFrames
+			frameReport.ProjectIDs = projectFilter
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
 			frameReport.RoundTotalsTo = roundTotals
@@ -129,19 +135,22 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flags().StringVarP(&templatePath, "template", "", "", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
 	cmd.Flag("template").Annotations = templateAnnotations
 
-	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "Optional start date")
+	// fixme add defaults?
+	cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
+	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "The date when the report should start.")
 	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
-	cmd.Flags().StringVarP(&projectID, "project", "p", "", "Project filter. Only frames which belong to this project are used for the report.")
 
-	cmd.Flags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
-	cmd.Flags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	// cmd.Flags().BoolVarP(&showAll, "all", "", false, "Reports all activities.")
 	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
+	cmd.Flags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	cmd.Flags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+
+	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
 	cmd.Flags().StringVarP(&splitModes, "split", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
-
 	// fixme
 	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")

@@ -92,7 +92,7 @@ func (q *defaultStoreQuery) TagByName(name string) (*store.Tag, error) {
 
 func (q *defaultStoreQuery) FrameByID(id string) (*store.Frame, error) {
 	return q.store.FindFirstFrame(func(f *store.Frame) bool {
-		return f.Id == id
+		return f.ID == id
 	})
 }
 

@@ -23,7 +23,7 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 				for _, p := range projects {
 					frames := context.Query.FramesByProject(p.ID)
 					for _, f := range frames {
-						if err := context.Store.RemoveFrame(f.Id); err != nil {
+						if err := context.Store.RemoveFrame(f.ID); err != nil {
 							fatal(err)
 						}
 						remvoedFrames++
