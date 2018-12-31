@@ -27,32 +27,10 @@ type InvoiceType string
 
 const TypeInvoice = "RE"
 
-func (api *SevdeskClient) makeRequest(method string, path string, query map[string]string) (*http.Request, error) {
-	var u *url.URL
-	var err error
-	if u, err = api.makeURL(path); err != nil {
-		return nil, err
-	}
-
-	q := u.Query()
-	for k, v := range query {
-		q.Add(k, v)
-	}
-	u.RawQuery = q.Encode()
-
-	urlString := u.String()
-	var req *http.Request
-	if req, err = http.NewRequest(method, urlString, nil); err != nil {
-		return nil, err
-	}
-	return req, err
-}
-
 func (api *SevdeskClient) FetchNextInvoiceID(invoiceType InvoiceType, nextID bool) (string, error) {
 	var err error
 	var req *http.Request
-	if req, err = api.makeRequest("GET", "/Invoice/Factory/getNextInvoiceNumber", map[string]string{
-		"token":         api.apiKey,
+	if req, err = api.makeRequest("GET", "/Invoice/Factory/getNextInvoiceNumber", true, map[string]string{
 		"invoiceType":   string(invoiceType),
 		"useNextNumber": boolToString(nextID),
 	}); err != nil {
@@ -78,6 +56,34 @@ func (api *SevdeskClient) FetchNextInvoiceID(invoiceType InvoiceType, nextID boo
 	}
 
 	return idValue.Objects, nil
+}
+
+func (api *SevdeskClient) makeRequest(method string, path string, addToken bool, query map[string]string) (*http.Request, error) {
+	var u *url.URL
+	var err error
+	if u, err = api.makeURL(path); err != nil {
+		return nil, err
+	}
+
+	q := u.Query()
+	for k, v := range query {
+		q.Add(k, v)
+	}
+	if addToken && query["token"] == "" {
+		query["token"] = api.apiKey
+	}
+	u.RawQuery = q.Encode()
+
+	urlString := u.String()
+	var req *http.Request
+	if req, err = http.NewRequest(method, urlString, nil); err != nil {
+		return nil, err
+	}
+
+	if addToken {
+		req.Header.Add("Authorization", api.apiKey)
+	}
+	return req, err
 }
 
 func (api *SevdeskClient) do(req *http.Request) (*http.Response, error) {
