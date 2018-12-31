@@ -80,10 +80,49 @@ func initConfig() {
 	ctx.DateTimePrinter = i18n.NewDateTimePrinter(ctx.Language)
 }
 
+const (
+	//language=BASH
+	bash_completion_func = `__gotime_projects_get()
+{
+    local gotime_output out
+    if gotime_output=$(gotime projects --format name | grep "$1" | sed -e 's/ /\\\\ /g' 2>/dev/null); then
+		SAVEIFS=$IFS; IFS=$'\n'; 
+		out=($gotime_output); out=($(printf "%s\n" ${out[*]}));
+        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
+		IFS=$SAVEIFS
+    fi
+}
+
+__gotime_get_projects()
+{
+    if [[ ${#nouns[@]} -eq 0 ]]; then
+        __gotime_projects_get ""
+	else
+	    __gotime_projects_get ${nouns[${#nouns[@]} -1]}
+    fi
+    if [[ $? -eq 0 ]]; then
+        return 0
+    fi
+}
+
+__custom_func() {
+    case ${last_command} in
+        gotime_start)
+            __gotime_get_projects
+            return
+            ;;
+        *)
+            ;;
+    esac
+}
+`
+)
+
 var RootCmd = &cobra.Command{
-	Use:     "gotime",
-	Short:   "gotime is a command line application to track time.",
-	Version: "1.0.0",
+	Use:                    "gotime",
+	Short:                  "gotime is a command line application to track time.",
+	Version:                "1.0.0",
+	BashCompletionFunction: bash_completion_func,
 }
 
 func Execute() {
