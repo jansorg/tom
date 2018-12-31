@@ -8,6 +8,8 @@ import (
 	"github.com/jansorg/gotime/gotime/store"
 )
 
+var ProjectNotFoundErr = fmt.Errorf("project not found")
+
 type ActivityControl struct {
 	ctx                   *context.GoTimeContext
 	createMissingProjects bool
@@ -30,7 +32,7 @@ func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []str
 	var err error
 	var project *store.Project
 	if len(projects) == 0 && a.createMissingProjects == false {
-		return nil, fmt.Errorf("project %s not found, on-the-fly is disabled", projectNameOrID)
+		return nil, ProjectNotFoundErr
 	} else if len(projects) == 0 {
 		if project, err = a.ctx.Store.AddProject(store.Project{Name: projectNameOrID}); err != nil {
 			return nil, err

@@ -31,7 +31,9 @@ func newStartCommand(context *context.GoTimeContext, parent *cobra.Command) *cob
 			}
 
 			frame, err := control.Start(args[0], "", args[1:])
-			if err != nil {
+			if err == activity.ProjectNotFoundErr {
+				fatal(fmt.Errorf("Project not found. Use --create-missing to create missing projects on-the-fly."))
+			} else if err != nil {
 				fatal(err)
 			}
 
@@ -51,7 +53,6 @@ func newStartCommand(context *context.GoTimeContext, parent *cobra.Command) *cob
 	if err := viper.BindPFlag(config.KeyProjectCreateMissing, cmd.Flag("create-missing")); err != nil {
 		fatal(err)
 	}
-
 
 	cmd.Flags().Bool("stop-on-start", false, "")
 	if err := viper.BindPFlag(config.KeyActivityStopOnStart, cmd.Flag("stop-on-start")); err != nil {

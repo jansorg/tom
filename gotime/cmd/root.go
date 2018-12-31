@@ -44,7 +44,7 @@ func init() {
 }
 
 func fatal(err ...interface{}) {
-	fmt.Println(err...)
+	fmt.Println(append([]interface{}{"Error: "}, err...)...)
 	os.Exit(1)
 }
 

@@ -136,7 +136,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flag("template").Annotations = templateAnnotations
 
 	// fixme add defaults?
-	cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
+	// cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
 	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "The date when the report should start.")
 	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
 
@@ -151,9 +151,10 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+
 	// fixme
-	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
-	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+	// cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
+	// cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -187,13 +188,13 @@ func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level 
 	}
 
 	if !report.DateRange.Empty() {
-		printfIndenting(level, "Date range: %s\n", report.DateRange.ShortString())
+		printfIndenting(level, "Date range: %s\n", report.DateRange.MinimalString())
 	}
 	if !report.TrackedDateRange.Empty() {
 		printfIndenting(level, "Tracked time: %s\n", report.TrackedDateRange.ShortString())
 	}
-	printfIndenting(level, "Duration: %s\n", report.Duration.String())
-	printfIndenting(level, "Exact Duration: %s\n", report.ExactDuration.String())
+	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration))
+	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.ExactDuration))
 	fmt.Println()
 
 	for _, r := range report.Results {

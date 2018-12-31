@@ -53,7 +53,7 @@ func (p *durationPrinter) Short(d time.Duration) string {
 	minutes := int(int(s) % 3600 / 60.0)
 	seconds := int(s) % 3600 % 60
 
-	return fmt.Sprintf("%d%s%d%s%d%s", hours, p.spec.short[0], minutes, p.spec.short[1], seconds, p.spec.short[2])
+	return fmt.Sprintf("%d%s %d%s %d%s", hours, p.spec.short[0], minutes, p.spec.short[1], seconds, p.spec.short[2])
 }
 
 func (p *durationPrinter) Long(d time.Duration) string {
@@ -62,5 +62,5 @@ func (p *durationPrinter) Long(d time.Duration) string {
 	minutes := int(int(s) % 3600 / 60.0)
 	seconds := int(s) % 3600 % 60
 
-	return fmt.Sprintf("%d%s%d%s%d%s", hours, p.spec.long[0], minutes, p.spec.long[1], seconds, p.spec.long[2])
+	return fmt.Sprintf("%d%s %d%s %d%s", hours, p.spec.long[0], minutes, p.spec.long[1], seconds, p.spec.long[2])
 }
