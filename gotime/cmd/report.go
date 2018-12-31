@@ -18,6 +18,8 @@ import (
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var includeActiveFrames bool
 
+	var jsonOutput bool
+
 	var fromDateString string
 	var toDateString string
 	var projectFilter []string
@@ -118,7 +120,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				if err := printTemplate(context, templatePath, frameReport); err != nil {
 					fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
 				}
-			} else if context.JsonOutput {
+			} else if jsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
 				if err != nil {
 					fatal(err)
@@ -151,6 +153,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+
+	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
 
 	// fixme
 	// cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")

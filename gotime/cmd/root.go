@@ -23,7 +23,6 @@ func init() {
 
 	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.gotime)")
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.gotime.yaml)")
-	RootCmd.PersistentFlags().BoolVarP(&ctx.JsonOutput, "json", "", false, "output JSON instead of plain text")
 
 	newProjectsCommand(&ctx, RootCmd)
 	newFramesCommand(&ctx, RootCmd)

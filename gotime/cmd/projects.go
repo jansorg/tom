@@ -14,6 +14,7 @@ import (
 func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	format := ""
 	delimiter := ""
+	jsonOutput := false
 
 	var cmd = &cobra.Command{
 		Use:   "projects",
@@ -26,7 +27,7 @@ func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *
 
 			properties := strings.Split(format, ",")
 
-			if context.JsonOutput {
+			if jsonOutput {
 				if bytes, err := json.MarshalIndent(projects, "", "  "); err != nil {
 					fatal(err)
 				} else {
@@ -56,6 +57,7 @@ func newProjectsCommand(context *context.GoTimeContext, parent *cobra.Command) *
 		},
 	}
 
+	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
 	cmd.Flags().StringVarP(&format, "format", "f", "id", "A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName")
 	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
 
