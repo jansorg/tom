@@ -19,4 +19,5 @@ type GoTimeContext struct {
 	LocalePrinter   *message.Printer
 	Locale          locales.Translator
 	DurationPrinter i18n.DurationPrinter
+	DateTimePrinter i18n.DateTimePrinter
 }

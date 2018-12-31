@@ -3,29 +3,27 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/text/message"
 
+	"github.com/jansorg/gotime/gotime/config"
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/i18n"
 	"github.com/jansorg/gotime/gotime/query"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
-var cfgFile string
-var dataDir string
-
 var ctx context.GoTimeContext
+var configFile string
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVar(&dataDir, "data-dir", "", "data directory (default is $HOME/.gotime)")
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gotime.yaml)")
-	RootCmd.PersistentFlags().BoolVarP(&ctx.JsonOutput, "json", "j", false, "output JSON instead of plain text")
+
+	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.gotime)")
+	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.gotime.yaml)")
+	RootCmd.PersistentFlags().BoolVarP(&ctx.JsonOutput, "json", "", false, "output JSON instead of plain text")
 
 	newProjectsCommand(&ctx, RootCmd)
 	newFramesCommand(&ctx, RootCmd)
@@ -38,8 +36,11 @@ func init() {
 	newResetCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
 	newCompletionCommand(&ctx, RootCmd)
+	newConfigCommand(&ctx, RootCmd)
 
-	viper.BindPFlag("data-dir", RootCmd.PersistentFlags().Lookup("data-dir"))
+	if err := viper.BindPFlag(config.KeyDataDir, RootCmd.PersistentFlags().Lookup("data-dir")); err != nil {
+		fatal(err)
+	}
 }
 
 func fatal(err ...interface{}) {
@@ -48,28 +49,23 @@ func fatal(err ...interface{}) {
 }
 
 func initConfig() {
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+	config.SetDefaults()
+	if configFile != "" {
+		viper.SetConfigFile(configFile)
 	}
 
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".gotime")
+	// setup config dir if it doesn't exist
+	dataDir := viper.GetString(config.KeyDataDir)
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dataDir, 0700); err != nil {
+			fatal(err)
+		}
 	}
 
-	viper.SetDefault("data-dir", filepath.Join(home, ".gotime"))
-
-	if err := viper.ReadInConfig(); err != nil {
-		// fmt.Println("Can't read config:", err)
-		// os.Exit(1)
+	if err := viper.ReadInConfig(); !os.IsNotExist(err) {
+		// fatal(err)
 	}
 
-	dataDir := viper.GetString("data-dir")
-	os.MkdirAll(dataDir, 0700)
 	dataStore, err := store.NewStore(dataDir)
 	if err != nil {
 		fatal(err)
@@ -82,6 +78,7 @@ func initConfig() {
 	ctx.LocalePrinter = message.NewPrinter(ctx.Language)
 	ctx.Locale = i18n.FindLocale(ctx.Language)
 	ctx.DurationPrinter = i18n.NewDurationPrinter(ctx.Language)
+	ctx.DateTimePrinter = i18n.NewDateTimePrinter(ctx.Language)
 }
 
 var RootCmd = &cobra.Command{

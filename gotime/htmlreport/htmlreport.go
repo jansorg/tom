@@ -31,13 +31,13 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 			return r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
-			return date.Format("15:04:05")
+			return r.ctx.DateTimePrinter.Time(date)
 		},
 		"formatDate": func(date time.Time) string {
-			return date.Format("2006-01-02")
+			return r.ctx.DateTimePrinter.Date(date)
 		},
 		"formatDateTime": func(date time.Time) string {
-			return date.Format("2006-01-02 15:04:05")
+			return r.ctx.DateTimePrinter.DateTime(date)
 		},
 		"minDuration": func(duration time.Duration) string {
 			return r.ctx.DurationPrinter.Minimal(duration)
