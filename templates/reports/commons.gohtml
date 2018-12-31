@@ -176,21 +176,26 @@
             margin: 10mm;
         }
 
+        body {
+            --font-size: 10pt;
+        }
+
         table {
+            width: 100%;
             page-break-inside: auto
         }
 
         tr {
             page-break-inside: avoid;
-            page-break-after: auto
+            page-break-after: auto;
         }
 
         thead {
-            display: table-header-group
+            display: table-header-group;
         }
 
         tfoot {
-            display: table-footer-group
+            display: table-row-group;
         }
     </style>
 {{end}}
