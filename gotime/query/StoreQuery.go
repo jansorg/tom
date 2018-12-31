@@ -20,7 +20,7 @@ type StoreQuery interface {
 	FrameByID(id string) (*store.Frame, error)
 	FramesByProject(id string) []*store.Frame
 	FramesByTag(id string) []*store.Frame
-	UnstoppedFrames() []*store.Frame
+	ActiveFrames() []*store.Frame
 	IsToplevelProject(id string) bool
 }
 
@@ -108,7 +108,7 @@ func (q *defaultStoreQuery) FramesByTag(id string) []*store.Frame {
 	})
 }
 
-func (q *defaultStoreQuery) UnstoppedFrames() []*store.Frame {
+func (q *defaultStoreQuery) ActiveFrames() []*store.Frame {
 	return q.store.FindFrames(func(f *store.Frame) bool {
 		return f.IsActive()
 	})
