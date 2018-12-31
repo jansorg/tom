@@ -57,9 +57,9 @@ func NewStore(dir string) (Store, error) {
 
 	store := &DataStore{
 		path:        dir,
-		projectFile: filepath.Join(dir, "projects.json"),
-		tagFile:     filepath.Join(dir, "tags.json"),
-		frameFile:   filepath.Join(dir, "frames.json"),
+		ProjectFile: filepath.Join(dir, "projects.json"),
+		TagFile:     filepath.Join(dir, "tags.json"),
+		FrameFile:   filepath.Join(dir, "frames.json"),
 	}
 
 	if err := store.loadLocked(); err != nil {
@@ -72,9 +72,9 @@ type DataStore struct {
 	path      string
 	batchMode int32
 
-	tagFile     string
-	frameFile   string
-	projectFile string
+	ProjectFile string
+	TagFile     string
+	FrameFile   string
 
 	mu          sync.RWMutex
 	projectsMap map[string]*Project
@@ -84,7 +84,7 @@ type DataStore struct {
 }
 
 func (d *DataStore) DirPath() string {
-	return filepath.Dir(d.projectFile)
+	return filepath.Dir(d.ProjectFile)
 }
 
 func (d *DataStore) StartBatch() {
@@ -132,8 +132,8 @@ func (d *DataStore) loadLocked() error {
 	var data []byte
 	var err error
 
-	if fileExists(d.projectFile) {
-		if data, err = ioutil.ReadFile(d.projectFile); err != nil {
+	if fileExists(d.ProjectFile) {
+		if data, err = ioutil.ReadFile(d.ProjectFile); err != nil {
 			return err
 		}
 		if err = json.Unmarshal(data, &d.projects); err != nil {
@@ -141,8 +141,8 @@ func (d *DataStore) loadLocked() error {
 		}
 	}
 
-	if fileExists(d.tagFile) {
-		if data, err = ioutil.ReadFile(d.tagFile); err != nil {
+	if fileExists(d.TagFile) {
+		if data, err = ioutil.ReadFile(d.TagFile); err != nil {
 			return err
 		}
 		if err = json.Unmarshal(data, &d.tags); err != nil {
@@ -150,8 +150,8 @@ func (d *DataStore) loadLocked() error {
 		}
 	}
 
-	if fileExists(d.frameFile) {
-		if data, err = ioutil.ReadFile(d.frameFile); err != nil {
+	if fileExists(d.FrameFile) {
+		if data, err = ioutil.ReadFile(d.FrameFile); err != nil {
 			return err
 		}
 		if err = json.Unmarshal(data, &d.frames); err != nil {
@@ -193,21 +193,21 @@ func (d *DataStore) saveLocked() error {
 	if data, err = json.Marshal(d.projects); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.projectFile, data, 0600); err != nil {
+	if err := ioutil.WriteFile(d.ProjectFile, data, 0600); err != nil {
 		return err
 	}
 
 	if data, err = json.Marshal(d.tags); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.tagFile, data, 0600); err != nil {
+	if err := ioutil.WriteFile(d.TagFile, data, 0600); err != nil {
 		return err
 	}
 
 	if data, err = json.Marshal(d.frames); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.frameFile, data, 0600); err != nil {
+	if err := ioutil.WriteFile(d.FrameFile, data, 0600); err != nil {
 		return err
 	}
 

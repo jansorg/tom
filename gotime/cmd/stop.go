@@ -2,14 +2,16 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/activity"
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
-func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	all := false
 	notes := ""
 	var tags []string
@@ -18,25 +20,27 @@ func newStopCommand(context *context.GoTimeContext, parent *cobra.Command) *cobr
 		Use:   "stop",
 		Short: "stops the newest active timer. If --all is specified, then all active timers are stopped.",
 		Run: func(cmd *cobra.Command, args []string) {
-			a := activity.NewActivityControl(context, false, false)
+			a := activity.NewActivityControl(ctx, false, false)
 
-			count := 0
+			var err error
+			var frames []*store.Frame
 			if all {
-				if frames, err := a.StopAll(notes, []string{}); err != nil {
+				if frames, err = a.StopAll(notes, []string{}); err != nil {
 					fatal(err)
-				} else {
-					count = len(frames)
 				}
 			} else {
-				_, err := a.StopNewest(notes, tags)
+				frame, err := a.StopNewest(notes, tags)
 				if err != nil {
 					fatal(err)
-				} else {
-					count = 1
 				}
+				frames = []*store.Frame{frame}
 			}
 
-			fmt.Printf("Stopped %d timers\n", count)
+			// translate
+			fmt.Printf("Stopped %d timers at %s\n", len(frames), ctx.DateTimePrinter.Time(time.Now()))
+			for _, frame := range frames {
+				fmt.Printf("\t%s\n", ctx.DurationPrinter.Minimal(frame.Duration()))
+			}
 		},
 	}
 

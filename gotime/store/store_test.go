@@ -1,4 +1,4 @@
-package store
+package store_test
 
 import (
 	"io/ioutil"
@@ -9,10 +9,12 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/jansorg/gotime/gotime/store"
 )
 
 func Test_StoreNoDataDir(t *testing.T) {
-	_, err := NewStore(filepath.Join(os.TempDir(), "gotime-does-not-exist"))
+	_, err := store.NewStore(filepath.Join(os.TempDir(), "gotime-does-not-exist"))
 	require.Error(t, err)
 }
 
@@ -21,7 +23,7 @@ func Test_Store(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	s, err := NewStore(dir)
+	s, err := store.NewStore(dir)
 	require.NoError(t, err)
 	require.NoError(t, err)
 	assert.Empty(t, s.Projects())
@@ -29,7 +31,7 @@ func Test_Store(t *testing.T) {
 	assert.Empty(t, s.Frames())
 
 	// project
-	newProject := Project{Name: "Project 42"}
+	newProject := store.Project{Name: "Project 42"}
 	addedProject, err := s.AddProject(newProject)
 	require.NoError(t, err)
 	assert.EqualValues(t, newProject.Name, addedProject.Name)
@@ -46,7 +48,7 @@ func Test_Store(t *testing.T) {
 	require.Error(t, err)
 
 	// tag
-	newTag := Tag{Name: "Tag 1"}
+	newTag := store.Tag{Name: "Tag 1"}
 	addedTag, err := s.AddTag(newTag)
 	require.NoError(t, err)
 	assert.EqualValues(t, newTag.Name, addedTag.Name)
@@ -63,13 +65,13 @@ func Test_Store(t *testing.T) {
 	require.Error(t, err)
 
 	// frames
-	addedProject, err = s.AddProject(Project{Name: "Project for Frame"})
+	addedProject, err = s.AddProject(store.Project{Name: "Project for Frame"})
 	require.NoError(t, err)
 	startTime, err := time.Parse(time.RFC822, "02 Jan 19 10:00 MST")
 	require.NoError(t, err)
 	endTime, err := time.Parse(time.RFC822, "02 Jan 19 10:00 MST")
 	require.NoError(t, err)
-	newFrame := Frame{
+	newFrame := store.Frame{
 		ProjectId: addedProject.ID,
 		Start:     &startTime,
 		End:       &endTime,
@@ -82,8 +84,8 @@ func Test_Store(t *testing.T) {
 	require.NoError(t, err)
 
 	// at this point save() must have been called and files must exists
-	dataStore := s.(*DataStore)
-	assert.True(t, fileExists(dataStore.projectFile))
-	assert.True(t, fileExists(dataStore.tagFile))
-	assert.True(t, fileExists(dataStore.frameFile))
+	dataStore := s.(*store.DataStore)
+	assert.FileExists(t, dataStore.ProjectFile)
+	assert.FileExists(t, dataStore.TagFile)
+	assert.FileExists(t, dataStore.FrameFile)
 }

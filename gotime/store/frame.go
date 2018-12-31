@@ -1,6 +1,8 @@
 package store
 
-import "time"
+import (
+	"time"
+)
 
 type Frame struct {
 	ID        string     `json:"id"`
@@ -20,8 +22,8 @@ func (f *Frame) IsSingleDay() bool {
 		return true
 	}
 
-	y1,m1,d1 := f.Start.Date()
-	y2,m2,d2 := f.Start.Date()
+	y1, m1, d1 := f.Start.Date()
+	y2, m2, d2 := f.Start.Date()
 
 	return y1 == y2 && m1 == m2 && d1 == d2
 }
