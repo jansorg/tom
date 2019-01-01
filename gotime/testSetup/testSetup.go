@@ -28,7 +28,6 @@ func CreateTestContext(lang language.Tag) (*context.GoTimeContext, error) {
 		Store:           store,
 		StoreHelper:     store2.NewStoreHelper(store),
 		Query:           query.NewStoreQuery(store),
-		JsonOutput:      false,
 		Language:        lang,
 		LocalePrinter:   message.NewPrinter(lang),
 		Locale:          i18n.FindLocale(lang),

@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 
+	"github.com/jansorg/gotime/gotime/config"
 	"github.com/jansorg/gotime/gotime/store"
 )
 
@@ -13,6 +14,10 @@ type StoreQuery interface {
 	ProjectByFullName(name string) (*store.Project, error)
 	ProjectsByShortName(name string) []*store.Project
 	ProjectsByShortNameOrID(nameOrID string) []*store.Project
+	WithProjectAndParents(id string, f func(*store.Project) bool) bool
+	GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool)
+	GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool)
+	GetInheritedIntProp(projectID string, prop config.IntProperty) (int64, bool)
 
 	TagByID(id string) (*store.Tag, error)
 	TagByName(name string) (*store.Tag, error)
@@ -76,6 +81,60 @@ func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*store.Pr
 	return q.store.FindProjects(func(p *store.Project) bool {
 		return p.ID == nameOrID || p.FullName == nameOrID
 	})
+}
+
+// Iterates the project and its parent hierarchy until there's not parent or the function returns false
+func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *store.Project) bool) bool {
+	for id != "" {
+		current, err := q.ProjectByID(id)
+		if err != nil {
+			return false
+		}
+
+		ok := f(current)
+		if !ok {
+			return false
+		}
+
+		id = current.ParentID
+	}
+	return false
+}
+
+func (q *defaultStoreQuery) GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool) {
+	value := ""
+	ok := false
+
+	q.WithProjectAndParents(projectID, func(project *store.Project) bool {
+		value, ok = prop.Get(project)
+		return !ok
+	})
+
+	return value, ok
+}
+
+func (q *defaultStoreQuery) GetInheritedIntProp(projectID string, prop config.IntProperty) (int64, bool) {
+	var value int64
+	ok := false
+
+	q.WithProjectAndParents(projectID, func(project *store.Project) bool {
+		value, ok = prop.Get(project)
+		return ok
+	})
+
+	return value, ok
+}
+
+func (q *defaultStoreQuery) GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool) {
+	var value float64
+	ok := false
+
+	q.WithProjectAndParents(projectID, func(project *store.Project) bool {
+		value, ok = prop.Get(project)
+		return ok
+	})
+
+	return value, ok
 }
 
 func (q *defaultStoreQuery) TagByID(id string) (*store.Tag, error) {

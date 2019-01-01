@@ -5,10 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/gotime/gotime/config"
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/dateUtil"
 	"github.com/jansorg/gotime/gotime/frames"
-	"github.com/jansorg/gotime/gotime/invoice/sevdesk"
 	"github.com/jansorg/gotime/gotime/report"
 	"github.com/jansorg/gotime/gotime/store"
 )
@@ -17,8 +17,6 @@ func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 	var cmd = &cobra.Command{
 		Use:   "invoice",
 		Short: "Create a new invoice in a cloud based service. See the list of command to see which service APIs are supported at this time.",
-		Run: func(cmd *cobra.Command, args []string) {
-		},
 	}
 
 	cmd.PersistentFlags().BoolP("dry-run", "d", false, "Dry run without creating data on the remote side")
@@ -60,12 +58,18 @@ func (c invoiceCmdConfig) createSummary() ([]ProjectInvoiceLine, error) {
 	frameReport.Update()
 
 	result := frameReport.Result
+
+	desc, _ := config.DescriptionProperty.Get(c.project)
+	currency, _ := config.CurrencyProperty.Get(c.project)
+	hourlyRate, _ := config.HourlyRateProperty.Get(c.project)
+
 	return []ProjectInvoiceLine{
 		{
 			ProjectName: c.project.Name,
 			Hours:       result.Duration.Hours(),
-			Currency:    string(sevdesk.USD),
-			HourlyRate:  81.0,
+			Description: desc,
+			Currency:    currency,
+			HourlyRate:  hourlyRate,
 		},
 	}, nil
 }

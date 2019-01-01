@@ -19,6 +19,10 @@ func nextID() string {
 	return uuid.NewV4().String()
 }
 
+type PropertyHolder interface {
+	GetProperties() map[string]string
+}
+
 type Store interface {
 	DirPath() string
 	StartBatch()
@@ -262,6 +266,12 @@ func (d *DataStore) AddProject(project Project) (*Project, error) {
 }
 
 func (d *DataStore) updateProjectInternals(p *Project) {
+	p.store = d
+
+	if p.Properties == nil {
+		p.Properties = make(map[string]string)
+	}
+
 	p.FullName = p.Name
 	if p.ParentID == "" {
 		return
@@ -287,11 +297,12 @@ func (d *DataStore) updateProjectInternals(p *Project) {
 }
 
 func (d *DataStore) UpdateProject(project Project) (*Project, error) {
-	if err := d.RemoveProject(project.ID); err != nil {
+	existing, err := d.ProjectByID(project.ID)
+	if err != nil {
 		return nil, err
 	}
-	// fixme keep id!
-	return d.AddProject(project)
+	*existing = project
+	return nil, d.save()
 }
 
 func (d *DataStore) RemoveProject(id string) error {
