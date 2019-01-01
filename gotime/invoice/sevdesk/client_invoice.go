@@ -56,6 +56,34 @@ func (api *Client) NewInvoicePosition(invoiceID string, name string, quantity fl
 	}, nil
 }
 
+func (api *Client) GetInvoices() (*[]InvoiceResponse, error) {
+	resp, err := api.doRequest("GET", "/Invoice", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var invoices []InvoiceResponse
+	err = api.unwrapJSONResponse(resp, &invoices)
+	if err != nil {
+		return nil, err
+	}
+	return &invoices, nil
+}
+
+func (api *Client) DeleteInvoice(id string) error {
+	// fixme escape ID in path?
+	resp, err := api.doRequest("DELETE", fmt.Sprintf("/Invoice/%s", id), nil, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected status %s", resp.Status)
+	}
+	return nil
+}
+
 func (api *Client) CreateInvoice(invoicdDef Invoice) (*InvoiceResponse, error) {
 	if invoicdDef.InvoiceID == "" {
 		if id, err := api.FetchNextInvoiceID(invoicdDef.InvoiceType, true); err != nil {
@@ -68,9 +96,7 @@ func (api *Client) CreateInvoice(invoicdDef Invoice) (*InvoiceResponse, error) {
 	resp, err := api.doFormRequest("POST", "/Invoice", nil, invoicdDef.asFormEncoded())
 	if err != nil {
 		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
+	} else if resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
 	}
 

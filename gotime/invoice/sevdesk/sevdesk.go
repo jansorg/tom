@@ -16,6 +16,7 @@ func NewClient(apiKey string) *Client {
 		baseURL: "https://my.sevdesk.de/api/v1",
 		apiKey:  apiKey,
 		http:    &http.Client{},
+		Logging: false,
 	}
 }
 
@@ -23,6 +24,7 @@ type Client struct {
 	baseURL string
 	apiKey  string
 	http    *http.Client
+	Logging bool
 
 	// cached data
 	user              *User
@@ -112,7 +114,9 @@ func (api *Client) createFormValues(data map[string]string, skipEmpty bool) url.
 }
 
 func (api *Client) do(req *http.Request) (*http.Response, error) {
-	log.Printf("%s %s", req.Method, req.URL.String())
+	if api.Logging {
+		log.Printf("%s %s", req.Method, req.URL.String())
+	}
 	return api.http.Do(req)
 }
 
@@ -122,12 +126,16 @@ func (api *Client) makeURL(path string) (*url.URL, error) {
 }
 
 func (api *Client) unwrapJSONResponse(resp *http.Response, target interface{}) error {
+	defer resp.Body.Close()
+
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(string(bytes))
+	if api.Logging {
+		fmt.Println(string(bytes))
+	}
 
 	// target is a pointer and will be updated
 	return json.Unmarshal(bytes, &struct {
