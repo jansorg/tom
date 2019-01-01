@@ -1,29 +1,71 @@
 package sevdesk
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
+	"time"
 )
 
-func (api *Client) CreateInvoice(data Invoice) (*InvoiceResponse, error) {
-	if data.InvoiceID == "" {
-		if id, err := api.FetchNextInvoiceID(data.InvoiceType, true); err != nil {
+func (api *Client) NewInvoice(invoiceType InvoiceType, invoiceDate time.Time, header string, contactID string, status int, taxRate float32, taxText string, taxType TaxType, currency Currency, discountTime int, address string) (Invoice, error) {
+	if invoiceType == "" {
+		return Invoice{}, fmt.Errorf("invoiceType is empty")
+	}
+	if invoiceDate.IsZero() {
+		return Invoice{}, fmt.Errorf("invoiceDate is required")
+	}
+	if header == "" {
+		return Invoice{}, fmt.Errorf("header is required")
+	}
+
+	return Invoice{
+		InvoiceType:   invoiceType,
+		InvoiceDate:   invoiceDate,
+		Header:        header,
+		Contact:       IDWithType{ID: contactID, ObjectName: "Contact"},
+		ContactPerson: api.userContactPerson,
+		Status:        status,
+		TaxRate:       taxRate,
+		TaxText:       taxText,
+		TaxType:       taxType,
+		Currency:      currency,
+		DiscountTime:  discountTime,
+		Address:       address,
+	}, nil
+}
+
+func (api *Client) NewQuantity(quantity float32, unitName string) (Quantity, error) {
+	if unit, err := api.FindUnit(unitName); err != nil {
+		return Quantity{}, err
+	} else {
+		return Quantity{Quantity: quantity, UnitID: unit.ID}, nil
+	}
+}
+
+func (api *Client) NewInvoicePosition(invoiceID string, name string, quantity float32, unitName string, price float32, taxRate int) (InvoicePosition, error) {
+	q, err := api.NewQuantity(quantity, unitName)
+	if err != nil {
+		return InvoicePosition{}, err
+	}
+
+	return InvoicePosition{
+		InvoiceID: invoiceID,
+		Name:      name,
+		Quantity:  q,
+		Price:     price,
+		TaxRate:   taxRate,
+	}, nil
+}
+
+func (api *Client) CreateInvoice(invoicdDef Invoice) (*InvoiceResponse, error) {
+	if invoicdDef.InvoiceID == "" {
+		if id, err := api.FetchNextInvoiceID(invoicdDef.InvoiceType, true); err != nil {
 			return nil, err
 		} else {
-			data.InvoiceID = id
+			invoicdDef.InvoiceID = id
 		}
 	}
 
-	req, err := api.newFormRequest("POST", "/Invoice", nil, data.asFormEncoded())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if err != nil {
-		return nil, err
-	}
-
-	var resp *http.Response
-	resp, err = api.do(req)
+	resp, err := api.doFormRequest("POST", "/Invoice", nil, invoicdDef.asFormEncoded())
 	if err != nil {
 		return nil, err
 	}
@@ -40,14 +82,7 @@ func (api *Client) CreateInvoice(data Invoice) (*InvoiceResponse, error) {
 }
 
 func (api *Client) CreateInvoicePos(data InvoicePosition) (*InvoicePosResponse, error) {
-	req, err := api.newFormRequest("POST", "/InvoicePos", nil, data.asFormEncoded())
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	if err != nil {
-		return nil, err
-	}
-
-	var resp *http.Response
-	resp, err = api.do(req)
+	resp, err := api.doFormRequest("POST", "/InvoicePos", nil, data.asFormEncoded())
 	if err != nil {
 		return nil, err
 	}
@@ -64,32 +99,21 @@ func (api *Client) CreateInvoicePos(data InvoicePosition) (*InvoicePosResponse, 
 }
 
 func (api *Client) FetchNextInvoiceID(invoiceType InvoiceType, nextID bool) (string, error) {
-	var err error
-	var req *http.Request
-	if req, err = api.newRequest("GET", "/Invoice/Factory/getNextInvoiceNumber", nil, map[string]string{
+	resp, err := api.doRequest("GET", "/Invoice/Factory/getNextInvoiceNumber", nil, map[string]string{
 		"invoiceType":   string(invoiceType),
 		"useNextNumber": boolToString(nextID),
-	}); err != nil {
+	})
+	if err != nil {
 		return "", err
 	}
 
-	var resp *http.Response
-	if resp, err = api.do(req); err != nil {
-		return "", err
-	} else if resp.StatusCode != http.StatusOK {
+	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("unexpected HTTP status %s", resp.Status)
 	}
 
-	idValue := struct {
-		Objects string `json:"objects"`
-	}{}
-	if bodyBytes, err := ioutil.ReadAll(resp.Body); err != nil {
+	var id string
+	if err := api.unwrapJSONResponse(resp, &id); err != nil {
 		return "", err
-	} else {
-		if err = json.Unmarshal(bodyBytes, &idValue); err != nil {
-			return "", err
-		}
 	}
-
-	return idValue.Objects, nil
+	return id, nil
 }

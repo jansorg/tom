@@ -23,6 +23,36 @@ type Client struct {
 	baseURL string
 	apiKey  string
 	http    *http.Client
+
+	// cached data
+	user              *User
+	userContactPerson IDWithType
+	units             *[]Unit
+}
+
+func (api *Client) LoadBasicData() error {
+	if u, err := api.GetCurrentUser(); err != nil {
+		return err
+	} else {
+		api.user = u
+		api.userContactPerson = IDWithType{ID: u.ID, ObjectName: u.ObjectName}
+	}
+
+	if units, err := api.GetUnits(); err != nil {
+		return err
+	} else {
+		api.units = &units
+	}
+
+	return nil
+}
+
+func (api *Client) doRequest(method string, path string, body io.Reader, query map[string]string) (*http.Response, error) {
+	req, err := api.newRequest(method, path, body, query)
+	if err != nil {
+		return nil, err
+	}
+	return api.do(req)
 }
 
 func (api *Client) newRequest(method string, path string, body io.Reader, query map[string]string) (*http.Request, error) {
@@ -63,6 +93,14 @@ func (api *Client) newFormRequest(method string, path string, query map[string]s
 	return req, err
 }
 
+func (api *Client) doFormRequest(method string, path string, query map[string]string, body map[string]string) (*http.Response, error) {
+	req, err := api.newFormRequest(method, path, query, body)
+	if err != nil {
+		return nil, err
+	}
+	return api.do(req)
+}
+
 func (api *Client) createFormValues(data map[string]string, skipEmpty bool) url.Values {
 	u := url.Values{}
 	for k, v := range data {
@@ -95,11 +133,4 @@ func (api *Client) unwrapJSONResponse(resp *http.Response, target interface{}) e
 	return json.Unmarshal(bytes, &struct {
 		Objects interface{} `json:"objects"`
 	}{Objects: target})
-}
-
-func (api *Client) GetQuantity(quantity float32, name string) Quantity {
-	return Quantity{
-		Quantity: quantity,
-		UnitID:   "1",
-	}
 }

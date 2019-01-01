@@ -11,21 +11,11 @@ import (
 
 func main() {
 	c := sevdesk.NewClient(os.Args[1])
+	if err := c.LoadBasicData(); err != nil {
+		log.Fatal(err)
+	}
 
-	invoice, err := sevdesk.NewInvoice(sevdesk.TypeInvoice, time.Now())
-	invoice.Header = "Rechnung NEU"
-	invoice.Contact.ID = "7067576"
-	invoice.Contact.ObjectName = "Contact"
-	invoice.ContactPerson.ID = "254513"
-	invoice.ContactPerson.ObjectName = "SevUser"
-	invoice.Status = 100
-	invoice.TaxRate = "19"
-	invoice.TaxText = ""
-	invoice.TaxType = sevdesk.TaxTypeNotEU
-	invoice.Currency = sevdesk.USD
-	invoice.DiscountTime = 0
-	invoice.Address = "Joachim Ansorg\nHi"
-
+	invoice, err := c.NewInvoice(sevdesk.TypeInvoice, time.Now(), "Invoice Kite 2018-12", "7067576", 100, 0.0, "", sevdesk.TaxTypeNotEU, sevdesk.USD, 14, "")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,12 +26,9 @@ func main() {
 	}
 
 	fmt.Printf("created invoice")
-	// bytes, _ := json.MarshalIndent(resp, "", "  ")
-	// fmt.Printf(string(bytes))
-
 	fmt.Println("Adding position")
 
-	pos, err := sevdesk.NewInvoicePosition(resp.ID, "PyCharm development", c.GetQuantity(32.0, "hours"), 71.0, 0)
+	pos, err := c.NewInvoicePosition(resp.ID, "PyCharm development", 32.0, "hours", 71.0, 0)
 	if err != nil {
 		log.Fatal(err)
 	}

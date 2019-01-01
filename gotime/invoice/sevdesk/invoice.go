@@ -24,28 +24,13 @@ type IDWithType struct {
 	ObjectName string `json:"objectName"`
 }
 
-func NewInvoice(invoiceType InvoiceType, invoiceDate time.Time) (Invoice, error) {
-	if invoiceType == "" {
-		return Invoice{}, fmt.Errorf("invoiceType is empty")
-	}
-
-	if invoiceDate.IsZero() {
-		return Invoice{}, fmt.Errorf("invoiceDate is required")
-	}
-
-	return Invoice{
-		InvoiceType: invoiceType,
-		InvoiceDate: invoiceDate,
-	}, nil
-}
-
 type Invoice struct {
 	Header          string
 	InvoiceID       string
 	InvoiceType     InvoiceType
 	InvoiceDate     time.Time
 	DeliveryDate    time.Time
-	TaxRate         string
+	TaxRate         float32
 	TaxText         string
 	TaxType         TaxType
 	Currency        Currency
@@ -71,7 +56,7 @@ func (data Invoice) asFormEncoded() map[string]string {
 		"contactPerson[id]":         data.ContactPerson.ID,
 		"contactPerson[objectName]": data.ContactPerson.ObjectName,
 		"discountTime":              strconv.Itoa(data.DiscountTime),
-		"taxRate":                   data.TaxRate,
+		"taxRate":                   strconv.Itoa(int(data.TaxRate)),
 		"taxText":                   stringOr0(data.TaxText),
 		"taxType":                   string(data.TaxType),
 		"discount":                  strconv.Itoa(data.Discount),
@@ -104,16 +89,6 @@ func (pos InvoicePosition) asFormEncoded() map[string]string {
 		"unity[objectName]":   "Unity",
 		"taxRate":             strconv.Itoa(pos.TaxRate),
 	}
-}
-
-func NewInvoicePosition(invoiceID string, name string, quantity Quantity, price float32, taxRate int) (InvoicePosition, error) {
-	return InvoicePosition{
-		InvoiceID: invoiceID,
-		Name:      name,
-		Quantity:  quantity,
-		Price:     price,
-		TaxRate:   taxRate,
-	}, nil
 }
 
 type InvoiceResponse struct {

@@ -1,5 +1,9 @@
 package invoice
 
+type Browser interface {
+	BrowserURL() string
+}
+
 type Factory interface {
 	Name() string
 	CreateInvoice(req Request)
