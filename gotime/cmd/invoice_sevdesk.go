@@ -23,15 +23,15 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 				fatal(err)
 			}
 
-			lines, err := cfg.createSummary()
+			ivConfig, err := cfg.createSummary()
 			if err != nil {
 				fatal(err)
 			}
 
 			if cfg.dryRun {
 				fmt.Printf("Date range: %s\n", cfg.filterRange.MinimalString())
-				for _, line := range lines {
-					fmt.Printf("%.2f at %.2f %s %s", line.Hours, line.HourlyRate, line.Currency, line.ProjectName)
+				for _, line := range ivConfig.lines {
+					fmt.Printf("%s: %.2f hours at %.2f %s\n", line.ProjectName, line.Hours, line.HourlyRate, line.Currency)
 				}
 			} else {
 				client := sevdesk.NewClient(apiKey)
@@ -40,7 +40,18 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					fatal(err)
 				}
 
-				invoice, err := client.NewInvoice(time.Now(), fmt.Sprintf("%s %s", cfg.project.FullName, cfg.filterRange.MinimalString()), "7067576", 100, 0.0, "", sevdesk.TaxTypeNotEU, sevdesk.USD, 0, "")
+				// fixme
+				invoice, err := client.NewInvoice(time.Now(),
+					fmt.Sprintf("%s %s", cfg.project.FullName, cfg.filterRange.MinimalString()),
+					"7067576",
+					100,
+					ivConfig.taxRate,
+					"",
+					sevdesk.TaxTypeNotEU,
+					sevdesk.Currency(ivConfig.currency),
+					0,
+					ivConfig.address)
+
 				if err != nil {
 					fatal(err)
 				}
@@ -50,7 +61,7 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					fatal(err)
 				}
 
-				for _, line := range lines {
+				for _, line := range ivConfig.lines {
 					posDef, err := client.NewInvoicePosition(resp.ID, line.ProjectName, line.Hours, "hours", line.HourlyRate, 0)
 					if err != nil {
 						fatal(err)
@@ -62,13 +73,13 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					}
 				}
 
-				fmt.Printf("Successfully created invoice with %d positions. URL: %s\n", len(lines), resp.BrowserURL())
+				fmt.Printf("Successfully created invoice with %d positions. URL: %s\n", len(ivConfig.lines), resp.BrowserURL())
 			}
 		},
 	}
 
 	cmd.Flags().StringVarP(&apiKey, "key", "k", "", "The API key to use for sevdesk.com")
-	cmd.MarkPersistentFlagRequired("key")
+	cmd.MarkFlagRequired("key")
 
 	parent.AddCommand(cmd)
 	return cmd

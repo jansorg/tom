@@ -19,19 +19,19 @@ func Test_PropertyTests(t *testing.T) {
 		p: map[string]string{},
 	}
 
-	_, ok := DescriptionProperty.Get(data)
+	_, ok := InvoiceDescriptionProperty.Get(data)
 	assert.False(t, ok)
 
-	DescriptionProperty.Set("mine", data)
-	s, ok := DescriptionProperty.Get(data)
+	InvoiceDescriptionProperty.Set("mine", data)
+	s, ok := InvoiceDescriptionProperty.Get(data)
 	assert.True(t, ok)
 	assert.EqualValues(t, "mine", s)
 
-	_, ok = AddressProperty.Get(data)
+	_, ok = InvoiceAddressProperty.Get(data)
 	assert.False(t, ok)
 
-	AddressProperty.Set("my address", data)
-	s, ok = AddressProperty.Get(data)
+	InvoiceAddressProperty.Set("my address", data)
+	s, ok = InvoiceAddressProperty.Get(data)
 	assert.True(t, ok)
 	assert.EqualValues(t, "my address", s)
 }

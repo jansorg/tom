@@ -30,7 +30,7 @@ type Invoice struct {
 	InvoiceType     InvoiceType
 	InvoiceDate     time.Time
 	DeliveryDate    time.Time
-	TaxRate         float32
+	TaxRate         float64
 	TaxText         string
 	TaxType         TaxType
 	Currency        Currency

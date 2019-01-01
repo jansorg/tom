@@ -14,20 +14,24 @@ type IntProperty Property
 
 // predefined list of properties
 const (
-	HourlyRateProperty  FloatProperty  = iota
-	DescriptionProperty StringProperty = iota
-	CurrencyProperty    StringProperty = iota
-	AddressProperty     StringProperty = iota
+	InvoiceHourlyRateProperty  FloatProperty  = iota
+	InvoiceTaxRateProperty     FloatProperty  = iota
+	InvoiceLanguageProperty    StringProperty = iota
+	InvoiceDescriptionProperty StringProperty = iota
+	InvoiceCurrencyProperty    StringProperty = iota
+	InvoiceAddressProperty     StringProperty = iota
 )
 
 func (p StringProperty) key() string {
 	switch p {
-	case DescriptionProperty:
-		return "description"
-	case CurrencyProperty:
-		return "currency"
-	case AddressProperty:
-		return "address"
+	case InvoiceDescriptionProperty:
+		return "invoiceDescription"
+	case InvoiceLanguageProperty:
+		return "invoiceLang"
+	case InvoiceCurrencyProperty:
+		return "invoiceCurrency"
+	case InvoiceAddressProperty:
+		return "invoiceAddress"
 	default:
 		return ""
 	}
@@ -49,8 +53,10 @@ func (p StringProperty) Set(value string, target store.PropertyHolder) {
 
 func (p FloatProperty) key() string {
 	switch p {
-	case HourlyRateProperty:
+	case InvoiceHourlyRateProperty:
 		return "hourlyRate"
+	case InvoiceTaxRateProperty:
+		return "taxRate"
 	default:
 		return ""
 	}

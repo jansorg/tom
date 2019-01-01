@@ -45,7 +45,14 @@ type invoiceCmdConfig struct {
 	roundFramesMode dateUtil.RoundingMode
 }
 
-func (c invoiceCmdConfig) createSummary() ([]ProjectInvoiceLine, error) {
+type invoiceConfig struct {
+	currency string
+	taxRate  float64
+	lines    []ProjectInvoiceLine
+	address  string
+}
+
+func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	storeFrames := c.ctx.Store.Frames()
 
 	frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames), c.ctx)
@@ -59,17 +66,24 @@ func (c invoiceCmdConfig) createSummary() ([]ProjectInvoiceLine, error) {
 
 	result := frameReport.Result
 
-	desc, _ := config.DescriptionProperty.Get(c.project)
-	currency, _ := config.CurrencyProperty.Get(c.project)
-	hourlyRate, _ := config.HourlyRateProperty.Get(c.project)
+	desc, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceDescriptionProperty)
+	address, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceAddressProperty)
+	currency, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceCurrencyProperty)
+	hourlyRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceHourlyRateProperty)
+	taxRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceTaxRateProperty)
 
-	return []ProjectInvoiceLine{
-		{
-			ProjectName: c.project.Name,
-			Hours:       result.Duration.Hours(),
-			Description: desc,
-			Currency:    currency,
-			HourlyRate:  hourlyRate,
+	return invoiceConfig{
+		currency: currency,
+		taxRate:  taxRate,
+		address:  address,
+		lines: []ProjectInvoiceLine{
+			{
+				ProjectName: c.project.Name,
+				Hours:       result.Duration.Hours(),
+				Description: desc,
+				Currency:    currency,
+				HourlyRate:  hourlyRate,
+			},
 		},
 	}, nil
 }
@@ -84,7 +98,10 @@ type ProjectInvoiceLine struct {
 
 func parseInvoiceCmd(ctx *context.GoTimeContext, cmd *cobra.Command) (invoiceCmdConfig, error) {
 	var filterRange dateUtil.DateRange
-	if cmd.Flag("month").Changed {
+
+	// fixme add start and end date
+
+	if filterRange.Empty() {
 		if month, err := cmd.Flags().GetInt("month"); err != nil {
 			return invoiceCmdConfig{}, err
 		} else {

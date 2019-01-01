@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
 func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -21,10 +22,29 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 
 			if len(args) == 1 {
 				size := len(project.Properties)
-				fmt.Printf("Found %d properties for %s\n", size, args[0])
+				fmt.Printf("%d properties for %s\n\n", size, args[0])
+				if size > 0 {
+					fmt.Println("Properties:")
+					for k, v := range project.Properties {
+						fmt.Printf("\t%s=%v\n", k, v)
+					}
+				}
 
-				for k, v := range project.Properties {
-					fmt.Printf("%s=%v\n", k, v)
+				inherited := 0
+				out := ""
+				ctx.Query.WithProjectAndParents(project.ID, func(parent *store.Project) bool {
+					if project.ID != parent.ID {
+						inherited += len(parent.Properties)
+
+						for k, v := range parent.Properties {
+							out += fmt.Sprintf("\t%s=%v (from %s)\n", k, v, parent.FullName)
+						}
+					}
+					return true
+				})
+				if inherited > 0 {
+					fmt.Println("Inherited properties:")
+					fmt.Println(out)
 				}
 			} else if len(args) == 2 {
 				fmt.Printf("%s=%v\n", args[1], project.Properties[args[1]])

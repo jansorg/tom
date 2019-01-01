@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (api *Client) NewInvoice(invoiceDate time.Time, header string, contactID string, status int, taxRate float32, taxText string, taxType TaxType, currency Currency, discountTime int, address string) (Invoice, error) {
+func (api *Client) NewInvoice(invoiceDate time.Time, header string, contactID string, status int, taxRate float64, taxText string, taxType TaxType, currency Currency, discountTime int, address string) (Invoice, error) {
 	if invoiceDate.IsZero() {
 		return Invoice{}, fmt.Errorf("invoiceDate is required")
 	}

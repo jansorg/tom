@@ -84,7 +84,7 @@ func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*store.Pr
 }
 
 // Iterates the project and its parent hierarchy until there's not parent or the function returns false
-func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *store.Project) bool) bool {
+func (q *defaultStoreQuery) WithProjectAndParents(id string,  f func(project *store.Project) bool) bool {
 	for id != "" {
 		current, err := q.ProjectByID(id)
 		if err != nil {

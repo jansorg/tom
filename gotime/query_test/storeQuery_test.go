@@ -28,18 +28,18 @@ func Test_InheritedProps(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, ok := ctx.Query.GetInheritedStringProp(parent.ID, config.DescriptionProperty)
+	_, ok := ctx.Query.GetInheritedStringProp(parent.ID, config.InvoiceDescriptionProperty)
 	assert.False(t, ok)
 
-	_, ok = ctx.Query.GetInheritedStringProp(child.ID, config.DescriptionProperty)
+	_, ok = ctx.Query.GetInheritedStringProp(child.ID, config.InvoiceDescriptionProperty)
 	assert.False(t, ok)
 
-	config.DescriptionProperty.Set("top description", parent)
-	v, ok := ctx.Query.GetInheritedStringProp(parent.ID, config.DescriptionProperty)
+	config.InvoiceDescriptionProperty.Set("top description", parent)
+	v, ok := ctx.Query.GetInheritedStringProp(parent.ID, config.InvoiceDescriptionProperty)
 	assert.EqualValues(t, "top description", v)
 	assert.True(t, ok)
 
-	v, ok = ctx.Query.GetInheritedStringProp(child.ID, config.DescriptionProperty)
+	v, ok = ctx.Query.GetInheritedStringProp(child.ID, config.InvoiceDescriptionProperty)
 	assert.EqualValues(t, "top description", v)
 	assert.True(t, ok)
 }
