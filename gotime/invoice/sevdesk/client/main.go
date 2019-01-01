@@ -15,9 +15,9 @@ func main() {
 	invoice, err := sevdesk.NewInvoice(sevdesk.TypeInvoice, time.Now())
 	invoice.Header = "Rechnung NEU"
 	invoice.Contact.ID = "7067576"
-	invoice.Contact.Name = "Contact"
+	invoice.Contact.ObjectName = "Contact"
 	invoice.ContactPerson.ID = "254513"
-	invoice.ContactPerson.Name = "SevUser"
+	invoice.ContactPerson.ObjectName = "SevUser"
 	invoice.Status = 100
 	invoice.TaxRate = "19"
 	invoice.TaxText = ""
@@ -36,5 +36,20 @@ func main() {
 	}
 
 	fmt.Printf("created invoice")
-	fmt.Printf(resp)
+	// bytes, _ := json.MarshalIndent(resp, "", "  ")
+	// fmt.Printf(string(bytes))
+
+	fmt.Println("Adding position")
+
+	pos, err := sevdesk.NewInvoicePosition(resp.ID, "PyCharm development", c.GetQuantity(32.0, "hours"), 71.0, 0)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = c.CreateInvoicePos(pos)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(resp.BrowserURL())
 }
