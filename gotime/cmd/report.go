@@ -104,10 +104,10 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				projectIDs = append(projectIDs, id)
 			}
 
-			storeFrames := context.Store.Frames()
-			frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames), context)
+			frameReport := report.NewBucketReport(frames.NewSortedFrameList(context.Store.Frames()), context)
 			frameReport.IncludeActiveFrames = includeActiveFrames
-			frameReport.ProjectIDs = projectFilter
+			frameReport.ProjectIDs = projectIDs
+			frameReport.IncludeSubprojects = true
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
 			frameReport.RoundTotalsTo = roundTotals

@@ -34,8 +34,10 @@ func init() {
 	newImportCommand(&ctx, RootCmd)
 	newResetCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
-	newCompletionCommand(&ctx, RootCmd)
+	newInvoiceCommand(&ctx, RootCmd)
 	newConfigCommand(&ctx, RootCmd)
+	// hidden command
+	newCompletionCommand(&ctx, RootCmd)
 
 	if err := viper.BindPFlag(config.KeyDataDir, RootCmd.PersistentFlags().Lookup("data-dir")); err != nil {
 		fatal(err)

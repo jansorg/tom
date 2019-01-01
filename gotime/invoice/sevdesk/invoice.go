@@ -69,12 +69,12 @@ type InvoicePosition struct {
 	InvoiceID string
 	Name      string
 	Quantity  Quantity
-	Price     float32
+	Price     float64
 	TaxRate   int
 }
 
 type Quantity struct {
-	Quantity float32
+	Quantity float64
 	UnitID   string
 }
 

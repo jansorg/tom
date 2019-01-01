@@ -6,10 +6,7 @@ import (
 	"time"
 )
 
-func (api *Client) NewInvoice(invoiceType InvoiceType, invoiceDate time.Time, header string, contactID string, status int, taxRate float32, taxText string, taxType TaxType, currency Currency, discountTime int, address string) (Invoice, error) {
-	if invoiceType == "" {
-		return Invoice{}, fmt.Errorf("invoiceType is empty")
-	}
+func (api *Client) NewInvoice(invoiceDate time.Time, header string, contactID string, status int, taxRate float32, taxText string, taxType TaxType, currency Currency, discountTime int, address string) (Invoice, error) {
 	if invoiceDate.IsZero() {
 		return Invoice{}, fmt.Errorf("invoiceDate is required")
 	}
@@ -18,7 +15,7 @@ func (api *Client) NewInvoice(invoiceType InvoiceType, invoiceDate time.Time, he
 	}
 
 	return Invoice{
-		InvoiceType:   invoiceType,
+		InvoiceType:   TypeInvoice,
 		InvoiceDate:   invoiceDate,
 		Header:        header,
 		Contact:       IDWithType{ID: contactID, ObjectName: "Contact"},
@@ -33,7 +30,7 @@ func (api *Client) NewInvoice(invoiceType InvoiceType, invoiceDate time.Time, he
 	}, nil
 }
 
-func (api *Client) NewQuantity(quantity float32, unitName string) (Quantity, error) {
+func (api *Client) NewQuantity(quantity float64, unitName string) (Quantity, error) {
 	if unit, err := api.FindUnit(unitName); err != nil {
 		return Quantity{}, err
 	} else {
@@ -41,7 +38,7 @@ func (api *Client) NewQuantity(quantity float32, unitName string) (Quantity, err
 	}
 }
 
-func (api *Client) NewInvoicePosition(invoiceID string, name string, quantity float32, unitName string, price float32, taxRate int) (InvoicePosition, error) {
+func (api *Client) NewInvoicePosition(invoiceID string, name string, quantity float64, unitName string, price float64, taxRate int) (InvoicePosition, error) {
 	q, err := api.NewQuantity(quantity, unitName)
 	if err != nil {
 		return InvoicePosition{}, err
