@@ -46,10 +46,12 @@ type invoiceCmdConfig struct {
 }
 
 type invoiceConfig struct {
-	currency string
-	taxRate  float64
-	lines    []ProjectInvoiceLine
-	address  string
+	currency    string
+	taxRate     float64
+	lines       []ProjectInvoiceLine
+	address     string
+	projectID   string
+	projectName string
 }
 
 func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
@@ -73,9 +75,11 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	taxRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceTaxRateProperty)
 
 	return invoiceConfig{
-		currency: currency,
-		taxRate:  taxRate,
-		address:  address,
+		projectID:   c.project.ID,
+		projectName: c.project.Name,
+		currency:    currency,
+		taxRate:     taxRate,
+		address:     address,
 		lines: []ProjectInvoiceLine{
 			{
 				ProjectName: c.project.Name,

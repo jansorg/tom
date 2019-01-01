@@ -25,7 +25,7 @@ type IDWithType struct {
 }
 
 type Invoice struct {
-	Header          string
+	InvoiceTitle    string
 	InvoiceID       string
 	InvoiceType     InvoiceType
 	InvoiceDate     time.Time
@@ -45,7 +45,7 @@ type Invoice struct {
 
 func (data Invoice) asFormEncoded() map[string]string {
 	return map[string]string{
-		"header":                    data.Header,
+		"header":                    data.InvoiceTitle,
 		"invoiceNumber":             data.InvoiceID,
 		"invoiceType":               string(data.InvoiceType),
 		"currency":                  string(data.Currency),

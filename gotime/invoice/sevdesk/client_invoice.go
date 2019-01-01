@@ -17,7 +17,7 @@ func (api *Client) NewInvoice(invoiceDate time.Time, header string, contactID st
 	return Invoice{
 		InvoiceType:   TypeInvoice,
 		InvoiceDate:   invoiceDate,
-		Header:        header,
+		InvoiceTitle:  header,
 		Contact:       IDWithType{ID: contactID, ObjectName: "Contact"},
 		ContactPerson: api.userContactPerson,
 		Status:        status,
@@ -54,89 +54,33 @@ func (api *Client) NewInvoicePosition(invoiceID string, name string, quantity fl
 }
 
 func (api *Client) GetInvoices() (*[]InvoiceResponse, error) {
-	resp, err := api.doRequest("GET", "/Invoice", nil, nil)
-	if err != nil {
-		return nil, err
-	}
-
 	var invoices []InvoiceResponse
-	err = api.unwrapJSONResponse(resp, &invoices)
-	if err != nil {
-		return nil, err
-	}
-	return &invoices, nil
+	return &invoices, api.getJSON("/Invoice", &invoices)
 }
 
 func (api *Client) DeleteInvoice(id string) error {
-	// fixme escape ID in path?
-	resp, err := api.doRequest("DELETE", fmt.Sprintf("/Invoice/%s", id), nil, nil)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status %s", resp.Status)
-	}
-	return nil
+	return api.delete("Invoice", id)
 }
 
-func (api *Client) CreateInvoice(invoicdDef Invoice) (*InvoiceResponse, error) {
-	if invoicdDef.InvoiceID == "" {
-		if id, err := api.FetchNextInvoiceID(invoicdDef.InvoiceType, true); err != nil {
+func (api *Client) CreateInvoice(invoice Invoice) (*InvoiceResponse, error) {
+	if invoice.InvoiceID == "" {
+		id, err := api.FetchNextInvoiceID(invoice.InvoiceType, true)
+		if err != nil {
 			return nil, err
-		} else {
-			invoicdDef.InvoiceID = id
 		}
-	}
-
-	resp, err := api.doFormRequest("POST", "/Invoice", nil, invoicdDef.asFormEncoded())
-	if err != nil {
-		return nil, err
-	} else if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
+		invoice.InvoiceID = id
 	}
 
 	invoiceResp := &InvoiceResponse{}
-	if err = api.unwrapJSONResponse(resp, invoiceResp); err != nil {
-		return nil, err
-	}
-	return invoiceResp, nil
+	return invoiceResp, api.postForm("/Invoice", []int{http.StatusCreated}, invoice.asFormEncoded(), invoiceResp)
 }
 
 func (api *Client) CreateInvoicePos(data InvoicePosition) (*InvoicePosResponse, error) {
-	resp, err := api.doFormRequest("POST", "/InvoicePos", nil, data.asFormEncoded())
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("unexpected status code %s", resp.Status)
-	}
-
 	invoiceResp := &InvoicePosResponse{}
-	if err = api.unwrapJSONResponse(resp, invoiceResp); err != nil {
-		return nil, err
-	}
-	return invoiceResp, nil
+	return invoiceResp, api.postForm("/InvoicePos", []int{http.StatusCreated}, data.asFormEncoded(), invoiceResp)
 }
 
 func (api *Client) FetchNextInvoiceID(invoiceType InvoiceType, nextID bool) (string, error) {
-	resp, err := api.doRequest("GET", "/Invoice/Factory/getNextInvoiceNumber", nil, map[string]string{
-		"invoiceType":   string(invoiceType),
-		"useNextNumber": boolToString(nextID),
-	})
-	if err != nil {
-		return "", err
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected HTTP status %s", resp.Status)
-	}
-
 	var id string
-	if err := api.unwrapJSONResponse(resp, &id); err != nil {
-		return "", err
-	}
-	return id, nil
+	return id, api.getJSON("/Invoice/Factory/getNextInvoiceNumber", &id)
 }

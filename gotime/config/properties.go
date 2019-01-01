@@ -14,6 +14,7 @@ type IntProperty Property
 
 // predefined list of properties
 const (
+	ContactIDProperty          StringProperty = iota
 	InvoiceHourlyRateProperty  FloatProperty  = iota
 	InvoiceTaxRateProperty     FloatProperty  = iota
 	InvoiceLanguageProperty    StringProperty = iota
@@ -24,6 +25,8 @@ const (
 
 func (p StringProperty) key() string {
 	switch p {
+	case ContactIDProperty:
+		return "contactID"
 	case InvoiceDescriptionProperty:
 		return "invoiceDescription"
 	case InvoiceLanguageProperty:

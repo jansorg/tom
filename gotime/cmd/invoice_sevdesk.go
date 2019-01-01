@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -23,14 +24,14 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 				fatal(err)
 			}
 
-			ivConfig, err := cfg.createSummary()
+			invoiceData, err := cfg.createSummary()
 			if err != nil {
 				fatal(err)
 			}
 
 			if cfg.dryRun {
 				fmt.Printf("Date range: %s\n", cfg.filterRange.MinimalString())
-				for _, line := range ivConfig.lines {
+				for _, line := range invoiceData.lines {
 					fmt.Printf("%s: %.2f hours at %.2f %s\n", line.ProjectName, line.Hours, line.HourlyRate, line.Currency)
 				}
 			} else {
@@ -40,17 +41,43 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					fatal(err)
 				}
 
+				// try to find the contact
+				contacts, err := client.GetContacts()
+				if err != nil {
+					fatal(err)
+				}
+
+
+				var contactID string
+				for _, contact := range contacts {
+					found := strings.Contains(contact.Description, fmt.Sprintf("[gotime: %s]", invoiceData.projectID ))
+					if found {
+						contactID = contact.ID
+						break
+					}
+				}
+
+				if contactID == ""{
+					// create a new company contact where invoices to this project will attach
+					contact, err := client.CreateCompanyContact(client.NewCompanyContact(fmt.Sprintf("[gotime] Project: %s", invoiceData.projectName), fmt.Sprintf("[gotime: %s]", invoiceData.projectID)))
+					if err != nil {
+						fatal(err)
+					}
+					contactID = contact.ID
+				}
+
 				// fixme
-				invoice, err := client.NewInvoice(time.Now(),
+				invoice, err := client.NewInvoice(
+					time.Now(),
 					fmt.Sprintf("%s %s", cfg.project.FullName, cfg.filterRange.MinimalString()),
-					"7067576",
+					contactID,
 					100,
-					ivConfig.taxRate,
+					invoiceData.taxRate,
 					"",
 					sevdesk.TaxTypeNotEU,
-					sevdesk.Currency(ivConfig.currency),
+					sevdesk.Currency(invoiceData.currency),
 					0,
-					ivConfig.address)
+					invoiceData.address)
 
 				if err != nil {
 					fatal(err)
@@ -61,7 +88,7 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					fatal(err)
 				}
 
-				for _, line := range ivConfig.lines {
+				for _, line := range invoiceData.lines {
 					posDef, err := client.NewInvoicePosition(resp.ID, line.ProjectName, line.Hours, "hours", line.HourlyRate, 0)
 					if err != nil {
 						fatal(err)
@@ -73,7 +100,7 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					}
 				}
 
-				fmt.Printf("Successfully created invoice with %d positions. URL: %s\n", len(ivConfig.lines), resp.BrowserURL())
+				fmt.Printf("Successfully created invoice with %d positions. URL: %s\n", len(invoiceData.lines), resp.BrowserURL())
 			}
 		},
 	}

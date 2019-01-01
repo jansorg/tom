@@ -142,3 +142,52 @@ func (api *Client) unwrapJSONResponse(resp *http.Response, target interface{}) e
 		Objects interface{} `json:"objects"`
 	}{Objects: target})
 }
+
+func (api *Client) getJSON(path string, target interface{}) error {
+	resp, err := api.doFormRequest("GET", path, nil, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("GET %s : unexpected status %s", path, resp.Status)
+	}
+	return api.unwrapJSONResponse(resp, target)
+}
+
+func (api *Client) postForm(path string, successStates []int, postData map[string]string, response interface{}) error {
+	resp, err := api.doFormRequest("POST", path, nil, postData)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	found := false
+	for _, s := range successStates {
+		if s == resp.StatusCode {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return fmt.Errorf("POST %s. Unexpected status %s", path, resp.Status)
+	}
+	return api.unwrapJSONResponse(resp, response)
+}
+
+func (api *Client) delete(elementType string, id string) error {
+	// fixme escape ID in path?
+	fullPath := fmt.Sprintf("/%s/%s", elementType, id)
+	resp, err := api.doRequest("DELETE", fullPath, nil, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("DELETE %s: unexpected status %s", fullPath, resp.Status)
+	}
+	return nil
+}
