@@ -15,6 +15,8 @@ import (
 	"github.com/satori/uuid"
 )
 
+var ErrTagNotFound = fmt.Errorf("tag not found")
+
 func nextID() string {
 	return uuid.NewV4().String()
 }
@@ -388,11 +390,13 @@ func (d *DataStore) AddTag(tag Tag) (*Tag, error) {
 }
 
 func (d *DataStore) UpdateTag(tag Tag) (*Tag, error) {
-	if err := d.RemoveTag(tag.ID); err != nil {
+	existing, err := d.FindTag(tag.ID)
+	if err != nil {
 		return nil, err
 	}
 
-	return d.AddTag(tag)
+	*existing = tag
+	return existing, d.saveLocked()
 }
 
 func (d *DataStore) RemoveTag(id string) error {
@@ -429,7 +433,7 @@ func (d *DataStore) FindFirstTag(filter func(*Tag) bool) (*Tag, error) {
 			return tag, nil
 		}
 	}
-	return nil, fmt.Errorf("no matching tag found")
+	return nil, ErrTagNotFound
 }
 
 func (d *DataStore) FindTags(filter func(*Tag) bool) []*Tag {
@@ -466,10 +470,15 @@ func (d *DataStore) UpdateFrame(frame Frame) (*Frame, error) {
 		return nil, fmt.Errorf("id of frame undefined")
 	}
 
-	if err := d.RemoveFrame(frame.ID); err != nil {
-		return nil, err
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	for _, f := range d.frames {
+		if f.ID == frame.ID {
+			*f = frame
+			return f, d.saveLocked()
+		}
 	}
-	return d.AddFrame(frame)
+	return nil, fmt.Errorf("no frame with ID %s found", frame.ID)
 }
 
 func (d *DataStore) RemoveFrame(id string) error {

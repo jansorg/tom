@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/jansorg/gotime/gotime/config"
 	"github.com/jansorg/gotime/gotime/store"
@@ -21,6 +22,7 @@ type StoreQuery interface {
 
 	TagByID(id string) (*store.Tag, error)
 	TagByName(name string) (*store.Tag, error)
+	TagsByName(names ...string) ([]*store.Tag, error)
 
 	FrameByID(id string) (*store.Frame, error)
 	FramesByProject(id string) []*store.Frame
@@ -84,7 +86,7 @@ func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*store.Pr
 }
 
 // Iterates the project and its parent hierarchy until there's not parent or the function returns false
-func (q *defaultStoreQuery) WithProjectAndParents(id string,  f func(project *store.Project) bool) bool {
+func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *store.Project) bool) bool {
 	for id != "" {
 		current, err := q.ProjectByID(id)
 		if err != nil {
@@ -138,15 +140,37 @@ func (q *defaultStoreQuery) GetInheritedFloatProp(projectID string, prop config.
 }
 
 func (q *defaultStoreQuery) TagByID(id string) (*store.Tag, error) {
-	return q.store.FindFirstTag(func(t *store.Tag) bool {
+	tag, err := q.store.FindFirstTag(func(t *store.Tag) bool {
 		return t.ID == id
 	})
+	if err != nil {
+		return nil, fmt.Errorf("no tag found for id %s", id)
+	}
+	return tag, nil
 }
 
 func (q *defaultStoreQuery) TagByName(name string) (*store.Tag, error) {
-	return q.store.FindFirstTag(func(t *store.Tag) bool {
+	tag, err := q.store.FindFirstTag(func(t *store.Tag) bool {
 		return t.Name == name
 	})
+
+	if err != nil {
+		return nil, fmt.Errorf("no tag found for name %s", name)
+	}
+	return tag, nil
+}
+
+func (q *defaultStoreQuery) TagsByName(names ...string) ([]*store.Tag, error) {
+	sort.Strings(names)
+	matching := q.store.FindTags(func(t *store.Tag) bool {
+		i := sort.SearchStrings(names, t.Name)
+		return i < len(names) && names[i] == t.Name
+	})
+
+	if len(matching) != len(names) {
+		return nil, fmt.Errorf("unable to find all tags for %s", names)
+	}
+	return matching, nil
 }
 
 func (q *defaultStoreQuery) FrameByID(id string) (*store.Frame, error) {

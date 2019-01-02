@@ -3,6 +3,7 @@ package activity
 import (
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/jansorg/gotime/gotime/context"
 	"github.com/jansorg/gotime/gotime/store"
@@ -15,18 +16,20 @@ type ActivityControl struct {
 	createMissingProjects bool
 	createMissingTags     bool
 	allowMultipleActives  bool
+	startStopTime         time.Time
 }
 
-func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMultipleActives bool) *ActivityControl {
+func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMultipleActives bool, startStopTime time.Time) *ActivityControl {
 	return &ActivityControl{
 		ctx:                   ctx,
 		createMissingProjects: createMissing,
 		createMissingTags:     createMissing,
 		allowMultipleActives:  allowMultipleActives,
+		startStopTime:         startStopTime,
 	}
 }
 
-func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []string) (*store.Frame, error) {
+func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*store.Tag) (*store.Frame, error) {
 	projects := a.ctx.Query.ProjectsByShortNameOrID(projectNameOrID)
 
 	var err error
@@ -45,10 +48,12 @@ func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []str
 
 	frame := store.NewStartedFrame(project)
 	frame.Notes = notes
+	frame.Start = &a.startStopTime
+	frame.AddTags(tags...)
 	return a.ctx.Store.AddFrame(frame)
 }
 
-func (a *ActivityControl) StopNewest(notes string, tags []string) (*store.Frame, error) {
+func (a *ActivityControl) StopNewest(notes string, tags []*store.Tag) (*store.Frame, error) {
 	var frames []*store.Frame
 	var err error
 	if frames, err = a.stopActivities(false, notes, tags); err != nil {
@@ -61,11 +66,11 @@ func (a *ActivityControl) StopNewest(notes string, tags []string) (*store.Frame,
 	return frames[0], nil
 }
 
-func (a *ActivityControl) StopAll(notes string, tags []string) ([]*store.Frame, error) {
+func (a *ActivityControl) StopAll(notes string, tags []*store.Tag) ([]*store.Frame, error) {
 	return a.stopActivities(true, notes, tags)
 }
 
-func (a *ActivityControl) stopActivities(all bool, notes string, tags []string) ([]*store.Frame, error) {
+func (a *ActivityControl) stopActivities(all bool, notes string, tags []*store.Tag) ([]*store.Frame, error) {
 	actives := a.ctx.Query.ActiveFrames()
 
 	if !all && len(actives) > 0 {
@@ -76,14 +81,18 @@ func (a *ActivityControl) stopActivities(all bool, notes string, tags []string) 
 	}
 
 	for _, frame := range actives {
-		frame.Stop()
+		frame.StopAt(a.startStopTime)
+
 		if notes != "" {
 			frame.Notes = notes
 		}
+
+		frame.AddTags(tags...)
+
 		if _, err := a.ctx.Store.UpdateFrame(*frame); err != nil {
 			return nil, err
 		}
 	}
-	// fixme add tags
+
 	return actives, nil
 }

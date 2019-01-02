@@ -1,8 +1,19 @@
 package store
 
 import (
+	"sort"
 	"time"
 )
+
+func NewStartedFrame(project *Project) Frame {
+	now := time.Now()
+	return Frame{
+		ID:        nextID(),
+		ProjectId: project.ID,
+		Start:     &now,
+		Updated:   &now,
+	}
+}
 
 type Frame struct {
 	ID        string     `json:"id"`
@@ -11,6 +22,42 @@ type Frame struct {
 	End       *time.Time `json:"end,omitempty"`
 	Updated   *time.Time `json:"updated,omitempty"`
 	Notes     string     `json:"notes,omitempty"`
+	TagIDs    []string   `json:"tags,omitempty"`
+}
+
+func (f *Frame) sortTagIDs() {
+	sort.Strings(f.TagIDs)
+}
+
+func (f *Frame) AddTagID(id string) {
+	i := sort.SearchStrings(f.TagIDs, id)
+	if i >= len(f.TagIDs) || f.TagIDs[i] != id {
+		// fixme user insertion index
+		f.TagIDs = append(f.TagIDs, id)
+		f.sortTagIDs()
+	}
+}
+
+func (f *Frame) RemoveTagID(id string) {
+	i := sort.SearchStrings(f.TagIDs, id)
+	if i < len(f.TagIDs) && f.TagIDs[i] == id {
+		f.TagIDs = append(f.TagIDs[:i], f.TagIDs[i+1:]...)
+	}
+}
+
+func (f *Frame) AddTags(newTags ...*Tag) {
+	for _, t := range newTags {
+		f.AddTagID(t.ID)
+	}
+}
+
+func (f *Frame) HasTag(tag *Tag) bool {
+	if tag == nil {
+		return false
+	}
+
+	i := sort.SearchStrings(f.TagIDs, tag.ID)
+	return i < len(f.TagIDs) && f.TagIDs[i] == tag.ID
 }
 
 func (f *Frame) IsStopped() bool {
@@ -33,9 +80,12 @@ func (f *Frame) IsActive() bool {
 }
 
 func (f *Frame) Stop() {
-	now := time.Now()
-	f.End = &now
-	f.Updated = &now
+	f.StopAt(time.Now())
+}
+
+func (f *Frame) StopAt(time time.Time) {
+	f.End = &time
+	f.Updated = &time
 }
 
 func (f *Frame) Duration() time.Duration {
@@ -51,14 +101,4 @@ func (f *Frame) IsBefore(other *Frame) bool {
 
 func (f *Frame) IsAfter(other *Frame) bool {
 	return !f.IsBefore(other) && f.Start != nil && other.Start != nil && f.Start.After(*other.Start)
-}
-
-func NewStartedFrame(project *Project) Frame {
-	now := time.Now()
-	return Frame{
-		ID:        nextID(),
-		ProjectId: project.ID,
-		Start:     &now,
-		Updated:   &now,
-	}
 }
