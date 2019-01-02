@@ -31,6 +31,7 @@ func init() {
 	newRemoveCommand(&ctx, RootCmd)
 	newStartCommand(&ctx, RootCmd)
 	newStopCommand(&ctx, RootCmd)
+	newCancelCommand(&ctx, RootCmd)
 	newReportCommand(&ctx, RootCmd)
 	newImportCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
