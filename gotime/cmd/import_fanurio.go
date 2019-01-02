@@ -79,7 +79,7 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			return err
 		}
 
-		project, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(clientName, projectName, taskName)
+		project, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(clientName, projectName, taskName)
 		if err != nil {
 			return err
 		}

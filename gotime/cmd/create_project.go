@@ -16,12 +16,16 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 		Example: "gotime create project \"Installation\" \"Deployment\"",
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
-				project, err := context.StoreHelper.GetOrCreateNestedProject(name)
+				project, created, err := context.StoreHelper.GetOrCreateNestedProject(name)
 				if err != nil {
 					fatal(err)
 				}
 
-				fmt.Printf("created project %s\n", project.FullName)
+				if created {
+					fmt.Printf("created project %s\n", project.FullName)
+				} else {
+					fmt.Printf("using existing project %s\n", project.FullName)
+				}
 			}
 		},
 	}

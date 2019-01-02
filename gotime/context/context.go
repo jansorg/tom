@@ -12,7 +12,7 @@ import (
 
 type GoTimeContext struct {
 	Store           store.Store
-	StoreHelper     *store.StoreHelper
+	StoreHelper     *store.Helper
 	Query           query.StoreQuery
 	Language        language.Tag
 	LocalePrinter   *message.Printer

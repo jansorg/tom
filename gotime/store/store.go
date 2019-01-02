@@ -30,7 +30,7 @@ type Store interface {
 	StartBatch()
 	StopBatch()
 
-	Reset(projects, tags, frames bool) error
+	Reset(projects, tags, frames bool) (int, int, int, error)
 
 	Projects() []*Project
 	ProjectByID(id string) (*Project, error)
@@ -182,7 +182,6 @@ func (d *DataStore) save() error {
 		return nil;
 	}
 
-	fmt.Println("saving...")
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.saveLocked()
@@ -220,21 +219,26 @@ func (d *DataStore) saveLocked() error {
 	return nil
 }
 
-func (d *DataStore) Reset(projects, tags, frames bool) error {
+func (d *DataStore) Reset(projects, tags, frames bool) (int, int, int, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	var projectCount, tagCount, frameCount int
+
 	if projects {
+		projectCount = len(d.projects)
 		d.projects = []*Project{}
 	}
 	if tags {
+		tagCount = len(d.tags)
 		d.tags = []*Tag{}
 	}
 	if frames {
+		frameCount = len(d.frames)
 		d.frames = []*Frame{}
 	}
 
-	return d.saveLocked()
+	return projectCount, tagCount, frameCount, d.saveLocked()
 }
 
 func (d *DataStore) Projects() []*Project {
