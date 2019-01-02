@@ -25,6 +25,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.gotime.yaml)")
 
 	newProjectsCommand(&ctx, RootCmd)
+	newTagsCommand(&ctx, RootCmd)
 	newFramesCommand(&ctx, RootCmd)
 	newCreateCommand(&ctx, RootCmd)
 	newRemoveCommand(&ctx, RootCmd)
@@ -86,13 +87,14 @@ const (
 	//language=BASH
 	bash_completion_func = `__gotime_projects_get()
 {
-    local gotime_output out
-    if gotime_output=$(gotime projects --format name | grep "$1" | sed -e 's/ /\\\\ /g' 2>/dev/null); then
-		SAVEIFS=$IFS; IFS=$'\n'; 
-		out=($gotime_output); out=($(printf "%s\n" ${out[*]}));
-        COMPREPLY=( $( compgen -W "${out[*]}" -- "$cur" ) )
-		IFS=$SAVEIFS
-    fi
+		  local IFS=$'\n'
+#          if [[ $COMP_CWORD -eq 2 ]]; then
+            local projects="$(gotime projects -f name | sed -e 's/ /\\\\ /g')"
+            COMPREPLY=($(compgen -W "$projects" -- ${cur}))
+#          else
+#            tags="$(tags | sed -e 's/ /\\\\ /g' | awk '$0="+"$0')"
+#            COMPREPLY=($(compgen -W "$tags" -- ${cur}))
+#          fi
 }
 
 __gotime_get_projects()

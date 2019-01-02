@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -9,60 +8,46 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
-func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
-	format := ""
-	delimiter := ""
-	jsonOutput := false
+type projectList []*store.Project
 
+func (o projectList) size() int {
+	return len(o)
+}
+
+func (o projectList) get(index int, prop string) (string, error) {
+	switch prop {
+	case "id":
+		return o[index].ID, nil
+	case "fullName":
+		return o[index].FullName, nil
+	case "name":
+		return o[index].Name, nil
+	default:
+		return "", fmt.Errorf("unknown property %s", prop)
+	}
+}
+
+func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "projects",
-		Short: "Print a listing of all projects",
+		Use:   "tags",
+		Short: "Prints tags",
 		Run: func(cmd *cobra.Command, args []string) {
-			projects := ctx.Store.Projects()
+			var projects projectList = ctx.Store.Projects()
 			sort.SliceStable(projects, func(i, j int) bool {
 				return strings.Compare(projects[i].FullName, projects[j].FullName) < 0
 			})
 
-			properties := strings.Split(format, ",")
-
-			if jsonOutput {
-				if bytes, err := json.MarshalIndent(projects, "", "  "); err != nil {
-					fatal(err)
-				} else {
-					fmt.Println(string(bytes))
-				}
-			} else {
-				for _, p := range projects {
-					line := ""
-					for i, prop := range properties {
-						if i > 0 {
-							line += delimiter
-						}
-						switch strings.TrimSpace(prop) {
-						case "id":
-							line += p.ID
-						case "name":
-							line += p.FullName
-						case "shortName":
-							line += p.Name
-						default:
-							fatal("unknown property", prop)
-						}
-					}
-					fmt.Println(line)
-				}
+			err := printList(cmd, projects)
+			if err != nil {
+				fatal(err)
 			}
 		},
 	}
 
-	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
-	cmd.Flags().StringVarP(&format, "format", "f", "name", "A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName")
-	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
-
-	newProjectsPropertyCommand(ctx, cmd)
-
+	addListOutputFlags(cmd, []string{"id", "fullName", "name"})
 	parent.AddCommand(cmd)
 	return cmd
 }
