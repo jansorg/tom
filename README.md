@@ -1,3 +1,5 @@
+<div style="color:red">This project is still in an early phase. It's usable and working but not yet recommended for production.</div>
+
 # gotime
 
 gotime is a command line application to track time and to simplify office work.
@@ -6,9 +8,9 @@ It's able to track time, to creat HTML and PDF reports and to create invoice dra
 ## Basic usage
 A typical session looks like this:
 ```bash
-gotime start acme/web
+gotime start acme
 gotime stop
-gotime report --month 0 --split project
+gotime report --month 0
 ```
 
 ## Documentation
@@ -30,6 +32,13 @@ gotime report --split project -p client
 ```
 
 This will create a report on all projects which belong to client1 with the tracked time per project.
+
+## Reporting
+
+## HTML Reports
+
+## PDF Reports
+
 
 ## Import from other tools
 
