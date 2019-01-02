@@ -12,13 +12,17 @@ import (
 // generates markdown documentation for the commandline
 // to be called from the main directory
 func main() {
-	target := "./docs/markdown"
+	target := "./docs/man"
 	if len(os.Args) == 1 {
 		target = os.Args[0]
 	}
 
-	c := cmd.RootCmd
-	err := doc.GenMarkdownTree(c, target)
+	cmd := cmd.RootCmd
+	header := &doc.GenManHeader{
+		Title:   "gotime",
+		Section: "3",
+	}
+	err := doc.GenManTree(cmd, header, target)
 	if err != nil {
 		log.Fatal(err)
 	}
