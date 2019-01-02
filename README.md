@@ -14,5 +14,35 @@ gotime report --month 0 --split project
 ## Documentation
 Documentation about the command line is available at [docs/markdown](./docs/markdown/gotime.md)
 
+## Data model
+
+### Projects
+gotime supports nested projects.
+The simplest form is a project without any subprojects.
+
+If you need to bill a single client for several distinct project then it's better to use subprojects.
+For example:
+```bash
+gotime create project client1 client1/web client1/backend
+gotime start client1/web
+gotime stop
+gotime report --split project -p client
+```
+
+This will create a report on all projects which belong to client1 with the tracked time per project.
+
+## Import from other tools
+
+### Import data from Watson
+```bash
+gotime import watson
+```
+
+### Import data from Fanurio
+This needs a custom CSV export (to be documented).
+```bash
+gotime import fanurio complete-export.csv
+```
+
 ## License
 To be decided
