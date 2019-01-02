@@ -2,7 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"runtime"
+	"runtime/pprof"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,6 +26,11 @@ func init() {
 
 	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.gotime)")
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.gotime.yaml)")
+
+	RootCmd.PersistentFlags().String("cpu-profile", "", "create a cpu profile for performance measurement")
+	RootCmd.Flag("cpu-profile").Hidden = true
+	RootCmd.Flags().String("mem-profile", "", "create a memory profile for performance measurement")
+	RootCmd.Flag("mem-profile").Hidden = true
 
 	newProjectsCommand(&ctx, RootCmd)
 	newTagsCommand(&ctx, RootCmd)
@@ -127,6 +135,39 @@ var RootCmd = &cobra.Command{
 	Short:                  "gotime is a command line application to track time.",
 	Version:                "1.0.0",
 	BashCompletionFunction: bash_completion_func,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		cpuProfile, _ := cmd.Flags().GetString("cpu-profile")
+		if cpuProfile != "" {
+			log.Println("creating a cpu profile...")
+			f, err := os.Create(cpuProfile)
+			if err != nil {
+				log.Fatal("could not create CPU profile: ", err)
+			}
+			if err := pprof.StartCPUProfile(f); err != nil {
+				log.Fatal("could not start CPU profile: ", err)
+			}
+		}
+	},
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		cpuProfile, _ := cmd.Flags().GetString("cpu-profile")
+		if cpuProfile != "" {
+			pprof.StopCPUProfile()
+		}
+
+		memProfile, _ := cmd.Flags().GetString("mem-profile")
+		if memProfile != "" {
+			log.Println("creating a mem profile...")
+			f, err := os.Create(memProfile)
+			if err != nil {
+				log.Fatal("could not create memory profile: ", err)
+			}
+			runtime.GC() // get up-to-date statistics
+			if err := pprof.WriteHeapProfile(f); err != nil {
+				log.Fatal("could not write memory profile: ", err)
+			}
+			f.Close()
+		}
+	},
 }
 
 func Execute() {

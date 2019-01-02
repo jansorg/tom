@@ -178,16 +178,16 @@ func (d *DataStore) loadLocked() error {
 }
 
 func (d *DataStore) save() error {
-	if atomic.LoadInt32(&d.batchMode) == 1 {
-		return nil;
-	}
-
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	return d.saveLocked()
 }
 
 func (d *DataStore) saveLocked() error {
+	if atomic.LoadInt32(&d.batchMode) == 1 {
+		return nil;
+	}
+
 	d.sortProjects()
 	d.sortTags()
 	d.sortFrames()
