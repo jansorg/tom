@@ -17,6 +17,7 @@ gotime report --month 0
 Documentation about the command line is available at [docs/markdown](./docs/markdown/gotime.md)
 
 ## Data model
+The data is stored in a few JSON files on disk. It's easy to backup and still fast.
 
 ### Projects
 gotime supports nested projects.
@@ -33,12 +34,25 @@ gotime report --split project -p client
 
 This will create a report on all projects which belong to client1 with the tracked time per project.
 
+## Tracking time
+### Start
+### Stop
+### Cancel
+### View
+
 ## Reporting
 
-## HTML Reports
+### Date and time filters
+### Splitting options
 
-## PDF Reports
+### Plain Text Reports
 
+### HTML Reports
+
+### PDF Reports
+
+## Create Invoices
+### Create invoices at sevdesk.com
 
 ## Import from other tools
 
