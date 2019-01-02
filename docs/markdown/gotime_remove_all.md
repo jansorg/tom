@@ -1,19 +1,19 @@
-## gotime remove project
+## gotime remove all
 
-removes new project and all its associated data
+Removes all stores data. Specify the type to only remove projects, tags or frames
 
 ### Synopsis
 
-removes new project and all its associated data
+Removes all stores data. Specify the type to only remove projects, tags or frames
 
 ```
-gotime remove project <project name or project ID> ... [flags]
+gotime remove all [all | projects | tags | frames] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for project
+  -h, --help   help for all
 ```
 
 ### Options inherited from parent commands

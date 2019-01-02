@@ -1,22 +1,22 @@
-## gotime frames
+## gotime tags
 
-Print a listing of all frames
+Prints tags
 
 ### Synopsis
 
-Print a listing of all frames
+Prints tags
 
 ```
-gotime frames [flags]
+gotime tags [flags]
 ```
 
 ### Options
 
 ```
   -d, --delimiter string   The delimiter to add between property values. Default: TAB (default "\t")
-  -f, --format string      A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName (default "id")
-  -h, --help               help for frames
-      --json               Prints JSON instead of plain text
+  -f, --format string      A comma separated list of of properties to output. Default: id . Possible values: id,fullName,name (default "name")
+  -h, --help               help for tags
+  -o, --output string      Output format. Supported: plain | json. Default: plain (default "plain")
 ```
 
 ### Options inherited from parent commands
