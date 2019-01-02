@@ -14,8 +14,8 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 		Short: "removes new project and all its associated data",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			remvoedFrames := 0
-			remvoedProjects := 0
+			removedFrameCount := 0
+			removedProjects := 0
 
 			for _, name := range args {
 				projects := context.Query.ProjectsByShortNameOrID(name)
@@ -26,17 +26,17 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 						if err := context.Store.RemoveFrame(f.ID); err != nil {
 							fatal(err)
 						}
-						remvoedFrames++
+						removedFrameCount++
 					}
 
 					if err := context.Store.RemoveProject(p.ID); err != nil {
 						fatal(err)
 					}
-					remvoedProjects++
+					removedProjects++
 				}
 			}
 
-			fmt.Printf("Removed projects: %d\nRemoved frames: %d\n", remvoedProjects, remvoedFrames)
+			fmt.Printf("Removed projects: %d\nRemoved frames: %d\n", removedProjects, removedFrameCount)
 		},
 	}
 	parent.AddCommand(cmd)

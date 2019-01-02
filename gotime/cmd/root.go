@@ -33,7 +33,6 @@ func init() {
 	newStopCommand(&ctx, RootCmd)
 	newReportCommand(&ctx, RootCmd)
 	newImportCommand(&ctx, RootCmd)
-	newResetCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
 	newInvoiceCommand(&ctx, RootCmd)
 	newConfigCommand(&ctx, RootCmd)
