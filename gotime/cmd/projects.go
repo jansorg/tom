@@ -58,7 +58,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 	}
 
 	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
-	cmd.Flags().StringVarP(&format, "format", "f", "id", "A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName")
+	cmd.Flags().StringVarP(&format, "format", "f", "name", "A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName")
 	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
 
 	newProjectsPropertyCommand(ctx, cmd)
