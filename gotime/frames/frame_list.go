@@ -77,7 +77,7 @@ func (f *FrameList) FilterByEndDate(maxEndDate time.Time, acceptUnstopped bool) 
 	}
 
 	f.Filter(func(frame *store.Frame) bool {
-		return frame.End == nil && acceptUnstopped || !frame.End.After(maxEndDate)
+		return frame.End == nil && acceptUnstopped || frame.End != nil && !frame.End.After(maxEndDate)
 	})
 }
 

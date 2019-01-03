@@ -143,13 +143,16 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
 
 	// cmd.Flags().BoolVarP(&showAll, "all", "", false, "Reports all activities.")
-	cmd.Flags().IntVarP(&year, "year", "", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
-	cmd.Flags().IntVarP(&month, "month", "", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
-	cmd.Flags().IntVarP(&day, "day", "", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+	cmd.Flags().IntVarP(&year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
+	// cmd.Flag("year").NoOptDefVal = "0"
+	cmd.Flags().IntVarP(&month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	// cmd.Flag("month").NoOptDefVal = "0"
+	cmd.Flags().IntVarP(&day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
+	// cmd.Flag("day").NoOptDefVal = "0"
 
 	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
-	cmd.Flags().StringVarP(&splitModes, "split", "", "", "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.Flags().StringVarP(&splitModes, "split", "s", "", "Group frames into years, months and/or days. Possible values: year,month,day")
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
