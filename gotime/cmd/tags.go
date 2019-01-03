@@ -44,7 +44,7 @@ func newTagsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 		},
 	}
 
-	addListOutputFlags(cmd, []string{"id", "name"})
+	addListOutputFlags(cmd, "name", []string{"id", "name"})
 	parent.AddCommand(cmd)
 	return cmd
 }

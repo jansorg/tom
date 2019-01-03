@@ -54,7 +54,7 @@ func init() {
 }
 
 func fatal(err ...interface{}) {
-	fmt.Println(append([]interface{}{"Error: "}, err...)...)
+	_, _ = fmt.Fprintln(os.Stderr, append([]interface{}{"Error: "}, err...)...)
 	os.Exit(1)
 }
 
@@ -95,14 +95,8 @@ const (
 	//language=BASH
 	bash_completion_func = `__gotime_projects_get()
 {
-		  local IFS=$'\n'
-#          if [[ $COMP_CWORD -eq 2 ]]; then
-            local projects="$(gotime projects -f name | sed -e 's/ /\\\\ /g')"
-            COMPREPLY=($(compgen -W "$projects" -- ${cur}))
-#          else
-#            tags="$(tags | sed -e 's/ /\\\\ /g' | awk '$0="+"$0')"
-#            COMPREPLY=($(compgen -W "$tags" -- ${cur}))
-#          fi
+    local -a projects
+    readarray -t COMPREPLY < <(gotime projects 2>/dev/null | grep "$cur" | sed -e 's/ /\\ /g')
 }
 
 __gotime_get_projects()

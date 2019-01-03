@@ -32,8 +32,8 @@ func (o projectList) get(index int, prop string) (string, error) {
 
 func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "tags",
-		Short: "Prints tags",
+		Use:   "projects",
+		Short: "Prints projects",
 		Run: func(cmd *cobra.Command, args []string) {
 			var projects projectList = ctx.Store.Projects()
 			sort.SliceStable(projects, func(i, j int) bool {
@@ -47,7 +47,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 		},
 	}
 
-	addListOutputFlags(cmd, []string{"id", "fullName", "name"})
+	addListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name"})
 	parent.AddCommand(cmd)
 	return cmd
 }
