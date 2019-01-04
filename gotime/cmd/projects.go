@@ -21,6 +21,8 @@ func (o projectList) get(index int, prop string) (string, error) {
 	switch prop {
 	case "id":
 		return o[index].ID, nil
+	case "parentID":
+		return o[index].ParentID, nil
 	case "fullName":
 		return o[index].FullName, nil
 	case "name":
@@ -47,7 +49,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 		},
 	}
 
-	addListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name"})
+	addListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID"})
 	parent.AddCommand(cmd)
 	return cmd
 }
