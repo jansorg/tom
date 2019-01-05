@@ -13,6 +13,7 @@ type StoreQuery interface {
 
 	ProjectByID(id string) (*store.Project, error)
 	ProjectByFullName(name string) (*store.Project, error)
+	ProjectByFullNameOrID(name string) (*store.Project, error)
 	ProjectsByShortName(name string) []*store.Project
 	ProjectsByShortNameOrID(nameOrID string) []*store.Project
 	WithProjectAndParents(id string, f func(*store.Project) bool) bool
@@ -70,6 +71,16 @@ func (q *defaultStoreQuery) IsToplevelProject(id string) bool {
 func (q *defaultStoreQuery) ProjectByFullName(name string) (*store.Project, error) {
 	return q.store.FindFirstProject(func(p *store.Project) bool {
 		return p.FullName == name
+	})
+}
+
+func (q *defaultStoreQuery) ProjectByFullNameOrID(nameOrID string) (*store.Project, error) {
+	if p, err := q.ProjectByID(nameOrID); err == nil {
+		return p, nil
+	}
+
+	return q.store.FindFirstProject(func(p *store.Project) bool {
+		return p.FullName == nameOrID
 	})
 }
 

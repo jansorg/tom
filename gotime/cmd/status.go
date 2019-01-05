@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -10,6 +12,8 @@ import (
 
 func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	verbose := false
+	format := ""
+	delimiter := ""
 
 	var cmd = &cobra.Command{
 		Use:   "status",
@@ -17,7 +21,40 @@ func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Run: func(cmd *cobra.Command, args []string) {
 			activeFrames := context.Query.ActiveFrames
 
-			if verbose {
+			if cmd.Flag("format").Changed {
+				flags := strings.Split(format, ",")
+
+				for _, frame := range activeFrames() {
+					project, err := context.Query.ProjectByID(frame.ProjectId)
+					if err != nil {
+						fatal(err)
+					}
+
+					var values []string
+					for _, flag := range flags {
+						value := ""
+						switch flag {
+						case "id":
+							value = frame.ID
+						case "projectID":
+							value = project.ID
+						case "projectName":
+							value = project.Name
+						case "projectFullName":
+							value = project.FullName
+						case "projectParentID":
+							value = project.ParentID
+						case "startTime":
+							value = frame.Start.Format(time.RFC3339)
+						default:
+							fatal(fmt.Errorf("unknown flag %s", flag))
+						}
+
+						values = append(values, value)
+					}
+					fmt.Println(strings.Join(values, delimiter))
+				}
+			} else if verbose {
 				projectCount := len(context.Store.Projects())
 				tagCount := len(context.Store.Tags())
 				frameCount := len(context.Store.Frames())
@@ -41,6 +78,8 @@ func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		},
 	}
 
+	cmd.Flags().StringVarP(&format, "format", "f", "", "Properties to print for each active frame. Possible values: id,projectID,projectName,projectFullName,projectParentID,startTime")
+	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "Delimiter to separate flags on the same line. Only used when --format is specified.")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", verbose, "Print details about the currently stored projects, tags and frames")
 
 	parent.AddCommand(cmd)

@@ -1,73 +1,79 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/gotime/gotime/context"
+	"github.com/jansorg/gotime/gotime/store"
 )
 
+type frameList []*store.Frame
+
+func (f frameList) size() int {
+	return len(f)
+}
+
+func (f frameList) get(index int, prop string) (string, error) {
+	switch prop {
+	case "id":
+		return f[index].ID, nil
+	case "projectName":
+		if project, err := ctx.Query.ProjectByID(f[index].ProjectId); err != nil {
+			return "", err
+		} else {
+			return project.Name, nil
+		}
+	case "projectFullName":
+		if project, err := ctx.Query.ProjectByID(f[index].ProjectId); err != nil {
+			return "", err
+		} else {
+			return project.FullName, nil
+		}
+	case "startTime":
+		return f[index].Start.In(time.Local).String(), nil
+	case "stopTime":
+		frame := f[index]
+		if frame.IsActive() {
+			return "", nil
+		}
+		return frame.End.In(time.Local).String(), nil
+	case "duration":
+		frame := f[index]
+		return ctx.DurationPrinter.Short(frame.Duration()), nil
+	default:
+		return "", fmt.Errorf("unknown property %s", prop)
+	}
+}
+
 func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
-	jsonOutput := false
-	format := ""
-	delimiter := ""
+	projectIDOrName := ""
 
 	var cmd = &cobra.Command{
 		Use:   "frames",
 		Short: "Print a listing of all frames",
 		Run: func(cmd *cobra.Command, args []string) {
-			frames := context.Store.Frames()
-
-			if jsonOutput {
-				if bytes, err := json.MarshalIndent(frames, "", "  "); err != nil {
-					fatal(err)
-				} else {
-					fmt.Println(string(bytes))
-				}
+			var frames frameList
+			if projectIDOrName == "" {
+				frames = context.Store.Frames()
 			} else {
-				properties := strings.Split(format, ",")
-
-				for _, frame := range frames {
-					line := ""
-					for i, prop := range properties {
-						if i > 0 {
-							line += delimiter
-						}
-
-						switch strings.TrimSpace(prop) {
-						case "id":
-							line += frame.ID
-						case "projectID":
-							line += frame.ProjectId
-						case "projectName":
-							project, _ := ctx.Query.ProjectByID(frame.ProjectId)
-							line += project.FullName
-						case "startTime":
-							line += frame.Start.String()
-						case "stopTime":
-							line += frame.Start.String()
-						case "duration":
-							if frame.IsStopped() {
-								line += ctx.DurationPrinter.Short(frame.Duration())
-							} else {
-								line += ""
-							}
-						default:
-							fatal("unknown property", prop, ". Valid values: id, projectID, projectName, startTime, stopTime, duration")
-						}
-					}
-					fmt.Println(line)
+				project, err := context.Query.ProjectByFullNameOrID(projectIDOrName)
+				if err != nil {
+					fatal(fmt.Errorf("no project found for %s", projectIDOrName))
 				}
+				frames = context.Query.FramesByProject(project.ID)
+			}
+
+			if err := printList(cmd, frames); err != nil {
+				fatal(err)
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&format, "format", "f", "id", "A comma separated list of of properties to output. Default: id . Possible values: id,name,shortName")
-	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
-	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
+	cmd.Flags().StringVarP(&projectIDOrName, "project", "p", "", "Only frames of this project will be printed. Project IDs or full project names are accepted. Default: no project")
+	addListOutputFlags(cmd, "name", []string{"id", "projectID", "projectName", "projectFullTime", "startTime", "stopTime", "duration"})
 
 	parent.AddCommand(cmd)
 	return cmd
