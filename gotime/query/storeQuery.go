@@ -26,7 +26,7 @@ type StoreQuery interface {
 	TagsByName(names ...string) ([]*store.Tag, error)
 
 	FrameByID(id string) (*store.Frame, error)
-	FramesByProject(id string) []*store.Frame
+	FramesByProject(id string, includeSubprojects bool) []*store.Frame
 	FramesByTag(id string) []*store.Frame
 	ActiveFrames() []*store.Frame
 	IsToplevelProject(id string) bool
@@ -190,9 +190,9 @@ func (q *defaultStoreQuery) FrameByID(id string) (*store.Frame, error) {
 	})
 }
 
-func (q *defaultStoreQuery) FramesByProject(id string) []*store.Frame {
+func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) []*store.Frame {
 	return q.store.FindFrames(func(f *store.Frame) bool {
-		return f.ProjectId == id
+		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsChild(id, f.ProjectId)
 	})
 }
 

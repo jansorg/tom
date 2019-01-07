@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -33,16 +34,28 @@ func (f frameList) get(index int, prop string) (string, error) {
 			return project.FullName, nil
 		}
 	case "startTime":
-		return f[index].Start.In(time.Local).String(), nil
+		return f[index].Start.In(time.Local).Format(time.RFC3339), nil
 	case "stopTime":
 		frame := f[index]
 		if frame.IsActive() {
 			return "", nil
 		}
-		return frame.End.In(time.Local).String(), nil
+		return frame.End.In(time.Local).Format(time.RFC3339), nil
+	case "lastUpdated":
+		frame := f[index]
+		if frame.Updated == nil {
+			return "", nil
+		}
+		return frame.Updated.Format(time.RFC3339), nil;
 	case "duration":
 		frame := f[index]
 		return ctx.DurationPrinter.Short(frame.Duration()), nil
+	case "notes":
+		frame := f[index]
+		return frame.Notes, nil;
+	case "tagIDs":
+		frame := f[index]
+		return strings.Join(frame.TagIDs, ","), nil;
 	default:
 		return "", fmt.Errorf("unknown property %s", prop)
 	}
@@ -50,6 +63,7 @@ func (f frameList) get(index int, prop string) (string, error) {
 
 func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	projectIDOrName := ""
+	includeSubprojects := false
 
 	var cmd = &cobra.Command{
 		Use:   "frames",
@@ -63,7 +77,7 @@ func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				if err != nil {
 					fatal(fmt.Errorf("no project found for %s", projectIDOrName))
 				}
-				frames = context.Query.FramesByProject(project.ID)
+				frames = context.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
 			if err := printList(cmd, frames); err != nil {
@@ -73,7 +87,8 @@ func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	}
 
 	cmd.Flags().StringVarP(&projectIDOrName, "project", "p", "", "Only frames of this project will be printed. Project IDs or full project names are accepted. Default: no project")
-	addListOutputFlags(cmd, "name", []string{"id", "projectID", "projectName", "projectFullTime", "startTime", "stopTime", "duration"})
+	cmd.Flags().BoolVarP(&includeSubprojects, "subprojects", "s", false, "Include frames of subprojects")
+	addListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs"})
 
 	parent.AddCommand(cmd)
 	return cmd

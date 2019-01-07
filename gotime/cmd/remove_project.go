@@ -11,7 +11,7 @@ import (
 func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "project <project name or project ID> ...",
-		Short: "removes new project and all its associated data",
+		Short: "removes new project and all its associated data (including subprojects)",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			removedFrameCount := 0
@@ -21,7 +21,7 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 				projects := context.Query.ProjectsByShortNameOrID(name)
 
 				for _, p := range projects {
-					frames := context.Query.FramesByProject(p.ID)
+					frames := context.Query.FramesByProject(p.ID, true)
 					for _, f := range frames {
 						if err := context.Store.RemoveFrame(f.ID); err != nil {
 							fatal(err)
