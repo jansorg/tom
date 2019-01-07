@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 func newCreateTagCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

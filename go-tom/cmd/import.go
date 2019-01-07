@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/context"
+	"github.com/jansorg/tom/go-tom/context"
 )
 
 func newImportCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

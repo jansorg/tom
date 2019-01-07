@@ -1,6 +1,6 @@
 package main
 
-import "github.com/jansorg/gotime/go-tom-pdf/cmd"
+import "github.com/jansorg/tom/go-tom-pdf/cmd"
 
 func main() {
 	cmd.Execute()

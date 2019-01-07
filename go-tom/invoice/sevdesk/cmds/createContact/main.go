@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jansorg/gotime/go-tom/invoice/sevdesk"
+	"github.com/jansorg/tom/go-tom/invoice/sevdesk"
 )
 
 func main() {

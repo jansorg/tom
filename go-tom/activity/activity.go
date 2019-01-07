@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 var ProjectNotFoundErr = fmt.Errorf("project not found")

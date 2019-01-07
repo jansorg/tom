@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/report"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/report"
 )
 
 type Report struct {

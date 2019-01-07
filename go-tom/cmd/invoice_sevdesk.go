@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/invoice/sevdesk"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/invoice/sevdesk"
 )
 
 func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

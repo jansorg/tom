@@ -11,8 +11,8 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

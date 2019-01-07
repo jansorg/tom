@@ -8,11 +8,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/dateUtil"
-	"github.com/jansorg/gotime/go-tom/frames"
-	"github.com/jansorg/gotime/go-tom/htmlreport"
-	"github.com/jansorg/gotime/go-tom/report"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateUtil"
+	"github.com/jansorg/tom/go-tom/frames"
+	"github.com/jansorg/tom/go-tom/htmlreport"
+	"github.com/jansorg/tom/go-tom/report"
 )
 
 func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

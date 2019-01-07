@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/text/language"
 
-	"github.com/jansorg/gotime/go-tom/frames"
-	"github.com/jansorg/gotime/go-tom/store"
-	"github.com/jansorg/gotime/go-tom/testSetup"
+	"github.com/jansorg/tom/go-tom/frames"
+	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/testSetup"
 )
 
 func Test_Report(t *testing.T) {

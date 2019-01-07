@@ -5,12 +5,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom/config"
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/dateUtil"
-	"github.com/jansorg/gotime/go-tom/frames"
-	"github.com/jansorg/gotime/go-tom/report"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/config"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateUtil"
+	"github.com/jansorg/tom/go-tom/frames"
+	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

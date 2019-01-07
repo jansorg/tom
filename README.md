@@ -1,40 +1,40 @@
 **This project is still in an early phase. It's usable and working but not yet recommended for production.**
 
-# gotime
+# tom
 
-gotime is a command line application to track time and to simplify office work.
+tom is a command line application to track time and to simplify office work.
 It's able to track time, to create HTML and PDF reports and to create invoice drafts for a few web-based invoicing application.
 
-`gotime` tracks time locally. Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
+`tom` tracks time locally. Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
 
 ## Basic usage
 A typical session looks like this:
 ```bash
-gotime start acme
-gotime stop
-gotime report --month 0
+tom start acme
+tom stop
+tom report --month 0
 ```
 
 ## Documentation
-Documentation about the command line is available at [docs/markdown](./docs/markdown/gotime.md)
+Documentation about the command line is available at [docs/markdown](./docs/markdown/tom.md)
 
 ## Data model
 The data is stored in a few JSON files on disk. It's easy to backup and still fast.
-Right now it's on disk at `$HOME/.gotime/`.
+Right now it's on disk at `$HOME/.tom/`.
 The available commands make it easy to export it into different target formats. Most commands are supporting plain text
 and JSON at this time. Other formats may be added in the future.
 
 ### Projects
-gotime supports nested projects. The separator character is the slash '/'.
+tom supports nested projects. The separator character is the slash '/'.
 The simplest form is a project without any subprojects.
 
 If you need to bill a single client for several distinct project then it's better to use subprojects.
 For example:
 ```bash
-gotime create project client1 client1/web client1/backend
-gotime start client1/web
-gotime stop
-gotime report --split project -p client1
+tom create project client1 client1/web client1/backend
+tom start client1/web
+tom stop
+tom report --split project -p client1
 ```
 
 This will create a report on all projects which belong to client1 with the tracked time per project.
@@ -74,13 +74,13 @@ For example, `-split year` creates a report where the tracked time is grouped in
 
 ### Import data from Watson
 ```bash
-gotime import watson
+tom import watson
 ```
 
 ### Import data from Fanurio
 This needs a custom CSV export (to be documented).
 ```bash
-gotime import fanurio complete-export.csv
+tom import fanurio complete-export.csv
 ```
 
 ## License

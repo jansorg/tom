@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v1"
 
-	"github.com/jansorg/gotime/go-tom/config"
-	"github.com/jansorg/gotime/go-tom/context"
+	"github.com/jansorg/tom/go-tom/config"
+	"github.com/jansorg/tom/go-tom/context"
 )
 
 func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {

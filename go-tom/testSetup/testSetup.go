@@ -7,10 +7,10 @@ import (
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/i18n"
-	"github.com/jansorg/gotime/go-tom/query"
-	store2 "github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/i18n"
+	"github.com/jansorg/tom/go-tom/query"
+	store2 "github.com/jansorg/tom/go-tom/store"
 )
 
 func CreateTestContext(lang language.Tag) (*context.GoTimeContext, error) {

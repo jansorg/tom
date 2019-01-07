@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/jansorg/gotime/go-tom-pdf/converter"
+	"github.com/jansorg/tom/go-tom-pdf/converter"
 )
 
 const baseURL = "https://v2018.api2pdf.com"

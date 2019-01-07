@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 func NewFrameList(frames []*store.Frame) *FrameList {

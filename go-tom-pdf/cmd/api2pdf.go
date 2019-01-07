@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/gotime/go-tom-pdf/converter/api2pdf"
+	"github.com/jansorg/tom/go-tom-pdf/converter/api2pdf"
 )
 
 func newAPI2PDFCommand() *cobra.Command {

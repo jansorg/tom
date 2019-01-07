@@ -3,7 +3,7 @@ package frames
 import (
 	"time"
 
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 func FilterFrames(frames []*store.Frame, start *time.Time, end *time.Time) []*store.Frame {

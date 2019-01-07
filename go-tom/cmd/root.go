@@ -11,11 +11,11 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/text/message"
 
-	"github.com/jansorg/gotime/go-tom/config"
-	"github.com/jansorg/gotime/go-tom/context"
-	"github.com/jansorg/gotime/go-tom/i18n"
-	"github.com/jansorg/gotime/go-tom/query"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/config"
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/i18n"
+	"github.com/jansorg/tom/go-tom/query"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 var ctx context.GoTimeContext
@@ -125,9 +125,9 @@ __custom_func() {
 )
 
 var RootCmd = &cobra.Command{
-	Use:                    "gotime",
-	Short:                  "gotime is a command line application to track time.",
-	Version:                "1.0.0",
+	Use:                    "tom",
+	Short:                  "tom is a command line application to track time.",
+	Version:                "0.0.1",
 	BashCompletionFunction: bash_completion_func,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cpuProfile, _ := cmd.Flags().GetString("cpu-profile")

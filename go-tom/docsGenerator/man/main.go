@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra/doc"
 
-	"github.com/jansorg/gotime/go-tom/cmd"
+	"github.com/jansorg/tom/go-tom/cmd"
 )
 
 // generates markdown documentation for the commandline

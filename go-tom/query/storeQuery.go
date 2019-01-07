@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/jansorg/gotime/go-tom/config"
-	"github.com/jansorg/gotime/go-tom/store"
+	"github.com/jansorg/tom/go-tom/config"
+	"github.com/jansorg/tom/go-tom/store"
 )
 
 type StoreQuery interface {

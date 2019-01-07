@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/jansorg/gotime/go-tom/config"
-	"github.com/jansorg/gotime/go-tom/context"
+	"github.com/jansorg/tom/go-tom/config"
+	"github.com/jansorg/tom/go-tom/context"
 )
 
 func newConfigSetCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
