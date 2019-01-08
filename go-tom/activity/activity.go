@@ -11,7 +11,7 @@ import (
 
 var ProjectNotFoundErr = fmt.Errorf("project not found")
 
-type ActivityControl struct {
+type Control struct {
 	ctx                   *context.GoTimeContext
 	createMissingProjects bool
 	createMissingTags     bool
@@ -19,8 +19,8 @@ type ActivityControl struct {
 	startStopTime         time.Time
 }
 
-func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMultipleActives bool, startStopTime time.Time) *ActivityControl {
-	return &ActivityControl{
+func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMultipleActives bool, startStopTime time.Time) *Control {
+	return &Control{
 		ctx:                   ctx,
 		createMissingProjects: createMissing,
 		createMissingTags:     createMissing,
@@ -29,7 +29,7 @@ func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMul
 	}
 }
 
-func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
+func (a *Control) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
 	projects := a.ctx.Query.ProjectsByShortNameOrID(projectNameOrID)
 
 	var err error
@@ -53,7 +53,7 @@ func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*mo
 	return a.ctx.Store.AddFrame(frame)
 }
 
-func (a *ActivityControl) StopNewest(notes string, tags []*model.Tag) (*model.Frame, error) {
+func (a *Control) StopNewest(notes string, tags []*model.Tag) (*model.Frame, error) {
 	var frames []*model.Frame
 	var err error
 	if frames, err = a.stopActivities(false, notes, tags); err != nil {
@@ -66,11 +66,11 @@ func (a *ActivityControl) StopNewest(notes string, tags []*model.Tag) (*model.Fr
 	return frames[0], nil
 }
 
-func (a *ActivityControl) StopAll(notes string, tags []*model.Tag) ([]*model.Frame, error) {
+func (a *Control) StopAll(notes string, tags []*model.Tag) ([]*model.Frame, error) {
 	return a.stopActivities(true, notes, tags)
 }
 
-func (a *ActivityControl) stopActivities(all bool, notes string, tags []*model.Tag) ([]*model.Frame, error) {
+func (a *Control) stopActivities(all bool, notes string, tags []*model.Tag) ([]*model.Frame, error) {
 	actives := a.ctx.Query.ActiveFrames()
 
 	if !all && len(actives) > 0 {
