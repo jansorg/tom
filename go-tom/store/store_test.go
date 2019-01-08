@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/store"
 )
 
@@ -31,7 +32,7 @@ func Test_Store(t *testing.T) {
 	assert.Empty(t, s.Frames())
 
 	// project
-	newProject := store.Project{Name: "Project 42"}
+	newProject := model.Project{Name: "Project 42"}
 	addedProject, err := s.AddProject(newProject)
 	require.NoError(t, err)
 	assert.EqualValues(t, newProject.Name, addedProject.Name)
@@ -48,7 +49,7 @@ func Test_Store(t *testing.T) {
 	require.Error(t, err)
 
 	// tag
-	newTag := store.Tag{Name: "Tag 1"}
+	newTag := model.Tag{Name: "Tag 1"}
 	addedTag, err := s.AddTag(newTag)
 	require.NoError(t, err)
 	assert.EqualValues(t, newTag.Name, addedTag.Name)
@@ -65,13 +66,13 @@ func Test_Store(t *testing.T) {
 	require.Error(t, err)
 
 	// frames
-	addedProject, err = s.AddProject(store.Project{Name: "Project for Frame"})
+	addedProject, err = s.AddProject(model.Project{Name: "Project for Frame"})
 	require.NoError(t, err)
 	startTime, err := time.Parse(time.RFC822, "02 Jan 19 10:00 MST")
 	require.NoError(t, err)
 	endTime, err := time.Parse(time.RFC822, "02 Jan 19 10:00 MST")
 	require.NoError(t, err)
-	newFrame := store.Frame{
+	newFrame := model.Frame{
 		ProjectId: addedProject.ID,
 		Start:     &startTime,
 		End:       &endTime,

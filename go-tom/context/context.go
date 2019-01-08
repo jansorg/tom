@@ -6,12 +6,13 @@ import (
 	"golang.org/x/text/message"
 
 	"github.com/jansorg/tom/go-tom/i18n"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/query"
 	"github.com/jansorg/tom/go-tom/store"
 )
 
 type GoTimeContext struct {
-	Store           store.Store
+	Store           model.Store
 	StoreHelper     *store.Helper
 	Query           query.StoreQuery
 	Language        language.Tag

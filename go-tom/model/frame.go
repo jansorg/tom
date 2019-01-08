@@ -1,4 +1,4 @@
-package store
+package model
 
 import (
 	"sort"
@@ -8,7 +8,7 @@ import (
 func NewStartedFrame(project *Project) Frame {
 	now := time.Now()
 	return Frame{
-		ID:        nextID(),
+		ID:        NextID(),
 		ProjectId: project.ID,
 		Start:     &now,
 		Updated:   &now,

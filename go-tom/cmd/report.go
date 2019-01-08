@@ -10,8 +10,8 @@ import (
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
-	"github.com/jansorg/tom/go-tom/frames"
 	"github.com/jansorg/tom/go-tom/htmlreport"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
 )
 
@@ -104,7 +104,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 				projectIDs = append(projectIDs, id)
 			}
 
-			frameReport := report.NewBucketReport(frames.NewSortedFrameList(context.Store.Frames()), context)
+			frameReport := report.NewBucketReport(model.NewSortedFrameList(context.Store.Frames()), context)
 			frameReport.IncludeActiveFrames = includeActiveFrames
 			frameReport.ProjectIDs = projectIDs
 			frameReport.IncludeSubprojects = true

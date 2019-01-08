@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
-type tagList []*store.Tag
+type tagList []*model.Tag
 
 func (o tagList) size() int {
 	return len(o)

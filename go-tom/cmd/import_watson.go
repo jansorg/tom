@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -88,7 +88,7 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 					}
 				}
 
-				_, err = ctx.Store.AddFrame(store.Frame{
+				_, err = ctx.Store.AddFrame(model.Frame{
 					Start:     &startTime,
 					End:       &stopTime,
 					Updated:   &udpatedTime,

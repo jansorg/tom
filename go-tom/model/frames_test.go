@@ -1,16 +1,14 @@
-package frames
+package model
 
 import (
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/jansorg/tom/go-tom/store"
 )
 
 func TestSplitByDay(t *testing.T) {
-	buckets := NewFrameList([]*store.Frame{
+	buckets := NewFrameList([]*Frame{
 		{
 			Start: newDay(10, 12, 0),
 			End:   newDay(10, 13, 30),
@@ -36,7 +34,7 @@ func TestSplitByDay(t *testing.T) {
 }
 
 func TestSplitByMonth(t *testing.T) {
-	buckets := NewFrameList([]*store.Frame{
+	buckets := NewFrameList([]*Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),
@@ -57,7 +55,7 @@ func TestSplitByMonth(t *testing.T) {
 }
 
 func TestSplitByYear(t *testing.T) {
-	buckets := NewFrameList([]*store.Frame{
+	buckets := NewFrameList([]*Frame{
 		{
 			Start: newDate(2017, time.February, 10, 12, 0),
 			End:   newDate(2017, time.February, 11, 20, 0),

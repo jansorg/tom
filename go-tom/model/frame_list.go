@@ -1,19 +1,17 @@
-package frames
+package model
 
 import (
 	"sort"
 	"time"
-
-	"github.com/jansorg/tom/go-tom/store"
 )
 
-func NewFrameList(frames []*store.Frame) *FrameList {
+func NewFrameList(frames []*Frame) *FrameList {
 	return &FrameList{
 		Frames: frames,
 	}
 }
 
-func NewSortedFrameList(frames []*store.Frame) *FrameList {
+func NewSortedFrameList(frames []*Frame) *FrameList {
 	list := NewFrameList(frames)
 	list.Sort()
 	return list
@@ -24,7 +22,7 @@ func NewEmptyFrameList() *FrameList {
 }
 
 type FrameList struct {
-	Frames []*store.Frame
+	Frames []*Frame
 }
 
 func (f *FrameList) Empty() bool {
@@ -35,18 +33,18 @@ func (f *FrameList) Size() int {
 	return len(f.Frames)
 }
 
-func (f *FrameList) Append(value *store.Frame) {
+func (f *FrameList) Append(value *Frame) {
 	f.Frames = append(f.Frames, value)
 }
 
-func (f *FrameList) First() *store.Frame {
+func (f *FrameList) First() *Frame {
 	if f.Empty() {
 		return nil
 	}
 	return f.Frames[0]
 }
 
-func (f *FrameList) Last() *store.Frame {
+func (f *FrameList) Last() *Frame {
 	if f.Empty() {
 		return nil
 	}
@@ -66,7 +64,7 @@ func (f *FrameList) FilterByStartDate(minStartDate time.Time) {
 		return
 	}
 
-	f.Filter(func(frame *store.Frame) bool {
+	f.Filter(func(frame *Frame) bool {
 		return !frame.Start.Before(minStartDate)
 	})
 }
@@ -76,7 +74,7 @@ func (f *FrameList) FilterByEndDate(maxEndDate time.Time, acceptUnstopped bool) 
 		return
 	}
 
-	f.Filter(func(frame *store.Frame) bool {
+	f.Filter(func(frame *Frame) bool {
 		return frame.End == nil && acceptUnstopped || frame.End != nil && !frame.End.After(maxEndDate)
 	})
 }
@@ -95,8 +93,8 @@ func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, acceptUnst
 	}
 }
 
-func (f *FrameList) Filter(accepted func(frame *store.Frame) bool) {
-	var result []*store.Frame
+func (f *FrameList) Filter(accepted func(frame *Frame) bool) {
+	var result []*Frame
 	for _, frame := range f.Frames {
 		if accepted(frame) {
 			result = append(result, frame)
@@ -108,26 +106,26 @@ func (f *FrameList) Filter(accepted func(frame *store.Frame) bool) {
 }
 
 func (f *FrameList) SplitByProject() []*FrameList {
-	return f.Split(func(frame *store.Frame) interface{} {
+	return f.Split(func(frame *Frame) interface{} {
 		return frame.ProjectId
 	})
 }
 
 func (f *FrameList) SplitByYear() []*FrameList {
-	return f.Split(func(frame *store.Frame) interface{} {
+	return f.Split(func(frame *Frame) interface{} {
 		return frame.Start.Year()
 	})
 }
 
 func (f *FrameList) SplitByMonth() []*FrameList {
-	return f.Split(func(frame *store.Frame) interface{} {
+	return f.Split(func(frame *Frame) interface{} {
 		y, m, _ := frame.Start.Date()
 		return time.Date(y, m, 1, 0, 0, 0, 0, frame.Start.Location())
 	})
 }
 
 func (f *FrameList) SplitByDay() []*FrameList {
-	return f.Split(func(frame *store.Frame) interface{} {
+	return f.Split(func(frame *Frame) interface{} {
 		y, m, d := frame.Start.Date()
 		return time.Date(y, m, d, 0, 0, 0, 0, frame.Start.Location())
 	})
@@ -136,12 +134,12 @@ func (f *FrameList) SplitByDay() []*FrameList {
 // Split splits all frames into one ore more parts
 // The part a frame belongs to is coputed by the key function
 // because the distribution of keys is not always in order a map has to be used here
-func (f *FrameList) Split(key func(f *store.Frame) interface{}) []*FrameList {
+func (f *FrameList) Split(key func(f *Frame) interface{}) []*FrameList {
 	if f.Empty() {
 		return []*FrameList{}
 	}
 
-	mapping := map[interface{}][]*store.Frame{}
+	mapping := map[interface{}][]*Frame{}
 	for _, f := range f.Frames {
 		v := key(f)
 		mapping[v] = append(mapping[v], f)
@@ -152,8 +150,8 @@ func (f *FrameList) Split(key func(f *store.Frame) interface{}) []*FrameList {
 		parts = append(parts, NewSortedFrameList(frames))
 	}
 	sort.SliceStable(parts, func(i, j int) bool {
-		a:=parts[i]
-		b:=parts[j]
+		a := parts[i]
+		b := parts[j]
 		if a.Empty() {
 			return b.Empty()
 		}

@@ -1,17 +1,17 @@
-package frames
+package model
 
 import (
 	"time"
 
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/satori/uuid"
 )
 
-func FilterFrames(frames []*store.Frame, start *time.Time, end *time.Time) []*store.Frame {
+func FilterFrames(frames []*Frame, start *time.Time, end *time.Time) []*Frame {
 	if start == nil && end == nil {
 		return frames
 	}
 
-	var result []*store.Frame
+	var result []*Frame
 
 	for _, frame := range frames {
 		if frame.Start != nil && start != nil && !start.IsZero() && frame.Start.Before(*start) && frame.End != nil && end != nil && !end.IsZero() && frame.End.After(*end) {
@@ -21,3 +21,8 @@ func FilterFrames(frames []*store.Frame, start *time.Time, end *time.Time) []*st
 	}
 	return result
 }
+
+func NextID() string {
+	return uuid.NewV4().String()
+}
+

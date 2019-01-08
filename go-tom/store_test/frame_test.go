@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/text/language"
 
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/testSetup"
 )
 
@@ -16,13 +16,13 @@ func TestTags(t *testing.T) {
 	require.NoError(t, err)
 	defer testSetup.CleanupTestContext(ctx)
 
-	p, err := ctx.Store.AddProject(store.Project{Name: "p1"})
+	p, err := ctx.Store.AddProject(model.Project{Name: "p1"})
 	require.NoError(t, err)
 
-	frame, err := ctx.Store.AddFrame(store.NewStartedFrame(p))
+	frame, err := ctx.Store.AddFrame(model.NewStartedFrame(p))
 	require.NoError(t, err)
 
-	tag, err := ctx.Store.AddTag(store.Tag{Name: "Tag1"})
+	tag, err := ctx.Store.AddTag(model.Tag{Name: "Tag1"})
 	require.NoError(t, err)
 	assert.NotEmpty(t, tag)
 	assert.NotEmpty(t, tag.ID)

@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -84,7 +84,7 @@ func importCSV(filePath string, ctx *context.GoTimeContext) error {
 			return err
 		}
 
-		_, err = ctx.Store.AddFrame(store.Frame{
+		_, err = ctx.Store.AddFrame(model.Frame{
 			ProjectId: project.ID,
 			Notes:     notes,
 			Start:     &startTime,

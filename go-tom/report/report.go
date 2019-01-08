@@ -9,8 +9,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
-	"github.com/jansorg/tom/go-tom/frames"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 type SplitOperation int8
@@ -24,7 +23,7 @@ const (
 
 type BucketReport struct {
 	ctx    *context.GoTimeContext
-	source *frames.FrameList
+	source *model.FrameList
 
 	Result *ResultBucket `json:"result"`
 
@@ -42,7 +41,7 @@ type BucketReport struct {
 	RoundTotalsTo      time.Duration         `json:"roundTotalsTo"`
 }
 
-func NewBucketReport(frameList *frames.FrameList, context *context.GoTimeContext) *BucketReport {
+func NewBucketReport(frameList *model.FrameList, context *context.GoTimeContext) *BucketReport {
 	report := &BucketReport{
 		ctx:    context,
 		source: frameList,
@@ -72,7 +71,7 @@ func (b *BucketReport) Update() {
 	if len(projectIDs) > 0 {
 		// sort IDs to use binary search
 		sort.Strings(projectIDs)
-		b.source.Filter(func(frame *store.Frame) bool {
+		b.source.Filter(func(frame *model.Frame) bool {
 			i := sort.SearchStrings(projectIDs, frame.ProjectId)
 			return i < len(projectIDs) && projectIDs[i] == frame.ProjectId
 		})
@@ -88,7 +87,7 @@ func (b *BucketReport) Update() {
 		switch op {
 		case SplitByYear:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(func(list *frames.FrameList) []*frames.FrameList {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
 					return list.SplitByYear()
 				})
 			})
@@ -100,7 +99,7 @@ func (b *BucketReport) Update() {
 			})
 		case SplitByMonth:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(func(list *frames.FrameList) []*frames.FrameList {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
 					return list.SplitByMonth()
 				})
 			})
@@ -112,7 +111,7 @@ func (b *BucketReport) Update() {
 			})
 		case SplitByDay:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(func(list *frames.FrameList) []*frames.FrameList {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
 					return list.SplitByDay()
 				})
 			})
@@ -124,7 +123,7 @@ func (b *BucketReport) Update() {
 			})
 		case SplitByProject:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(func(list *frames.FrameList) []*frames.FrameList {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
 					return list.SplitByProject()
 				})
 			})

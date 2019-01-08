@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newCreateTagCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -14,7 +14,7 @@ func newCreateTagCommand(context *context.GoTimeContext, parent *cobra.Command) 
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
-				if _, err := context.Store.AddTag(store.Tag{Name: name}); err != nil {
+				if _, err := context.Store.AddTag(model.Tag{Name: name}); err != nil {
 					fatal(err)
 				}
 			}

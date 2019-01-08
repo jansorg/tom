@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
-type frameList []*store.Frame
+type frameList []*model.Frame
 
 func (f frameList) size() int {
 	return len(f)

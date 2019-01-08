@@ -6,8 +6,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
-	"github.com/jansorg/tom/go-tom/frames"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 type ResultBucket struct {
@@ -21,8 +20,8 @@ type ResultBucket struct {
 	ExactDuration time.Duration `json:"duration_exact"`
 
 	SplitBy interface{}
-	Source  *frames.FrameList `json:"source,omitempty"`
-	Results []*ResultBucket   `json:"results,omitempty"`
+	Source  *model.FrameList `json:"source,omitempty"`
+	Results []*ResultBucket  `json:"results,omitempty"`
 }
 
 func (b *ResultBucket) Empty() bool {
@@ -57,7 +56,7 @@ func (b *ResultBucket) IsProjectBucket() bool {
 	return err == nil
 }
 
-func (b *ResultBucket) FindProjectBucket() (*store.Project, error) {
+func (b *ResultBucket) FindProjectBucket() (*model.Project, error) {
 	if id, ok := b.SplitBy.(string); ok {
 		if p, err := b.ctx.Query.ProjectByID(id); err == nil {
 			return p, nil
@@ -95,7 +94,7 @@ func (b *ResultBucket) LeafChildren() []*ResultBucket {
 	return result
 }
 
-func (b *ResultBucket) Split(splitter func(list *frames.FrameList) []*frames.FrameList) {
+func (b *ResultBucket) Split(splitter func(list *model.FrameList) []*model.FrameList) {
 	parts := splitter(b.Source)
 
 	b.Results = []*ResultBucket{}
@@ -121,11 +120,11 @@ func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
 func (b *ResultBucket) Title() string {
 	if id, ok := b.SplitBy.(string); ok {
 		if value, err := b.ctx.Query.AnyByID(id); err == nil {
-			if p, ok := value.(*store.Project); ok {
+			if p, ok := value.(*model.Project); ok {
 				return fmt.Sprintf("%s", p.FullName)
 			}
 
-			if t, ok := value.(*store.Tag); ok {
+			if t, ok := value.(*model.Tag); ok {
 				return fmt.Sprintf("#%s", t.Name)
 			}
 		}

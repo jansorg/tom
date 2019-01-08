@@ -8,7 +8,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/activity"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -28,7 +28,7 @@ func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 				fatal(err)
 			}
 
-			var frames []*store.Frame
+			var frames []*model.Frame
 			if all {
 				if frames, err = a.StopAll(notes, tags); err != nil {
 					fatal(err)
@@ -38,7 +38,7 @@ func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 				if err != nil {
 					fatal(err)
 				}
-				frames = []*store.Frame{frame}
+				frames = []*model.Frame{frame}
 			}
 
 			// translate

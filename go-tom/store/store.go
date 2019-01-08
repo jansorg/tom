@@ -12,51 +12,12 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/satori/uuid"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 var ErrTagNotFound = fmt.Errorf("tag not found")
 
-func nextID() string {
-	return uuid.NewV4().String()
-}
-
-type PropertyHolder interface {
-	GetProperties() map[string]string
-}
-
-type Store interface {
-	DirPath() string
-	StartBatch()
-	StopBatch()
-
-	Reset(projects, tags, frames bool) (int, int, int, error)
-
-	Projects() []*Project
-	ProjectByID(id string) (*Project, error)
-	ProjectIsChild(parentID, id string) bool
-	AddProject(project Project) (*Project, error)
-	UpdateProject(project Project) (*Project, error)
-	RemoveProject(id string) error
-	FindFirstProject(func(*Project) bool) (*Project, error)
-	FindProjects(func(*Project) bool) []*Project
-
-	Tags() []*Tag
-	AddTag(tag Tag) (*Tag, error)
-	UpdateTag(tag Tag) (*Tag, error)
-	RemoveTag(id string) error
-	FindFirstTag(func(*Tag) bool) (*Tag, error)
-	FindTags(func(*Tag) bool) []*Tag
-
-	Frames() []*Frame
-	AddFrame(frame Frame) (*Frame, error)
-	UpdateFrame(frame Frame) (*Frame, error)
-	RemoveFrame(id string) error
-	FindFirstFrame(func(*Frame) bool) (*Frame, error)
-	FindFrames(func(*Frame) bool) []*Frame
-}
-
-func NewStore(dir string) (Store, error) {
+func NewStore(dir string) (model.Store, error) {
 	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
 		return nil, fmt.Errorf("directory %s does not exist", dir)
 	}
@@ -83,10 +44,10 @@ type DataStore struct {
 	FrameFile   string
 
 	mu          sync.RWMutex
-	projectsMap map[string]*Project
-	projects    []*Project
-	tags        []*Tag
-	frames      []*Frame
+	projectsMap map[string]*model.Project
+	projects    []*model.Project
+	tags        []*model.Tag
+	frames      []*model.Frame
 }
 
 func (d *DataStore) DirPath() string {
@@ -227,28 +188,28 @@ func (d *DataStore) Reset(projects, tags, frames bool) (int, int, int, error) {
 
 	if projects {
 		projectCount = len(d.projects)
-		d.projects = []*Project{}
+		d.projects = []*model.Project{}
 	}
 	if tags {
 		tagCount = len(d.tags)
-		d.tags = []*Tag{}
+		d.tags = []*model.Tag{}
 	}
 	if frames {
 		frameCount = len(d.frames)
-		d.frames = []*Frame{}
+		d.frames = []*model.Frame{}
 	}
 
 	return projectCount, tagCount, frameCount, d.saveLocked()
 }
 
-func (d *DataStore) Projects() []*Project {
+func (d *DataStore) Projects() []*model.Project {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.projects
 }
 
-func (d *DataStore) ProjectByID(id string) (*Project, error) {
+func (d *DataStore) ProjectByID(id string) (*model.Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -259,11 +220,11 @@ func (d *DataStore) ProjectByID(id string) (*Project, error) {
 	return p, nil
 }
 
-func (d *DataStore) AddProject(project Project) (*Project, error) {
+func (d *DataStore) AddProject(project model.Project) (*model.Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	project.ID = nextID()
+	project.ID = model.NextID()
 	d.updateProjectInternals(&project)
 	d.projects = append(d.projects, &project)
 	d.updateProjectsMapping()
@@ -271,8 +232,8 @@ func (d *DataStore) AddProject(project Project) (*Project, error) {
 	return &project, d.saveLocked()
 }
 
-func (d *DataStore) updateProjectInternals(p *Project) {
-	p.store = d
+func (d *DataStore) updateProjectInternals(p *model.Project) {
+	p.Store = d
 
 	if p.Properties == nil {
 		p.Properties = make(map[string]string)
@@ -287,7 +248,7 @@ func (d *DataStore) updateProjectInternals(p *Project) {
 
 	id := p.ParentID
 	for id != "" {
-		parent, err := d.findFirstProjectLocked(func(current *Project) bool {
+		parent, err := d.findFirstProjectLocked(func(current *model.Project) bool {
 			return current.ID == id
 		})
 
@@ -302,7 +263,7 @@ func (d *DataStore) updateProjectInternals(p *Project) {
 	p.FullName = strings.Join(parents, "/")
 }
 
-func (d *DataStore) UpdateProject(project Project) (*Project, error) {
+func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error) {
 	existing, err := d.ProjectByID(project.ID)
 	if err != nil {
 		return nil, err
@@ -326,14 +287,14 @@ func (d *DataStore) RemoveProject(id string) error {
 	return fmt.Errorf("project %s not found", id)
 }
 
-func (d *DataStore) FindFirstProject(filter func(*Project) bool) (*Project, error) {
+func (d *DataStore) FindFirstProject(filter func(*model.Project) bool) (*model.Project, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
 	return d.findFirstProjectLocked(filter)
 }
 
-func (d *DataStore) findFirstProjectLocked(filter func(*Project) bool) (*Project, error) {
+func (d *DataStore) findFirstProjectLocked(filter func(*model.Project) bool) (*model.Project, error) {
 	for _, p := range d.projects {
 		if filter(p) {
 			return p, nil
@@ -342,11 +303,11 @@ func (d *DataStore) findFirstProjectLocked(filter func(*Project) bool) (*Project
 	return nil, fmt.Errorf("no matching project found")
 }
 
-func (d *DataStore) FindProjects(filter func(*Project) bool) []*Project {
+func (d *DataStore) FindProjects(filter func(*model.Project) bool) []*model.Project {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var result []*Project
+	var result []*model.Project
 	for _, p := range d.projects {
 		if filter(p) {
 			result = append(result, p)
@@ -377,23 +338,23 @@ func (d *DataStore) ProjectIsChild(parentID, id string) bool {
 	return false
 }
 
-func (d *DataStore) Tags() []*Tag {
+func (d *DataStore) Tags() []*model.Tag {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.tags
 }
 
-func (d *DataStore) AddTag(tag Tag) (*Tag, error) {
+func (d *DataStore) AddTag(tag model.Tag) (*model.Tag, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	tag.ID = nextID()
+	tag.ID = model.NextID()
 	d.tags = append(d.tags, &tag)
 	return &tag, d.saveLocked()
 }
 
-func (d *DataStore) UpdateTag(tag Tag) (*Tag, error) {
+func (d *DataStore) UpdateTag(tag model.Tag) (*model.Tag, error) {
 	existing, err := d.FindTag(tag.ID)
 	if err != nil {
 		return nil, err
@@ -416,7 +377,7 @@ func (d *DataStore) RemoveTag(id string) error {
 	return fmt.Errorf("tag %s not found", id)
 }
 
-func (d *DataStore) FindTag(id string) (*Tag, error) {
+func (d *DataStore) FindTag(id string) (*model.Tag, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -428,7 +389,7 @@ func (d *DataStore) FindTag(id string) (*Tag, error) {
 	return nil, fmt.Errorf("tag %s not found", id)
 }
 
-func (d *DataStore) FindFirstTag(filter func(*Tag) bool) (*Tag, error) {
+func (d *DataStore) FindFirstTag(filter func(*model.Tag) bool) (*model.Tag, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
@@ -440,11 +401,11 @@ func (d *DataStore) FindFirstTag(filter func(*Tag) bool) (*Tag, error) {
 	return nil, ErrTagNotFound
 }
 
-func (d *DataStore) FindTags(filter func(*Tag) bool) []*Tag {
+func (d *DataStore) FindTags(filter func(*model.Tag) bool) []*model.Tag {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	var result []*Tag
+	var result []*model.Tag
 	for _, tag := range d.tags {
 		if filter(tag) {
 			result = append(result, tag)
@@ -453,23 +414,23 @@ func (d *DataStore) FindTags(filter func(*Tag) bool) []*Tag {
 	return result
 }
 
-func (d *DataStore) Frames() []*Frame {
+func (d *DataStore) Frames() []*model.Frame {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
 	return d.frames
 }
 
-func (d *DataStore) AddFrame(frame Frame) (*Frame, error) {
+func (d *DataStore) AddFrame(frame model.Frame) (*model.Frame, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	frame.ID = nextID()
+	frame.ID = model.NextID()
 	d.frames = append(d.frames, &frame)
 	return &frame, d.saveLocked()
 }
 
-func (d *DataStore) UpdateFrame(frame Frame) (*Frame, error) {
+func (d *DataStore) UpdateFrame(frame model.Frame) (*model.Frame, error) {
 	if frame.ID == "" {
 		return nil, fmt.Errorf("id of frame undefined")
 	}
@@ -498,7 +459,7 @@ func (d *DataStore) RemoveFrame(id string) error {
 	return fmt.Errorf("frame %s not found", id)
 }
 
-func (d *DataStore) FindFirstFrame(filter func(*Frame) bool) (*Frame, error) {
+func (d *DataStore) FindFirstFrame(filter func(*model.Frame) bool) (*model.Frame, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
@@ -510,11 +471,11 @@ func (d *DataStore) FindFirstFrame(filter func(*Frame) bool) (*Frame, error) {
 	return nil, fmt.Errorf("no matching frame found")
 }
 
-func (d *DataStore) FindFrames(filter func(*Frame) bool) []*Frame {
+func (d *DataStore) FindFrames(filter func(*model.Frame) bool) []*model.Frame {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
-	var result []*Frame
+	var result []*model.Frame
 	for _, frame := range d.frames {
 		if filter(frame) {
 			result = append(result, frame)
@@ -524,7 +485,7 @@ func (d *DataStore) FindFrames(filter func(*Frame) bool) []*Frame {
 }
 
 func (d *DataStore) updateProjectsMapping() {
-	d.projectsMap = map[string]*Project{}
+	d.projectsMap = map[string]*model.Project{}
 	for _, p := range d.projects {
 		d.projectsMap[p.ID] = p
 	}

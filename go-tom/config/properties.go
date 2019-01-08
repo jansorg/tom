@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 type Property int
@@ -40,7 +40,7 @@ func (p StringProperty) key() string {
 	}
 }
 
-func (p StringProperty) Get(source store.PropertyHolder) (string, bool) {
+func (p StringProperty) Get(source model.PropertyHolder) (string, bool) {
 	name := p.key()
 	v, ok := source.GetProperties()[name]
 	if !ok {
@@ -49,7 +49,7 @@ func (p StringProperty) Get(source store.PropertyHolder) (string, bool) {
 	return v, ok
 }
 
-func (p StringProperty) Set(value string, target store.PropertyHolder) {
+func (p StringProperty) Set(value string, target model.PropertyHolder) {
 	name := p.key()
 	target.GetProperties()[name] = value
 }
@@ -65,7 +65,7 @@ func (p FloatProperty) key() string {
 	}
 }
 
-func (p FloatProperty) Get(source store.PropertyHolder) (float64, bool) {
+func (p FloatProperty) Get(source model.PropertyHolder) (float64, bool) {
 	name := p.key()
 	v, ok := source.GetProperties()[name]
 	if !ok {
@@ -80,7 +80,7 @@ func (p FloatProperty) Get(source store.PropertyHolder) (float64, bool) {
 	return float64(f), true
 }
 
-func (p FloatProperty) Set(value float64, target store.PropertyHolder) {
+func (p FloatProperty) Set(value float64, target model.PropertyHolder) {
 	name := p.key()
 	target.GetProperties()[name] = fmt.Sprintf("%.4f", value)
 }
@@ -92,7 +92,7 @@ func (p IntProperty) key() string {
 	}
 }
 
-func (p IntProperty) Get(source store.PropertyHolder) (int64, bool) {
+func (p IntProperty) Get(source model.PropertyHolder) (int64, bool) {
 	name := p.key()
 	v, ok := source.GetProperties()[name]
 	if !ok {
@@ -106,7 +106,7 @@ func (p IntProperty) Get(source store.PropertyHolder) (int64, bool) {
 	return i, true
 }
 
-func (p IntProperty) Set(value int64, target store.PropertyHolder) {
+func (p IntProperty) Set(value int64, target model.PropertyHolder) {
 	name := p.key()
 	target.GetProperties()[name] = fmt.Sprintf("%d", value)
 }

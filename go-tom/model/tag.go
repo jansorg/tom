@@ -1,4 +1,4 @@
-package store
+package model
 
 type Tag struct {
 	ID   string `json:"id"`

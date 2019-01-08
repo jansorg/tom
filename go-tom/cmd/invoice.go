@@ -8,9 +8,8 @@ import (
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
-	"github.com/jansorg/tom/go-tom/frames"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
-	"github.com/jansorg/tom/go-tom/store"
 )
 
 func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -39,7 +38,7 @@ func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 type invoiceCmdConfig struct {
 	ctx             *context.GoTimeContext
 	dryRun          bool
-	project         *store.Project
+	project         *model.Project
 	filterRange     dateUtil.DateRange
 	roundFramesTo   time.Duration
 	roundFramesMode dateUtil.RoundingMode
@@ -57,7 +56,7 @@ type invoiceConfig struct {
 func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	storeFrames := c.ctx.Store.Frames()
 
-	frameReport := report.NewBucketReport(frames.NewSortedFrameList(storeFrames), c.ctx)
+	frameReport := report.NewBucketReport(model.NewSortedFrameList(storeFrames), c.ctx)
 	frameReport.IncludeActiveFrames = false
 	frameReport.ProjectIDs = []string{c.project.ID}
 	frameReport.IncludeSubprojects = true

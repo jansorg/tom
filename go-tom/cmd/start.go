@@ -11,17 +11,17 @@ import (
 	"github.com/jansorg/tom/go-tom/activity"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var notes string
 
 	var cmd = &cobra.Command{
-		Use:   "start <project> [time shift into past] [+tag1 +tag2]",
-		Short: "starts a new activity for the given project ands adds a list of optional tags",
-		Example:"start acme 15m +onsite",
-		Args:  cobra.MinimumNArgs(1),
+		Use:     "start <project> [time shift into past] [+tag1 +tag2]",
+		Short:   "starts a new activity for the given project ands adds a list of optional tags",
+		Example: "start acme 15m +onsite",
+		Args:    cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			createMissingProject := viper.GetBool(config.KeyProjectCreateMissing)
 			stopActives := viper.GetBool(config.KeyActivityStopOnStart)
@@ -30,10 +30,10 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 			var shiftedStart time.Duration
 
 			// look out for a time shift on the command line
-			if len(args) >=  2 && !strings.HasPrefix(args[1], "+") && !cmd.Flag("past").Changed {
+			if len(args) >= 2 && !strings.HasPrefix(args[1], "+") && !cmd.Flag("past").Changed {
 				if shift, err := time.ParseDuration(args[1]); err == nil {
 					// it's not making sense to start a task in the future. Also, - is parsed as a shorthand flag prefix and we don't want the user working around that all the time
-					if shift.Seconds() >0 {
+					if shift.Seconds() > 0 {
 						shift = -shift
 					}
 					shiftedStart = shift
@@ -50,7 +50,7 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 				fatal(err)
 			}
 
-			var stoppedFrames []*store.Frame
+			var stoppedFrames []*model.Frame
 			if stopActives {
 				// fixme tags for stop?
 				stoppedFrames, _ = control.StopAll("", nil)

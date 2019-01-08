@@ -5,15 +5,15 @@ import (
 	"strings"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
-func argsToTags(ctx *context.GoTimeContext, args []string) ([]*store.Tag, error) {
+func argsToTags(ctx *context.GoTimeContext, args []string) ([]*model.Tag, error) {
 	if len(args) == 0 {
-		return []*store.Tag{}, nil
+		return []*model.Tag{}, nil
 	}
 
-	var tags []*store.Tag
+	var tags []*model.Tag
 
 	for _, arg := range args {
 		if !strings.HasPrefix(arg, "+") {

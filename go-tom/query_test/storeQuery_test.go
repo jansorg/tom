@@ -8,7 +8,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/jansorg/tom/go-tom/config"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/testSetup"
 )
 
@@ -17,12 +17,12 @@ func Test_InheritedProps(t *testing.T) {
 	require.NoError(t, err)
 	defer testSetup.CleanupTestContext(ctx)
 
-	parent, err := ctx.Store.AddProject(store.Project{
+	parent, err := ctx.Store.AddProject(model.Project{
 		Name: "Top",
 	})
 	require.NoError(t, err)
 
-	child, err := ctx.Store.AddProject(store.Project{
+	child, err := ctx.Store.AddProject(model.Project{
 		Name:     "Top > Sub",
 		ParentID: parent.ID,
 	})

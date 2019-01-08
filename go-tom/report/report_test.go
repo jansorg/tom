@@ -8,8 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/text/language"
 
-	"github.com/jansorg/tom/go-tom/frames"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/testSetup"
 )
 
@@ -21,8 +20,8 @@ func Test_Report(t *testing.T) {
 	start := newDate(2018, time.March, 10, 10, 0)
 	end := newDate(2018, time.March, 10, 12, 0)
 
-	frameList := []*store.Frame{{Start: start, End: end}}
-	report := NewBucketReport(frames.NewFrameList(frameList), ctx)
+	frameList := []*model.Frame{{Start: start, End: end}}
+	report := NewBucketReport(model.NewFrameList(frameList), ctx)
 	report.Update()
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration)
@@ -45,12 +44,12 @@ func Test_ReportSplitYear(t *testing.T) {
 	start2 := newDate(2019, time.March, 10, 9, 0)
 	end2 := newDate(2019, time.March, 10, 10, 0)
 
-	frameList := []*store.Frame{
+	frameList := []*model.Frame{
 		{Start: start2, End: end2},
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(frames.NewSortedFrameList(frameList), ctx)
+	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
 	report.SplitOperations = []SplitOperation{SplitByYear}
 	report.Update()
 

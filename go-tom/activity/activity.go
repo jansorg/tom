@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 var ProjectNotFoundErr = fmt.Errorf("project not found")
@@ -29,15 +29,15 @@ func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMul
 	}
 }
 
-func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*store.Tag) (*store.Frame, error) {
+func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
 	projects := a.ctx.Query.ProjectsByShortNameOrID(projectNameOrID)
 
 	var err error
-	var project *store.Project
+	var project *model.Project
 	if len(projects) == 0 && a.createMissingProjects == false {
 		return nil, ProjectNotFoundErr
 	} else if len(projects) == 0 {
-		if project, err = a.ctx.Store.AddProject(store.Project{Name: projectNameOrID}); err != nil {
+		if project, err = a.ctx.Store.AddProject(model.Project{Name: projectNameOrID}); err != nil {
 			return nil, err
 		}
 	} else if len(projects) == 1 {
@@ -46,15 +46,15 @@ func (a *ActivityControl) Start(projectNameOrID string, notes string, tags []*st
 		return nil, fmt.Errorf("more than one project found for %s", projectNameOrID)
 	}
 
-	frame := store.NewStartedFrame(project)
+	frame := model.NewStartedFrame(project)
 	frame.Notes = notes
 	frame.Start = &a.startStopTime
 	frame.AddTags(tags...)
 	return a.ctx.Store.AddFrame(frame)
 }
 
-func (a *ActivityControl) StopNewest(notes string, tags []*store.Tag) (*store.Frame, error) {
-	var frames []*store.Frame
+func (a *ActivityControl) StopNewest(notes string, tags []*model.Tag) (*model.Frame, error) {
+	var frames []*model.Frame
 	var err error
 	if frames, err = a.stopActivities(false, notes, tags); err != nil {
 		return nil, err
@@ -66,11 +66,11 @@ func (a *ActivityControl) StopNewest(notes string, tags []*store.Tag) (*store.Fr
 	return frames[0], nil
 }
 
-func (a *ActivityControl) StopAll(notes string, tags []*store.Tag) ([]*store.Frame, error) {
+func (a *ActivityControl) StopAll(notes string, tags []*model.Tag) ([]*model.Frame, error) {
 	return a.stopActivities(true, notes, tags)
 }
 
-func (a *ActivityControl) stopActivities(all bool, notes string, tags []*store.Tag) ([]*store.Frame, error) {
+func (a *ActivityControl) stopActivities(all bool, notes string, tags []*model.Tag) ([]*model.Frame, error) {
 	actives := a.ctx.Query.ActiveFrames()
 
 	if !all && len(actives) > 0 {

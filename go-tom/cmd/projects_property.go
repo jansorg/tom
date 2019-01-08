@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/model"
 )
 
 func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -32,7 +32,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 
 				inherited := 0
 				out := ""
-				ctx.Query.WithProjectAndParents(project.ID, func(parent *store.Project) bool {
+				ctx.Query.WithProjectAndParents(project.ID, func(parent *model.Project) bool {
 					if project.ID != parent.ID {
 						inherited += len(parent.Properties)
 
