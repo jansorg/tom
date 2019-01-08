@@ -28,7 +28,7 @@ func Test_Report(t *testing.T) {
 	assert.EqualValues(t, 2*time.Hour, report.Result.ExactDuration)
 	assert.EqualValues(t, start, report.Result.TrackedDateRange.Start)
 	assert.EqualValues(t, end, report.Result.TrackedDateRange.End)
-	assert.EqualValues(t, frameList, report.source.Frames)
+	assert.EqualValues(t, frameList, report.source.Frames())
 }
 
 func Test_ReportSplitYear(t *testing.T) {
@@ -59,7 +59,7 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 3*time.Hour, report.Result.ExactDuration)
 	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange.Start)
 	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange.End)
-	assert.EqualValues(t, frameList, report.source.Frames)
+	assert.EqualValues(t, frameList, report.source.Frames())
 
 	require.EqualValues(t, 2, len(report.Result.Results), "expected a sub-report for each year")
 

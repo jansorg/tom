@@ -157,7 +157,7 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 		updateBucket(report, sub)
 	}
 
-	for _, f := range bucket.Source.Frames {
+	for _, f := range bucket.Source.Frames() {
 		d := f.Duration()
 		bucket.ExactDuration += d
 		bucket.Duration += dateUtil.RoundDuration(d, report.RoundingModeFrames, report.RoundFramesTo)

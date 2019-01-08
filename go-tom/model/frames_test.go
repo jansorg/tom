@@ -28,9 +28,9 @@ func TestSplitByDay(t *testing.T) {
 	}).SplitByDay()
 
 	assert.EqualValues(t, 3, len(buckets))
-	assert.EqualValues(t, 2, len(buckets[0].Frames))
-	assert.EqualValues(t, 1, len(buckets[1].Frames))
-	assert.EqualValues(t, 1, len(buckets[1].Frames))
+	assert.EqualValues(t, 2, buckets[0].Size())
+	assert.EqualValues(t, 1, buckets[1].Size())
+	assert.EqualValues(t, 1, buckets[1].Size())
 }
 
 func TestSplitByMonth(t *testing.T) {
@@ -50,8 +50,8 @@ func TestSplitByMonth(t *testing.T) {
 	}).SplitByMonth()
 
 	assert.EqualValues(t, 2, len(buckets))
-	assert.EqualValues(t, 1, len(buckets[0].Frames))
-	assert.EqualValues(t, 2, len(buckets[1].Frames))
+	assert.EqualValues(t, 1, buckets[0].Size())
+	assert.EqualValues(t, 2, buckets[1].Size())
 }
 
 func TestSplitByYear(t *testing.T) {
@@ -75,8 +75,8 @@ func TestSplitByYear(t *testing.T) {
 	}).SplitByYear()
 
 	assert.EqualValues(t, 2, len(buckets))
-	assert.EqualValues(t, 1, len(buckets[0].Frames))
-	assert.EqualValues(t, 3, len(buckets[1].Frames))
+	assert.EqualValues(t, 1, buckets[0].Size())
+	assert.EqualValues(t, 3, buckets[1].Size())
 }
 
 func newDay(day, hour, minute int) *time.Time {

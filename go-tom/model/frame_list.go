@@ -6,9 +6,8 @@ import (
 )
 
 func NewFrameList(frames []*Frame) *FrameList {
-	return &FrameList{
-		Frames: frames,
-	}
+	list := FrameList(frames)
+	return &list
 }
 
 func NewSortedFrameList(frames []*Frame) *FrameList {
@@ -21,40 +20,42 @@ func NewEmptyFrameList() *FrameList {
 	return &FrameList{}
 }
 
-type FrameList struct {
-	Frames []*Frame
-}
+type FrameList []*Frame
 
 func (f *FrameList) Empty() bool {
-	return len(f.Frames) == 0
+	return len(*f) == 0
+}
+
+func (f *FrameList) Frames() []*Frame {
+	return *f
 }
 
 func (f *FrameList) Size() int {
-	return len(f.Frames)
+	return len(*f)
 }
 
 func (f *FrameList) Append(value *Frame) {
-	f.Frames = append(f.Frames, value)
+	*f = append(*f, value)
 }
 
 func (f *FrameList) First() *Frame {
 	if f.Empty() {
 		return nil
 	}
-	return f.Frames[0]
+	return (*f)[0]
 }
 
 func (f *FrameList) Last() *Frame {
 	if f.Empty() {
 		return nil
 	}
-	return f.Frames[len(f.Frames)-1]
+	return (*f)[len(*f)-1]
 }
 
 func (f *FrameList) Sort() {
-	sort.SliceStable(f.Frames, func(i, j int) bool {
-		a := f.Frames[i]
-		b := f.Frames[j]
+	sort.SliceStable(*f, func(i, j int) bool {
+		a := (*f)[i]
+		b := (*f)[j]
 		return a.IsBefore(b)
 	})
 }
@@ -95,13 +96,13 @@ func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, acceptUnst
 
 func (f *FrameList) Filter(accepted func(frame *Frame) bool) {
 	var result []*Frame
-	for _, frame := range f.Frames {
+	for _, frame := range *f {
 		if accepted(frame) {
 			result = append(result, frame)
 		}
 	}
 
-	f.Frames = result
+	*f = result
 	f.Sort()
 }
 
@@ -140,7 +141,7 @@ func (f *FrameList) Split(key func(f *Frame) interface{}) []*FrameList {
 	}
 
 	mapping := map[interface{}][]*Frame{}
-	for _, f := range f.Frames {
+	for _, f := range *f {
 		v := key(f)
 		mapping[v] = append(mapping[v], f)
 	}
