@@ -23,6 +23,7 @@ func FilterFrames(frames []*Frame, start *time.Time, end *time.Time) []*Frame {
 }
 
 func NextID() string {
-	return uuid.NewV4().String()
+	id, _ := uuid.NewV4()
+	return id.String()
 }
 
