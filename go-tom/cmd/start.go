@@ -30,7 +30,7 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 			var shiftedStart time.Duration
 
 			// look out for a time shift on the command line
-			if len(args) >= 2 && !strings.HasPrefix(args[1], "+") && !cmd.Flag("past").Changed {
+			if len(args) >= 2 && !strings.HasPrefix(args[1], "+") /*&& !cmd.Flag("past").Changed */{
 				if shift, err := time.ParseDuration(args[1]); err == nil {
 					// it's not making sense to start a task in the future. Also, - is parsed as a shorthand flag prefix and we don't want the user working around that all the time
 					if shift.Seconds() > 0 {

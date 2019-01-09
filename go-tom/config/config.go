@@ -12,7 +12,7 @@ const KeyDataDir = "data_dir"
 const KeyActivityStopOnStart = "activity.stop_on_start"
 const KeyProjectCreateMissing = "projects.create_missing"
 
-const ConfigFilename = "gotime"
+const ConfigFilename = "tom"
 
 func SetDefaults() {
 	home, err := homedir.Dir()
@@ -20,7 +20,7 @@ func SetDefaults() {
 		log.Fatal(err)
 	}
 
-	dataDirPath := filepath.Join(home, ".gotime")
+	dataDirPath := filepath.Join(home, ".tom")
 	viper.SetDefault(KeyDataDir, dataDirPath)
 	viper.SetDefault(KeyProjectCreateMissing, false)
 	viper.SetDefault(KeyActivityStopOnStart, true)

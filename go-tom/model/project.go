@@ -1,7 +1,7 @@
 package model
 
 type Project struct {
-	Store Store
+	Store Store `json:"-"`
 
 	ID       string `json:"id"`
 	ParentID string `json:"parent"`
