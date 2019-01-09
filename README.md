@@ -1,3 +1,8 @@
+
+[![GoDoc](https://godoc.org/github.com/jansorg/tom?status.svg)](https://godoc.org/github.com/jansorg/tom)
+[![Linux and macOS Build Status](https://api.travis-ci.org/jansorg/tom.svg?branch=master&label=Windows+and+Linux+and+macOS+build "Windows, Linux and macOS Build Status")](https://travis-ci.org/jansorg/tom)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jansorg/tom)](https://goreportcard.com/report/github.com/jansorg/tom)
+
 **This project is still in an early phase. It's usable and working but not yet recommended for production.**
 
 # tom
