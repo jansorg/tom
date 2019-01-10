@@ -37,6 +37,7 @@ func init() {
 	newFramesCommand(&ctx, RootCmd)
 	newCreateCommand(&ctx, RootCmd)
 	newRemoveCommand(&ctx, RootCmd)
+	newRenameCommand(&ctx, RootCmd)
 	newStartCommand(&ctx, RootCmd)
 	newStopCommand(&ctx, RootCmd)
 	newCancelCommand(&ctx, RootCmd)
@@ -55,6 +56,11 @@ func init() {
 
 func fatal(err ...interface{}) {
 	_, _ = fmt.Fprintln(os.Stderr, append([]interface{}{"Error: "}, err...)...)
+	os.Exit(1)
+}
+
+func fatalf(format string, args ...interface{}) {
+	_, _ = fmt.Fprintf(os.Stderr, "Error: "+format+"\n", args...)
 	os.Exit(1)
 }
 

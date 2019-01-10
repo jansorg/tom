@@ -1,4 +1,4 @@
-package testSetup
+package test_setup
 
 import (
 	"io/ioutil"

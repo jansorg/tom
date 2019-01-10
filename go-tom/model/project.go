@@ -14,3 +14,12 @@ type Project struct {
 func (p *Project) GetProperties() map[string]string {
 	return p.Properties
 }
+
+func (p *Project) Parent() *Project {
+	if p.ParentID == "" {
+		return nil
+	}
+
+	parent, _ := p.Store.ProjectByID(p.ParentID)
+	return parent
+}

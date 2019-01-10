@@ -269,7 +269,8 @@ func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error)
 		return nil, err
 	}
 	*existing = project
-	return nil, d.save()
+	d.updateProjectInternals(existing)
+	return existing, d.save()
 }
 
 func (d *DataStore) RemoveProject(id string) error {

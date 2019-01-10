@@ -9,13 +9,13 @@ import (
 
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/model"
-	"github.com/jansorg/tom/go-tom/testSetup"
+	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
 func Test_InheritedProps(t *testing.T) {
-	ctx, err := testSetup.CreateTestContext(language.English)
+	ctx, err := test_setup.CreateTestContext(language.English)
 	require.NoError(t, err)
-	defer testSetup.CleanupTestContext(ctx)
+	defer test_setup.CleanupTestContext(ctx)
 
 	parent, err := ctx.Store.AddProject(model.Project{
 		Name: "Top",

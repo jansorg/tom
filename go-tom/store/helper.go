@@ -5,14 +5,19 @@ import (
 	"strings"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/query"
 )
 
 func NewStoreHelper(store model.Store) *Helper {
-	return &Helper{store: store}
+	return &Helper{
+		store: store,
+		query: query.NewStoreQuery(store),
+	}
 }
 
 type Helper struct {
 	store model.Store
+	query query.StoreQuery
 }
 
 func (s *Helper) GetOrCreateTag(name string) (*model.Tag, bool, error) {
@@ -72,4 +77,43 @@ func (s *Helper) GetOrCreateProject(shortName string, parentID string) (*model.P
 		ParentID: parentID,
 	})
 	return project, true, err
+}
+
+func (s *Helper) RenameProjectByName(oldName, newName string) (*model.Project, error) {
+	if p, err := s.query.ProjectByFullNameOrID(oldName); err != nil {
+		return nil, fmt.Errorf("no project found for '%s'", oldName)
+	} else {
+		return s.RenameProject(p, newName)
+	}
+}
+
+func (s *Helper) RenameProject(project *model.Project, newName string) (*model.Project, error) {
+	if project == nil {
+		return nil, fmt.Errorf("project is undefined")
+	} else if newName == "" {
+		return nil, fmt.Errorf("new name is empty")
+	} else if _, err := s.query.ProjectByFullNameOrID(newName); err == nil {
+		return nil, fmt.Errorf("project %s already exists", newName)
+	}
+
+	// now find parent if newName indicates a nested project, just rename if it's a top-level project
+
+	if !strings.Contains(newName, "/") {
+		// now top-level
+		project.ParentID = ""
+		project.Name = newName
+		return s.store.UpdateProject(*project)
+	}
+
+	// now a nested project
+	parts := strings.Split(newName, "/")
+	parentNames := parts[:len(parts)-1]
+	parent, _, err := s.GetOrCreateNestedProjectNames(parentNames...)
+	if err != nil {
+		return nil, err
+	}
+
+	project.ParentID = parent.ID
+	project.Name = parts[len(parts)-1]
+	return s.store.UpdateProject(*project)
 }
