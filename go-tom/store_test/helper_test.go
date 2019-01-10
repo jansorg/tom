@@ -65,4 +65,6 @@ func Test_RenameProject(t *testing.T) {
 	newParent, err := ctx.Query.ProjectByFullNameOrID("newParent/sub")
 	require.NoError(t, err)
 	require.EqualValues(t, newParent.ID, renamed.ParentID, "parent ids must match after rename")
+
+	// fixme test that a rename of a parent will also update the fullnames of all child projects
 }
