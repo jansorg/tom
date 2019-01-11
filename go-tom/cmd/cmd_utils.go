@@ -36,7 +36,7 @@ func parseListOutputFlags(cmd *cobra.Command) (props []string, output string, de
 
 type propList interface {
 	size() int
-	get(index int, prop string) (string, error)
+	get(index int, prop string, format string) (string, error)
 }
 
 func printList(cmd *cobra.Command, data propList) error {
@@ -51,7 +51,7 @@ func printList(cmd *cobra.Command, data propList) error {
 	for i := 0; i < data.size(); i++ {
 		r := row{}
 		for _, prop := range formatFlags {
-			r[prop], err = data.get(i, prop)
+			r[prop], err = data.get(i, prop, output)
 			if err != nil {
 				return err
 			}

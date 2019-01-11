@@ -19,8 +19,8 @@ type ResultBucket struct {
 	Duration      time.Duration `json:"duration"`
 	ExactDuration time.Duration `json:"duration_exact"`
 
-	SplitBy interface{}
-	Source  *model.FrameList `json:"source,omitempty"`
+	SplitBy interface{}      `json:"splitBy,omitempty"`
+	Frames  *model.FrameList `json:"frames,omitempty"`
 	Results []*ResultBucket  `json:"results,omitempty"`
 }
 
@@ -29,7 +29,7 @@ func (b *ResultBucket) Empty() bool {
 }
 
 func (b *ResultBucket) EmptySource() bool {
-	return b.Source.Empty()
+	return b.Frames.Empty()
 }
 
 func (b *ResultBucket) IsRounded() bool {
@@ -95,13 +95,16 @@ func (b *ResultBucket) LeafChildren() []*ResultBucket {
 }
 
 func (b *ResultBucket) Split(splitter func(list *model.FrameList) []*model.FrameList) {
-	parts := splitter(b.Source)
+	parts := splitter(b.Frames)
+	// defer func() {
+	// 	b.Frames = &model.FrameList{}
+	// }()
 
 	b.Results = []*ResultBucket{}
 	for _, p := range parts {
 		b.Results = append(b.Results, &ResultBucket{
 			ctx:    b.ctx,
-			Source: p,
+			Frames: p,
 		})
 	}
 }

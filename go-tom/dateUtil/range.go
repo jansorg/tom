@@ -28,6 +28,17 @@ func NewYearRange(date time.Time, locale locales.Translator) DateRange {
 	return NewDateRange(&start, &end, locale)
 }
 
+func NewWeekRange(date time.Time, locale locales.Translator) DateRange {
+	// e.g. Tuesday = 2-0 -> 2 days to shift back
+	daysShift := int(date.Weekday() - time.Sunday)
+
+	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	start.AddDate(0, 0, -daysShift)
+	end := start.AddDate(0, 0, 7-daysShift)
+
+	return NewDateRange(&start, &end, locale)
+}
+
 func NewMonthRange(date time.Time, locale locales.Translator) DateRange {
 	y, m, _ := date.Date()
 	start := time.Date(y, m, 1, 0, 0, 0, 0, date.Location())

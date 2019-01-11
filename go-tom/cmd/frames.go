@@ -17,7 +17,7 @@ func (f frameList) size() int {
 	return len(f)
 }
 
-func (f frameList) get(index int, prop string) (string, error) {
+func (f frameList) get(index int, prop string, format string) (string, error) {
 	switch prop {
 	case "id":
 		return f[index].ID, nil

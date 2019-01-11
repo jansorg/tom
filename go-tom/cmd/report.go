@@ -80,6 +80,8 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 						splitOperations = append(splitOperations, report.SplitByYear)
 					case "month":
 						splitOperations = append(splitOperations, report.SplitByMonth)
+					case "week":
+						splitOperations = append(splitOperations, report.SplitByWeek)
 					case "day":
 						splitOperations = append(splitOperations, report.SplitByDay)
 					case "project":

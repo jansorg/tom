@@ -17,7 +17,7 @@ func (o tagList) size() int {
 	return len(o)
 }
 
-func (t tagList) get(index int, prop string) (string, error) {
+func (t tagList) get(index int, prop string, format string) (string, error) {
 	switch prop {
 	case "id":
 		return t[index].ID, nil

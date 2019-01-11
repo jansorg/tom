@@ -3,6 +3,8 @@ package model
 import (
 	"sort"
 	"time"
+
+	"github.com/jansorg/tom/go-tom/dateUtil"
 )
 
 func NewFrameList(frames []*Frame) *FrameList {
@@ -80,6 +82,13 @@ func (f *FrameList) FilterByEndDate(maxEndDate time.Time, acceptUnstopped bool) 
 	})
 }
 
+func (f *FrameList) FilterByDateRange(dateRange dateUtil.DateRange, acceptUnstopped bool) {
+	f.FilterByStartDate(*dateRange.Start)
+	if dateRange.IsClosed() {
+		f.FilterByEndDate(*dateRange.End, acceptUnstopped)
+	}
+}
+
 func (f *FrameList) FilterByDate(start time.Time, end time.Time, acceptUnstopped bool) {
 	f.FilterByStartDate(start)
 	f.FilterByEndDate(end, acceptUnstopped)
@@ -122,6 +131,15 @@ func (f *FrameList) SplitByMonth() []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
 		y, m, _ := frame.Start.Date()
 		return time.Date(y, m, 1, 0, 0, 0, 0, frame.Start.Location())
+	})
+}
+
+func (f *FrameList) SplitByWeek() []*FrameList {
+	return f.Split(func(frame *Frame) interface{} {
+		y, m, d := frame.Start.Date()
+		date := time.Date(y, m, d, 0, 0, 0, 0, frame.Start.Location())
+		date.AddDate(0, 0, -int(frame.Start.Weekday()))
+		return date
 	})
 }
 

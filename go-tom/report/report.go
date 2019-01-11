@@ -17,6 +17,7 @@ type SplitOperation int8
 const (
 	SplitByYear SplitOperation = iota + 1
 	SplitByMonth
+	SplitByWeek
 	SplitByDay
 	SplitByProject
 )
@@ -79,7 +80,7 @@ func (b *BucketReport) Update() {
 
 	b.Result = &ResultBucket{
 		ctx:       b.ctx,
-		Source:    b.source,
+		Frames:    b.source,
 		DateRange: dateUtil.NewDateRange(nil, nil, b.ctx.Locale),
 	}
 
@@ -92,8 +93,8 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewYearRange(*leaf.Source.First().Start, b.ctx.Locale)
+				if !leaf.Frames.Empty() {
+					leaf.DateRange = dateUtil.NewYearRange(*leaf.Frames.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -104,8 +105,20 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Source.First().Start, b.ctx.Locale)
+				if !leaf.Frames.Empty() {
+					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Frames.First().Start, b.ctx.Locale)
+				}
+				leaf.SplitBy = leaf.DateRange
+			})
+		case SplitByWeek:
+			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
+					return list.SplitByWeek()
+				})
+			})
+			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
+				if !leaf.Frames.Empty() {
+					leaf.DateRange = dateUtil.NewWeekRange(*leaf.Frames.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -116,8 +129,8 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				if !leaf.Source.Empty() {
-					leaf.DateRange = dateUtil.NewDayRange(*leaf.Source.First().Start, b.ctx.Locale)
+				if !leaf.Frames.Empty() {
+					leaf.DateRange = dateUtil.NewDayRange(*leaf.Frames.First().Start, b.ctx.Locale)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -128,8 +141,8 @@ func (b *BucketReport) Update() {
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				if !leaf.Source.Empty() {
-					leaf.SplitBy = leaf.Source.First().ProjectId
+				if !leaf.Frames.Empty() {
+					leaf.SplitBy = leaf.Frames.First().ProjectId
 				}
 			})
 			sort.SliceStable(b.Result.Results, func(i, j int) bool {
@@ -151,13 +164,13 @@ func (b *BucketReport) Update() {
 
 // depth first update of the buckets to aggregate stats from sub-buckets
 func updateBucket(report *BucketReport, bucket *ResultBucket) {
-	bucket.FrameCount = bucket.Source.Size()
+	bucket.FrameCount = bucket.Frames.Size()
 
 	for _, sub := range bucket.Results {
 		updateBucket(report, sub)
 	}
 
-	for _, f := range bucket.Source.Frames() {
+	for _, f := range bucket.Frames.Frames() {
 		d := f.Duration()
 		bucket.ExactDuration += d
 		bucket.Duration += dateUtil.RoundDuration(d, report.RoundingModeFrames, report.RoundFramesTo)
@@ -178,12 +191,12 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 			bucket.DateRange.Start = first.DateRange.Start
 			bucket.DateRange.End = last.DateRange.End
 		}
-	} else if !bucket.Source.Empty() {
+	} else if !bucket.Frames.Empty() {
 		if bucket.TrackedDateRange.Start == nil {
-			bucket.TrackedDateRange.Start = bucket.Source.First().Start
+			bucket.TrackedDateRange.Start = bucket.Frames.First().Start
 		}
 		if bucket.TrackedDateRange.End == nil {
-			bucket.TrackedDateRange.End = bucket.Source.Last().End
+			bucket.TrackedDateRange.End = bucket.Frames.Last().End
 		}
 	}
 }
