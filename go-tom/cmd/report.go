@@ -86,8 +86,10 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 						splitOperations = append(splitOperations, report.SplitByDay)
 					case "project":
 						splitOperations = append(splitOperations, report.SplitByProject)
+					// case "parentProject":
+					// 	splitOperations = append(splitOperations, report.SplitByParentProject)
 					default:
-						fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day", mode))
+						fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day, project, parentProject", mode))
 					}
 				}
 			}
@@ -154,7 +156,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 
 	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
-	cmd.Flags().StringVarP(&splitModes, "split", "s", "", "Group frames into years, months and/or days. Possible values: year,month,day")
+	cmd.Flags().StringVarP(&splitModes, "split", "s", "", "Group frames into years, months and/or days. Possible values: year,month,day,project,parentProject")
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
@@ -200,7 +202,7 @@ func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level 
 		printfIndenting(level, "Date range: %s\n", report.DateRange.MinimalString())
 	}
 	if !report.TrackedDateRange.Empty() {
-		printfIndenting(level, "Tracked time: %s\n", report.TrackedDateRange.ShortString())
+		printfIndenting(level, "Tracked dates: %s\n", report.TrackedDateRange.ShortString())
 	}
 	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration))
 	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.ExactDuration))

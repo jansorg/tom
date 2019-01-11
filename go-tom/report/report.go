@@ -20,6 +20,7 @@ const (
 	SplitByWeek
 	SplitByDay
 	SplitByProject
+	SplitByParentProject
 )
 
 type BucketReport struct {
@@ -142,6 +143,25 @@ func (b *BucketReport) Update() {
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
 					leaf.SplitBy = leaf.Frames.First().ProjectId
+				}
+			})
+			sort.SliceStable(b.Result.Results, func(i, j int) bool {
+				a := b.Result.Results[i]
+				b := b.Result.Results[j]
+				return strings.Compare(strings.ToLower(a.Title()), strings.ToLower(b.Title())) < 0
+			})
+		case SplitByParentProject:
+			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
+				leaf.Split(func(list *model.FrameList) []*model.FrameList {
+					return list.SplitByParentProject(b.ctx.Store)
+				})
+			})
+			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
+				if !leaf.Frames.Empty() {
+					project, err := b.ctx.Store.ProjectByID(leaf.Frames.First().ProjectId)
+					if err == nil {
+						leaf.SplitBy = project.ParentID
+					}
 				}
 			})
 			sort.SliceStable(b.Result.Results, func(i, j int) bool {

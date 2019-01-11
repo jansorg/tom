@@ -121,6 +121,16 @@ func (f *FrameList) SplitByProject() []*FrameList {
 	})
 }
 
+func (f *FrameList) SplitByParentProject(store Store) []*FrameList {
+	return f.Split(func(frame *Frame) interface{} {
+		project, err := store.ProjectByID(frame.ProjectId)
+		if err != nil {
+			return ""
+		}
+		return project.ParentID
+	})
+}
+
 func (f *FrameList) SplitByYear() []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
 		return frame.Start.Year()
