@@ -17,7 +17,7 @@ func (f frameList) size() int {
 	return len(f)
 }
 
-func (f frameList) get(index int, prop string, format string) (string, error) {
+func (f frameList) get(index int, prop string, format string) (interface{}, error) {
 	switch prop {
 	case "id":
 		return f[index].ID, nil
@@ -34,22 +34,22 @@ func (f frameList) get(index int, prop string, format string) (string, error) {
 			return project.FullName, nil
 		}
 	case "startTime":
-		return f[index].Start.In(time.Local).Format(time.RFC3339), nil
+		return f[index].Start.In(time.Local), nil
 	case "stopTime":
 		frame := f[index]
 		if frame.IsActive() {
 			return "", nil
 		}
-		return frame.End.In(time.Local).Format(time.RFC3339), nil
+		return frame.End.In(time.Local), nil
 	case "lastUpdated":
 		frame := f[index]
 		if frame.Updated == nil {
 			return "", nil
 		}
-		return frame.Updated.Format(time.RFC3339), nil;
+		return frame.Updated, nil;
 	case "duration":
 		frame := f[index]
-		return ctx.DurationPrinter.Short(frame.Duration()), nil
+		return frame.Duration(), nil
 	case "notes":
 		frame := f[index]
 		return frame.Notes, nil;
@@ -61,7 +61,7 @@ func (f frameList) get(index int, prop string, format string) (string, error) {
 	}
 }
 
-func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	projectIDOrName := ""
 	includeSubprojects := false
 
@@ -71,16 +71,16 @@ func newFramesCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Run: func(cmd *cobra.Command, args []string) {
 			var frames frameList
 			if projectIDOrName == "" {
-				frames = context.Store.Frames()
+				frames = ctx.Store.Frames()
 			} else {
-				project, err := context.Query.ProjectByFullNameOrID(projectIDOrName)
+				project, err := ctx.Query.ProjectByFullNameOrID(projectIDOrName)
 				if err != nil {
 					fatal(fmt.Errorf("no project found for %s", projectIDOrName))
 				}
-				frames = context.Query.FramesByProject(project.ID, includeSubprojects)
+				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
-			if err := printList(cmd, frames); err != nil {
+			if err := printList(cmd, frames, ctx); err != nil {
 				fatal(err)
 			}
 		},

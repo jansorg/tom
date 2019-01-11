@@ -3,9 +3,14 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateUtil"
 )
 
 func addListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
@@ -36,16 +41,16 @@ func parseListOutputFlags(cmd *cobra.Command) (props []string, output string, de
 
 type propList interface {
 	size() int
-	get(index int, prop string, format string) (string, error)
+	get(index int, prop string, format string) (interface{}, error)
 }
 
-func printList(cmd *cobra.Command, data propList) error {
+func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
 		fatal(err)
 	}
 
-	type row map[string]string
+	type row map[string]interface{}
 
 	var rows []row
 	for i := 0; i < data.size(); i++ {
@@ -64,7 +69,7 @@ func printList(cmd *cobra.Command, data propList) error {
 		for _, row := range rows {
 			var rowValues []string
 			for _, prop := range formatFlags {
-				rowValues = append(rowValues, row[prop])
+				rowValues = append(rowValues, stringValue(row[prop], ctx))
 			}
 			fmt.Println(strings.Join(rowValues, delimiter))
 		}
@@ -78,4 +83,24 @@ func printList(cmd *cobra.Command, data propList) error {
 		fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
+}
+
+func stringValue(v interface{}, ctx *context.GoTimeContext) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+
+	if date, ok := v.(time.Time); ok {
+		return date.Format(time.RFC3339)
+	}
+
+	if duration, ok := v.(time.Duration); ok {
+		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10)
+	}
+
+	if date, ok := v.(dateUtil.DateRange); ok {
+		return date.ShortString()
+	}
+
+	return fmt.Sprintf("%v", v)
 }

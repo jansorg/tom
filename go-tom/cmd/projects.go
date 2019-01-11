@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -23,7 +22,7 @@ func (o projectList) size() int {
 	return len(o.projects)
 }
 
-func (o projectList) get(index int, prop string, format string) (string, error) {
+func (o projectList) get(index int, prop string, format string) (interface{}, error) {
 	r := o.reports[o.projects[index].ID]
 	if r == nil {
 		r = &report.ProjectSummary{}
@@ -39,53 +38,23 @@ func (o projectList) get(index int, prop string, format string) (string, error) 
 	case "name":
 		return o.projects[index].Name, nil
 	case "trackedDay":
-		duration := r.TrackedDay
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return r.TrackedDay, nil
 	case "trackedWeek":
-		duration := r.TrackedWeek
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return r.TrackedWeek, nil
 	case "trackedMonth":
-		duration := r.TrackedMonth
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return r.TrackedMonth, nil
 	case "trackedYear":
-		duration := r.TrackedYear
-		// if format = "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-	// }
-	// return ctx.DurationPrinter.Short(duration), nil
+		return r.TrackedYear, nil
 	case "totalTrackedDay":
-		duration := r.TotalTrackedDay
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return r.TotalTrackedDay, nil
 	case "totalTrackedWeek":
 		duration := r.TotalTrackedWeek
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return duration, nil
 	case "totalTrackedMonth":
 		duration := r.TotalTrackedMonth
-		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return duration, nil
 	case "totalTrackedYear":
-		duration := r.TotalTrackedYear
-		// if format = "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
-		// }
-		// return ctx.DurationPrinter.Short(duration), nil
+		return r.TotalTrackedYear, nil
 	default:
 		return "", fmt.Errorf("unknown property %s", prop)
 	}
@@ -107,7 +76,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 
 			projectList := projectList{projects: projects, reports: projectReports}
 
-			err := printList(cmd, projectList)
+			err := printList(cmd, projectList, ctx)
 			if err != nil {
 				fatal(err)
 			}

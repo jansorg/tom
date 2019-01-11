@@ -17,7 +17,7 @@ func (o tagList) size() int {
 	return len(o)
 }
 
-func (t tagList) get(index int, prop string, format string) (string, error) {
+func (t tagList) get(index int, prop string, format string) (interface{}, error) {
 	switch prop {
 	case "id":
 		return t[index].ID, nil
@@ -38,7 +38,7 @@ func newTagsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 				return strings.Compare(tags[i].Name, tags[j].Name) < 0
 			})
 
-			if err := printList(cmd, tags); err != nil {
+			if err := printList(cmd, tags, ctx); err != nil {
 				fatal(err)
 			}
 		},
