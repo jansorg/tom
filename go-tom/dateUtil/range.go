@@ -142,3 +142,11 @@ func (r DateRange) IsOpen() bool {
 func (r DateRange) Empty() bool {
 	return r.Start == nil && r.End == nil
 }
+
+func (r DateRange) Contains(date time.Time) bool {
+	return r.Start != nil && !date.Before(*r.Start) && r.End != nil && !date.After(*r.End)
+}
+
+func (r DateRange) ContainsP(date *time.Time) bool {
+	return date != nil && r.Contains(*date)
+}

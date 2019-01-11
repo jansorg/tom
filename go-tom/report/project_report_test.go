@@ -63,4 +63,9 @@ func Test_ProjectReportTest(t *testing.T) {
 	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth)
 	require.EqualValues(t, 30*time.Minute, reports[p.ID].TrackedWeek)
 	require.EqualValues(t, 10*time.Minute, reports[p.ID].TrackedDay)
+
+	require.EqualValues(t, 50*time.Minute, reports[p.ID].TotalTrackedYear)
+	require.EqualValues(t, 40*time.Minute, reports[p.ID].TotalTrackedMonth)
+	require.EqualValues(t, 30*time.Minute, reports[p.ID].TotalTrackedWeek)
+	require.EqualValues(t, 10*time.Minute, reports[p.ID].TotalTrackedDay)
 }
