@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	verbose := false
 	format := ""
 	delimiter := ""
@@ -19,13 +19,13 @@ func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 		Use:   "status",
 		Short: "Displays when the current project was started and the time spent...",
 		Run: func(cmd *cobra.Command, args []string) {
-			activeFrames := context.Query.ActiveFrames
+			activeFrames := ctx.Query.ActiveFrames
 
 			if cmd.Flag("format").Changed {
 				flags := strings.Split(format, ",")
 
 				for _, frame := range activeFrames() {
-					project, err := context.Query.ProjectByID(frame.ProjectId)
+					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
 						fatal(err)
 					}
@@ -55,15 +55,15 @@ func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 					fmt.Println(strings.Join(values, delimiter))
 				}
 			} else if verbose {
-				projectCount := len(context.Store.Projects())
-				tagCount := len(context.Store.Tags())
-				frameCount := len(context.Store.Frames())
+				projectCount := len(ctx.Store.Projects())
+				tagCount := len(ctx.Store.Tags())
+				frameCount := len(ctx.Store.Frames())
 				activeFrameCount := len(activeFrames())
 
 				fmt.Printf("Projects: %d\nTags: %d\nFrames: %d\nStarted activites: %d\n", projectCount, tagCount, frameCount, activeFrameCount)
 			} else {
 				for _, frame := range activeFrames() {
-					project, err := context.Query.ProjectByID(frame.ProjectId)
+					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
 						fatal(err)
 					}
@@ -82,6 +82,7 @@ func newStatusCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "Delimiter to separate flags on the same line. Only used when --format is specified.")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", verbose, "Print details about the currently stored projects, tags and frames")
 
+	newProjectsStatusCommand(ctx, cmd)
 	parent.AddCommand(cmd)
 	return cmd
 }

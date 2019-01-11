@@ -9,7 +9,7 @@ import (
 )
 
 type ProjectSummary struct {
-	ProjectID    string
+	Project      *model.Project
 	TrackedYear  time.Duration
 	TrackedMonth time.Duration
 	TrackedWeek  time.Duration
@@ -57,13 +57,20 @@ func (p *ProjectSummary) addTotalDay(d time.Duration) {
 	p.TotalTrackedDay += d
 }
 
-func CreateProjectReports(frames *model.FrameList, referenceDay time.Time, ctx *context.GoTimeContext) map[string]*ProjectSummary {
+func CreateProjectReports(referenceDay time.Time, showEmpty bool, ctx *context.GoTimeContext) map[string]*ProjectSummary {
+	frames := model.NewFrameList(ctx.Store.Frames())
+
 	year := dateUtil.NewYearRange(referenceDay, ctx.Locale)
 	week := dateUtil.NewWeekRange(referenceDay, ctx.Locale)
 	month := dateUtil.NewMonthRange(referenceDay, ctx.Locale)
 	day := dateUtil.NewDayRange(referenceDay, ctx.Locale)
 
 	result := map[string]*ProjectSummary{}
+	if showEmpty {
+		for _, p := range ctx.Store.Projects() {
+			result[p.ID] = &ProjectSummary{Project: p}
+		}
+	}
 
 	frames.FilterByDateRange(year, false)
 
@@ -76,7 +83,7 @@ func CreateProjectReports(frames *model.FrameList, referenceDay time.Time, ctx *
 		ctx.Query.WithProjectAndParents(frame.ProjectId, func(project *model.Project) bool {
 			target, ok := result[project.ID]
 			if !ok {
-				target = &ProjectSummary{ProjectID: project.ID}
+				target = &ProjectSummary{Project: project}
 				result[project.ID] = target
 			}
 
