@@ -32,8 +32,7 @@ type BucketReport struct {
 	ProjectIDs          []string           `json:"projectIDs,omitempty"`
 	IncludeSubprojects  bool               `json:"includeSubprojects,omitempty"`
 	FilterRange         dateUtil.DateRange `json:"dateRange,omitempty"`
-
-	SplitOperations []SplitOperation `json:"splitOperations"`
+	SplitOperations     []SplitOperation   `json:"splitOperations"`
 
 	RoundingModeFrames dateUtil.RoundingMode `json:"roundingModeFrames"`
 	RoundFramesTo      time.Duration         `json:"roundFramesTo"`

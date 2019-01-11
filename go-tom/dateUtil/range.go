@@ -33,8 +33,9 @@ func NewWeekRange(date time.Time, locale locales.Translator) DateRange {
 	daysShift := int(date.Weekday() - time.Sunday)
 
 	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
-	start.AddDate(0, 0, -daysShift)
-	end := start.AddDate(0, 0, 7-daysShift)
+	start = start.AddDate(0, 0, -daysShift)
+
+	end := start.AddDate(0, 0, 7)
 
 	return NewDateRange(&start, &end, locale)
 }

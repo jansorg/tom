@@ -36,25 +36,25 @@ func (o projectList) get(index int, prop string, format string) (string, error) 
 	case "trackedDay":
 		duration := o.reports[o.projects[index].ID].TrackedDay
 		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000, 10), nil
+		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
 		// }
 		// return ctx.DurationPrinter.Short(duration), nil
 	case "trackedWeek":
 		duration := o.reports[o.projects[index].ID].TrackedWeek
 		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000, 10), nil
+		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
 		// }
 		// return ctx.DurationPrinter.Short(duration), nil
 	case "trackedMonth":
 		duration := o.reports[o.projects[index].ID].TrackedMonth
 		// if format == "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000, 10), nil
+		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
 		// }
 		// return ctx.DurationPrinter.Short(duration), nil
 	case "trackedYear":
 		duration := o.reports[o.projects[index].ID].TrackedYear
 		// if format = "json" {
-		return strconv.FormatInt(duration.Nanoseconds()/1000, 10), nil
+		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10), nil
 		// }
 		// return ctx.DurationPrinter.Short(duration), nil
 	default:

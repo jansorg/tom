@@ -136,10 +136,8 @@ func (f *FrameList) SplitByMonth() []*FrameList {
 
 func (f *FrameList) SplitByWeek() []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
-		y, m, d := frame.Start.Date()
-		date := time.Date(y, m, d, 0, 0, 0, 0, frame.Start.Location())
-		date.AddDate(0, 0, -int(frame.Start.Weekday()))
-		return date
+		y, week := frame.Start.ISOWeek()
+		return y*1000 + week
 	})
 }
 

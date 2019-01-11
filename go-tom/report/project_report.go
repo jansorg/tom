@@ -24,11 +24,11 @@ func CreateProjectReports(frames *model.FrameList, referenceDay time.Time, ctx *
 
 	result := map[string]ProjectSummary{}
 
-	// frames.FilterByDateRange(year, false)
-
 	// update years
 	report := NewBucketReport(frames, ctx)
 	report.SplitOperations = []SplitOperation{SplitByProject}
+	report.IncludeSubprojects = true
+
 	report.FilterRange = year
 	report.Update()
 	for _, r := range report.Result.Results {
