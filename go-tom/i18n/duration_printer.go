@@ -13,9 +13,9 @@ func (p *durationPrinter) Minimal(d time.Duration) string {
 	s := d.Seconds()
 	hours := int(s / 3600.0)
 	minutes := int(int(s) % 3600 / 60.0)
-	seconds := int(s) % 3600 % 60
+	//seconds := int(s) % 3600 % 60
 
-	return fmt.Sprintf("%d%s%02d%s%02d%s", hours, p.spec.separator, minutes, p.spec.separator, seconds, p.spec.minSuffix)
+	return fmt.Sprintf("%d%s%02d%s", hours, p.spec.separator, minutes, p.spec.minSuffix)
 }
 
 func (p *durationPrinter) Short(d time.Duration) string {
