@@ -12,12 +12,13 @@ import (
 )
 
 type GoTimeContext struct {
-	Store           model.Store
-	StoreHelper     *store.Helper
-	Query           query.StoreQuery
-	Language        language.Tag
-	LocalePrinter   *message.Printer
-	Locale          locales.Translator
-	DurationPrinter i18n.DurationPrinter
-	DateTimePrinter i18n.DateTimePrinter
+	Store                  model.Store
+	StoreHelper            *store.Helper
+	Query                  query.StoreQuery
+	Language               language.Tag
+	LocalePrinter          *message.Printer
+	Locale                 locales.Translator
+	DurationPrinter        i18n.DurationPrinter
+	DecimalDurationPrinter i18n.DurationPrinter
+	DateTimePrinter        i18n.DateTimePrinter
 }

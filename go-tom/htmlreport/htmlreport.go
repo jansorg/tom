@@ -15,11 +15,17 @@ import (
 type Report struct {
 	workingDir   string
 	templatePath string
+	options      Options
 	ctx          *context.GoTimeContext
 }
 
-func NewReport(workingDir string, templatePath string, ctx *context.GoTimeContext) *Report {
+type Options struct {
+	DecimalDurationn bool
+}
+
+func NewReport(workingDir string, templatePath string, opts Options, ctx *context.GoTimeContext) *Report {
 	return &Report{
+		options:      opts,
 		workingDir:   workingDir,
 		templatePath: templatePath,
 		ctx:          ctx,
@@ -48,12 +54,21 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 			return r.ctx.DateTimePrinter.DateTime(date)
 		},
 		"minDuration": func(duration time.Duration) string {
+			if r.options.DecimalDurationn {
+				return r.ctx.DecimalDurationPrinter.Minimal(duration)
+			}
 			return r.ctx.DurationPrinter.Minimal(duration)
 		},
 		"shortDuration": func(duration time.Duration) string {
+			if r.options.DecimalDurationn {
+				return r.ctx.DecimalDurationPrinter.Short(duration)
+			}
 			return r.ctx.DurationPrinter.Short(duration)
 		},
 		"longDuration": func(duration time.Duration) string {
+			if r.options.DecimalDurationn {
+				return r.ctx.DecimalDurationPrinter.Long(duration)
+			}
 			return r.ctx.DurationPrinter.Long(duration)
 		},
 	}

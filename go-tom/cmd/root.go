@@ -95,6 +95,7 @@ func initConfig() {
 	ctx.LocalePrinter = message.NewPrinter(ctx.Language)
 	ctx.Locale = i18n.FindLocale(ctx.Language)
 	ctx.DurationPrinter = i18n.NewDurationPrinter(ctx.Language)
+	ctx.DecimalDurationPrinter = i18n.NewDecimalDurationPrinter(ctx.Language)
 	ctx.DateTimePrinter = i18n.NewDateTimePrinter(ctx.Language)
 }
 

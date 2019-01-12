@@ -1,7 +1,6 @@
 package i18n
 
 import (
-	"fmt"
 	"time"
 
 	"golang.org/x/text/language"
@@ -34,33 +33,7 @@ func NewDurationPrinter(lang language.Tag) DurationPrinter {
 	return &durationPrinter{spec: supportedMapping[base.String()]}
 }
 
-type durationPrinter struct {
-	spec langDef
-}
-
-func (p *durationPrinter) Minimal(d time.Duration) string {
-	s := d.Seconds()
-	hours := int(s / 3600.0)
-	minutes := int(int(s) % 3600 / 60.0)
-	seconds := int(s) % 3600 % 60
-
-	return fmt.Sprintf("%d%s%02d%s%02d%s", hours, p.spec.separator, minutes, p.spec.separator, seconds, p.spec.minSuffix)
-}
-
-func (p *durationPrinter) Short(d time.Duration) string {
-	s := d.Seconds()
-	hours := int(s / 3600.0)
-	minutes := int(int(s) % 3600 / 60.0)
-	seconds := int(s) % 3600 % 60
-
-	return fmt.Sprintf("%d%s %d%s %d%s", hours, p.spec.short[0], minutes, p.spec.short[1], seconds, p.spec.short[2])
-}
-
-func (p *durationPrinter) Long(d time.Duration) string {
-	s := d.Seconds()
-	hours := int(s / 3600.0)
-	minutes := int(int(s) % 3600 / 60.0)
-	seconds := int(s) % 3600 % 60
-
-	return fmt.Sprintf("%d%s %d%s %d%s", hours, p.spec.long[0], minutes, p.spec.long[1], seconds, p.spec.long[2])
+func NewDecimalDurationPrinter(lang language.Tag) DurationPrinter {
+	base, _ := lang.Base()
+	return &decimalDurationPrinter{printer: FindLocale(lang), spec: supportedMapping[base.String()]}
 }

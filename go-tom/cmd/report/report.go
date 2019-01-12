@@ -37,6 +37,8 @@ func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Comman
 	var roundModeFrames string
 	var roundModeTotal string
 
+	var decimalDurations bool
+
 	var templatePath string
 
 	var cmd = &cobra.Command{
@@ -121,16 +123,16 @@ func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Comman
 			frameReport.SplitOperations = splitOperations
 			frameReport.Update()
 
-			if templatePath != "" {
-				if err := printTemplate(ctx, templatePath, frameReport); err != nil {
-					log.Fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
-				}
-			} else if jsonOutput {
+			if jsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
 				if err != nil {
 					log.Fatal(err)
 				}
 				fmt.Println(string(data))
+			} else if templatePath != "" {
+				if err := printTemplate(ctx, templatePath, frameReport, htmlreport.Options{DecimalDurationn: decimalDurations}); err != nil {
+					log.Fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
+				}
 			} else {
 				printReport(frameReport.Result, ctx, 1)
 			}
@@ -151,16 +153,18 @@ func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Comman
 	cmd.Flags().IntVarP(&year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 	// cmd.Flag("year").NoOptDefVal = "0"
 	cmd.Flags().IntVarP(&month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
-	// cmd.Flag("month").NoOptDefVal = "0"
+	cmd.Flag("month").NoOptDefVal = "0"
 	cmd.Flags().IntVarP(&day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 	// cmd.Flag("day").NoOptDefVal = "0"
 
 	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
-	cmd.Flags().StringVarP(&splitModes, "split", "s", "", "Group frames into years, months and/or days. Possible values: year,month,day,project,parentProject")
+	cmd.Flags().StringVarP(&splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,day,project")
 
-	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Duration(0), "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+
+	cmd.Flags().BoolVarP(&decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
 
 	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
 
@@ -172,8 +176,8 @@ func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Comman
 	return cmd
 }
 
-func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport) error {
-	t := htmlreport.NewReport("", templatePath, ctx)
+func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport, opts htmlreport.Options) error {
+	t := htmlreport.NewReport("", templatePath, opts, ctx)
 	out, err := t.Render(report)
 	if err != nil {
 		return err
