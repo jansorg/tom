@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -15,7 +16,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 		Short: "Get/set project properties. Usage: <projectName> [propertyName] --set [optional new value]",
 		Args:  cobra.RangeArgs(1, 3),
 		Run: func(cmd *cobra.Command, args []string) {
-			project, err := ctx.Query.ProjectByFullName(args[0])
+			project, err := ctx.Query.ProjectByFullName(strings.Split(args[0], "/"))
 			if err != nil {
 				fatal(err)
 			}

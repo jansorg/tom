@@ -3,6 +3,7 @@ package activity
 import (
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
@@ -30,20 +31,17 @@ func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMul
 }
 
 func (a *Control) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
-	projects := a.ctx.Query.ProjectsByShortNameOrID(projectNameOrID)
+	project, err := a.ctx.Query.ProjectByID(projectNameOrID)
+	if err != nil {
+		project, err = a.ctx.Query.ProjectByFullName(strings.Split(projectNameOrID, "/"))
+	}
 
-	var err error
-	var project *model.Project
-	if len(projects) == 0 && a.createMissingProjects == false {
+	if project == nil && a.createMissingProjects == false {
 		return nil, ProjectNotFoundErr
-	} else if len(projects) == 0 {
+	} else if project == nil {
 		if project, err = a.ctx.Store.AddProject(model.Project{Name: projectNameOrID}); err != nil {
 			return nil, err
 		}
-	} else if len(projects) == 1 {
-		project = projects[0]
-	} else {
-		return nil, fmt.Errorf("more than one project found for %s", projectNameOrID)
 	}
 
 	frame := model.NewStartedFrame(project)

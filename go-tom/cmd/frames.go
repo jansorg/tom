@@ -73,9 +73,12 @@ func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 			if projectIDOrName == "" {
 				frames = ctx.Store.Frames()
 			} else {
-				project, err := ctx.Query.ProjectByFullNameOrID(projectIDOrName)
+				project, err := ctx.Query.ProjectByID(projectIDOrName)
 				if err != nil {
-					fatal(fmt.Errorf("no project found for %s", projectIDOrName))
+					project, err = ctx.Query.ProjectByFullName(strings.Split(projectIDOrName, "/"))
+					if err != nil {
+						fatal(fmt.Errorf("no project found for %s", projectIDOrName))
+					}
 				}
 				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}

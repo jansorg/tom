@@ -80,40 +80,43 @@ func (s *Helper) GetOrCreateProject(shortName string, parentID string) (*model.P
 }
 
 func (s *Helper) RenameProjectByName(oldName, newName string) (*model.Project, error) {
-	if p, err := s.query.ProjectByFullNameOrID(oldName); err != nil {
-		return nil, fmt.Errorf("no project found for '%s'", oldName)
-	} else {
-		return s.RenameProject(p, newName)
+	p, err := s.query.ProjectByID(oldName)
+	if err != nil {
+		p, err = s.query.ProjectByFullName(strings.Split(oldName, "/"))
+		if err != nil {
+			return nil, fmt.Errorf("no project found for '%s'", oldName)
+		}
 	}
+
+	return s.RenameProject(p, strings.Split(newName, "/"))
 }
 
-func (s *Helper) RenameProject(project *model.Project, newName string) (*model.Project, error) {
+func (s *Helper) RenameProject(project *model.Project, newName []string) (*model.Project, error) {
 	if project == nil {
 		return nil, fmt.Errorf("project is undefined")
-	} else if newName == "" {
+	} else if len(newName) == 0 {
 		return nil, fmt.Errorf("new name is empty")
-	} else if _, err := s.query.ProjectByFullNameOrID(newName); err == nil {
+	} else if _, err := s.query.ProjectByFullName(newName); err == nil {
 		return nil, fmt.Errorf("project %s already exists", newName)
 	}
 
 	// now find parent if newName indicates a nested project, just rename if it's a top-level project
 
-	if !strings.Contains(newName, "/") {
+	if len(newName) == 1 {
 		// now top-level
 		project.ParentID = ""
-		project.Name = newName
+		project.Name = newName[0]
 		return s.store.UpdateProject(*project)
 	}
 
 	// now a nested project
-	parts := strings.Split(newName, "/")
-	parentNames := parts[:len(parts)-1]
+	parentNames := newName[:len(newName)-1]
 	parent, _, err := s.GetOrCreateNestedProjectNames(parentNames...)
 	if err != nil {
 		return nil, err
 	}
 
 	project.ParentID = parent.ID
-	project.Name = parts[len(parts)-1]
+	project.Name = newName[len(newName)-1]
 	return s.store.UpdateProject(*project)
 }

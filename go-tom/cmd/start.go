@@ -70,7 +70,7 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 			if project, err := ctx.Query.ProjectByID(frame.ProjectId); err == nil {
 				// fixme i18n?
-				fmt.Printf("Started new activity for %s at %v. Tags: %s\n", project.FullName, ctx.DateTimePrinter.Time(*frame.Start), args)
+				fmt.Printf("Started new activity for %s at %v. Tags: %s\n", project.GetFullName("/"), ctx.DateTimePrinter.Time(*frame.Start), args)
 			}
 		},
 	}

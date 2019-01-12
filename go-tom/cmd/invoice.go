@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -117,7 +118,7 @@ func parseInvoiceCmd(ctx *context.GoTimeContext, cmd *cobra.Command) (invoiceCmd
 		return invoiceCmdConfig{}, err
 	}
 
-	project, err := ctx.Query.ProjectByFullName(projectName)
+	project, err := ctx.Query.ProjectByFullName(strings.Split(projectName, "/"))
 	if err != nil {
 		return invoiceCmdConfig{}, err
 	}

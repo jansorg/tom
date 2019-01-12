@@ -24,13 +24,13 @@ func Test_RenameProject(t *testing.T) {
 	require.NoError(t, err)
 
 	// top1/child -> childNewName
-	renamed, err := ctx.StoreHelper.RenameProject(c1, "childNewName")
+	renamed, err := ctx.StoreHelper.RenameProject(c1, []string{"childNewName"})
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
 	require.EqualValues(t, "childNewName", renamed.GetFullName("/"))
 
 	// childNewName -> top1/childNewName
-	renamed, err = ctx.StoreHelper.RenameProject(renamed, "top1/childNewName")
+	renamed, err = ctx.StoreHelper.RenameProject(renamed, []string{"top1", "childNewName"})
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
 	require.EqualValues(t, "top1/childNewName", renamed.GetFullName("/"))
@@ -62,7 +62,7 @@ func Test_RenameProject(t *testing.T) {
 	require.EqualValues(t, "childName", renamed.Name)
 	require.EqualValues(t, "newParent/sub/childName", renamed.GetFullName("/"))
 
-	newParent, err := ctx.Query.ProjectByFullNameOrID("newParent/sub")
+	newParent, err := ctx.Query.ProjectByFullName([]string{"newParent", "sub"})
 	require.NoError(t, err)
 	require.EqualValues(t, newParent.ID, renamed.ParentID, "parent ids must match after rename")
 

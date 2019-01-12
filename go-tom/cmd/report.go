@@ -100,7 +100,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			for _, nameOrID := range projectFilter {
 				id := ""
 				// if it's a name resolve it to the ID
-				if project, err := context.Query.ProjectByFullName(nameOrID); err == nil {
+				if project, err := context.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
 					id = project.ID
 				} else if _, err := context.Query.ProjectByID(nameOrID); err != nil {
 					fatal(fmt.Errorf("project %s not found", projectFilter))

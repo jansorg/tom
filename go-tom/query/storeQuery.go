@@ -6,14 +6,14 @@ import (
 
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/slices"
 )
 
 type StoreQuery interface {
 	AnyByID(id string) (interface{}, error)
 
 	ProjectByID(id string) (*model.Project, error)
-	ProjectByFullName(name string) (*model.Project, error)
-	ProjectByFullNameOrID(name string) (*model.Project, error)
+	ProjectByFullName(names []string) (*model.Project, error)
 	ProjectsByShortName(name string) []*model.Project
 	ProjectsByShortNameOrID(nameOrID string) []*model.Project
 	WithProjectAndParents(id string, f func(*model.Project) bool) bool
@@ -68,17 +68,10 @@ func (q *defaultStoreQuery) IsToplevelProject(id string) bool {
 	return err != nil && p.ParentID == ""
 }
 
-func (q *defaultStoreQuery) ProjectByFullName(name string) (*model.Project, error) {
+func (q *defaultStoreQuery) ProjectByFullName(name []string) (*model.Project, error) {
 	return q.store.FindFirstProject(func(p *model.Project) bool {
-		return p.GetFullName("/") == name
+		return slices.StringsEqual(name, p.FullName)
 	})
-}
-
-func (q *defaultStoreQuery) ProjectByFullNameOrID(nameOrID string) (*model.Project, error) {
-	if p, err := q.ProjectByID(nameOrID); err == nil {
-		return p, nil
-	}
-	return q.ProjectByFullName(nameOrID)
 }
 
 func (q *defaultStoreQuery) ProjectsByShortName(name string) []*model.Project {
