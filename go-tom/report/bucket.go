@@ -124,7 +124,7 @@ func (b *ResultBucket) Title() string {
 	if id, ok := b.SplitBy.(string); ok {
 		if value, err := b.ctx.Query.AnyByID(id); err == nil {
 			if p, ok := value.(*model.Project); ok {
-				return fmt.Sprintf("%s", p.FullName)
+				return fmt.Sprintf("%s", p.GetFullName("/"))
 			}
 
 			if t, ok := value.(*model.Tag); ok {

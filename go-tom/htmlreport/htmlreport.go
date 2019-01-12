@@ -2,28 +2,32 @@ package htmlreport
 
 import (
 	"bytes"
-	"html/template"
-	"path/filepath"
+	"path"
 	"time"
 
+	"github.com/arschles/go-bindata-html-template"
+
+	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/report"
 )
 
 type Report struct {
+	workingDir   string
 	templatePath string
 	ctx          *context.GoTimeContext
 }
 
-func NewReport(templatePath string, ctx *context.GoTimeContext) *Report {
+func NewReport(workingDir string, templatePath string, ctx *context.GoTimeContext) *Report {
 	return &Report{
+		workingDir:   workingDir,
 		templatePath: templatePath,
 		ctx:          ctx,
 	}
 }
 
 func (r *Report) Render(results *report.BucketReport) (string, error) {
-	tmpl, err := template.New(filepath.Base(r.templatePath)).Funcs(map[string]interface{}{
+	functionMap := map[string]interface{}{
 		"i18n": func(key string) string {
 			return r.ctx.LocalePrinter.Sprintf(key)
 		},
@@ -52,8 +56,15 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		"longDuration": func(duration time.Duration) string {
 			return r.ctx.DurationPrinter.Long(duration)
 		},
-	}).ParseFiles(r.templatePath, filepath.Join(filepath.Dir(r.templatePath), "commons.gohtml"))
+	}
 
+	baseDir := path.Join("reports", "html")
+	templateFiles := []string{
+		path.Join(baseDir, r.templatePath+".gohtml"),
+		path.Join(baseDir, "commons.gohtml"),
+	}
+
+	tmpl, err := template.New(r.templatePath, tom.Asset).Funcs(functionMap).ParseFiles(templateFiles...)
 	if err != nil {
 		return "", err
 	}

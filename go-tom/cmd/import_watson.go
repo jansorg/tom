@@ -27,23 +27,23 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 			} else {
 				home, err := homedir.Dir()
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 				dir = filepath.Join(home, ".config", "watson")
 			}
 
 			framesFile := filepath.Join(dir, "frames")
 			if _, err := os.Stat(framesFile); os.IsNotExist(err) {
-				fatal(fmt.Errorf("file %s not found", framesFile))
+				Fatal(fmt.Errorf("file %s not found", framesFile))
 			}
 
 			var frames [][]interface{}
 			bytes, err := ioutil.ReadFile(framesFile)
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 			if err := json.Unmarshal(bytes, &frames); err != nil {
-				fatal(fmt.Errorf("error parsing json file %s: %s", framesFile, err.Error()))
+				Fatal(fmt.Errorf("error parsing json file %s: %s", framesFile, err.Error()))
 			}
 
 			epoch := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -68,7 +68,7 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 
 				project, createdProject, err := ctx.StoreHelper.GetOrCreateNestedProject(projectName)
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 				if createdProject {
@@ -79,7 +79,7 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 				for _, tagName := range tagNames {
 					tag, createdTag, err := ctx.StoreHelper.GetOrCreateTag(tagName.(string))
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 					tagIDs = append(tagIDs, tag.ID)
 
@@ -96,7 +96,7 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 					TagIDs:    tagIDs,
 				})
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 			}
 

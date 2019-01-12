@@ -39,7 +39,7 @@ func newTagsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 			})
 
 			if err := printList(cmd, tags, ctx); err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 		},
 	}

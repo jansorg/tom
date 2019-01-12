@@ -1,8 +1,9 @@
-package cmd
+package report
 
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/jansorg/tom/go-tom/report"
 )
 
-func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var includeActiveFrames bool
 
 	var jsonOutput bool
@@ -47,7 +48,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			if fromDateString != "" {
 				start, err := parseDate(&fromDateString)
 				if err != nil {
-					fatal(err)
+					log.Fatal(err)
 				}
 				filterRange.Start = start
 			}
@@ -55,7 +56,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			if toDateString != "" {
 				end, err := parseDate(&toDateString)
 				if err != nil {
-					fatal(err)
+					log.Fatal(err)
 				}
 				filterRange.End = end
 			}
@@ -89,7 +90,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 					// case "parentProject":
 					// 	splitOperations = append(splitOperations, report.SplitByParentProject)
 					default:
-						fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day, project, parentProject", mode))
+						log.Fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day, project", mode))
 					}
 				}
 			}
@@ -100,15 +101,15 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			for _, nameOrID := range projectFilter {
 				id := ""
 				// if it's a name resolve it to the ID
-				if project, err := context.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
+				if project, err := ctx.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
 					id = project.ID
-				} else if _, err := context.Query.ProjectByID(nameOrID); err != nil {
-					fatal(fmt.Errorf("project %s not found", projectFilter))
+				} else if _, err := ctx.Query.ProjectByID(nameOrID); err != nil {
+					log.Fatal(fmt.Errorf("project %s not found", projectFilter))
 				}
 				projectIDs = append(projectIDs, id)
 			}
 
-			frameReport := report.NewBucketReport(model.NewSortedFrameList(context.Store.Frames()), context)
+			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), ctx)
 			frameReport.IncludeActiveFrames = includeActiveFrames
 			frameReport.ProjectIDs = projectIDs
 			frameReport.IncludeSubprojects = true
@@ -121,24 +122,24 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 			frameReport.Update()
 
 			if templatePath != "" {
-				if err := printTemplate(context, templatePath, frameReport); err != nil {
-					fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
+				if err := printTemplate(ctx, templatePath, frameReport); err != nil {
+					log.Fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
 				}
 			} else if jsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
 				if err != nil {
-					fatal(err)
+					log.Fatal(err)
 				}
 				fmt.Println(string(data))
 			} else {
-				printReport(frameReport.Result, context, 1)
+				printReport(frameReport.Result, ctx, 1)
 			}
 		},
 	}
 
 	templateAnnotations := make(map[string][]string)
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
-	cmd.Flags().StringVarP(&templatePath, "template", "", "", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
+	cmd.Flags().StringVarP(&templatePath, "template", "r", "default", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
 	cmd.Flag("template").Annotations = templateAnnotations
 
 	// fixme add defaults?
@@ -172,7 +173,7 @@ func newReportCommand(context *context.GoTimeContext, parent *cobra.Command) *co
 }
 
 func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport) error {
-	t := htmlreport.NewReport(templatePath, ctx)
+	t := htmlreport.NewReport("", templatePath, ctx)
 	out, err := t.Render(report)
 	if err != nil {
 		return err

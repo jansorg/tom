@@ -23,7 +23,7 @@ func newRemoveAllCommand(context *context.GoTimeContext, parent *cobra.Command) 
 			frames := arg == "all" || arg == "frames"
 
 			if removedProjects, removedTags, removedFrames, err := context.Store.Reset(projects, tags, frames); err != nil {
-				fatal(err)
+				Fatal(err)
 			} else {
 				fmt.Printf("Successfully removed %d projects, %d tags and %d frames\n", removedProjects, removedTags, removedFrames)
 			}

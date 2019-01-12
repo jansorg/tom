@@ -1,7 +1,7 @@
 {{- /*gotype: github.com/jansorg/gotime/gotime/report.BucketReport*/ -}}
 
 {{define "Bucket"}}
-    {{- /*gotype: github.com/jansorg/gotime/gotime/report.ResultBucket*/ -}}
+    {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$leafs := .LeafChildren}}
     {{$showExact := .HasRoundedChildren}}
@@ -23,7 +23,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {{range .Source.Frames}}
+                {{range .Frames.Frames}}
                     <tr>
                         <td class="start-day">{{formatDate .Start}}</td>
                         <td class="start-time">{{formatTime .Start}}</td>

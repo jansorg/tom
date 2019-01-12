@@ -25,15 +25,15 @@ func newRenameCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				}
 			case "tag":
 				if tag, err := ctx.Query.TagByName(oldName); err != nil {
-					fatal("tag %s not found", oldName)
+					Fatal("tag %s not found", oldName)
 				} else {
 					tag.Name = newName
 					if _, err := ctx.Store.UpdateTag(*tag); err != nil {
-						fatal("unable to rename tag %s to %s", oldName, newName)
+						Fatal("unable to rename tag %s to %s", oldName, newName)
 					}
 				}
 			default:
-				fatal(fmt.Errorf("unknown TYPE %s. Valid values are project, tag", typeName))
+				Fatal(fmt.Errorf("unknown TYPE %s. Valid values are project, tag", typeName))
 			}
 
 			fmt.Printf("successfully renamed %s %s to %s\n", typeName, oldName, newName)

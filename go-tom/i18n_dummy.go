@@ -8,12 +8,6 @@ import (
 
 func i18n_dummy(){
 p:= message.NewPrinter(language.Tag{})
-p.Printf("Date")
-p.Printf("Start")
-p.Printf("End")
-p.Printf("Duration")
-p.Printf("Notes")
-p.Printf("Total")
 p.Printf("Duration")
 p.Printf("Exact duration")
 p.Printf("Total")
@@ -22,4 +16,10 @@ p.Printf("Time range:")
 p.Printf("Tracked time:")
 p.Printf("Exact tracked time:")
 p.Printf("Frames:")
+p.Printf("Date")
+p.Printf("Start")
+p.Printf("End")
+p.Printf("Duration")
+p.Printf("Notes")
+p.Printf("Total")
 }

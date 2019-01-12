@@ -20,7 +20,7 @@ func newConfigSetCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cob
 
 			viper.Set(args[0], args[1])
 			if err := viper.WriteConfig(); err != nil {
-				fatal("error updating configuration file: ", err)
+				Fatal("error updating configuration file: ", err)
 			}
 
 			fmt.Println("Successfully updated the configuration value of " + args[0])

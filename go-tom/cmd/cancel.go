@@ -20,7 +20,7 @@ func newCancelCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 			if cancelAll {
 				for _, f := range frames {
 					if err := ctx.Store.RemoveFrame(f.ID); err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 				}
 				fmt.Printf("Successfully removed %d frames", len(frames))
@@ -29,7 +29,7 @@ func newCancelCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 					return frames[i].IsBefore(frames[j])
 				})
 				if err := ctx.Store.RemoveFrame(frames[0].ID); err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 				fmt.Println("Successfully stopped frame")
 			} else {

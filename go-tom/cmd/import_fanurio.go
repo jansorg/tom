@@ -23,11 +23,11 @@ func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) 
 		Run: func(cmd *cobra.Command, args []string) {
 			absPath, err := filepath.Abs(args[0])
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			if err = importCSV(absPath, ctx); err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 		},
 	}

@@ -47,7 +47,7 @@ type propList interface {
 func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
-		fatal(err)
+		Fatal(err)
 	}
 
 	type row map[string]interface{}
@@ -75,12 +75,12 @@ func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) er
 		}
 	case "json":
 		if bytes, err := json.MarshalIndent(rows, "", "  "); err != nil {
-			fatal(err)
+			Fatal(err)
 		} else {
 			fmt.Println(string(bytes))
 		}
 	default:
-		fatal(fmt.Errorf("unsupported output type %s", output))
+		Fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
 }

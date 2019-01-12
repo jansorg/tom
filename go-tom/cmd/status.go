@@ -28,7 +28,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				for _, frame := range activeFrames() {
 					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 
 					var values []string
@@ -48,7 +48,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 						case "startTime":
 							value = frame.Start.Format(time.RFC3339)
 						default:
-							fatal(fmt.Errorf("unknown flag %s", flag))
+							Fatal(fmt.Errorf("unknown flag %s", flag))
 						}
 
 						values = append(values, value)
@@ -66,7 +66,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				for _, frame := range activeFrames() {
 					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 
 					fmt.Printf("Project %s was started %s\n", project.FullName, ctx.DateTimePrinter.DateTime(*frame.Start))

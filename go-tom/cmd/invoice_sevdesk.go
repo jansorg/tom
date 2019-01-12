@@ -21,12 +21,12 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg, err := parseInvoiceCmd(ctx, cmd)
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			invoiceData, err := cfg.createSummary()
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			if cfg.dryRun {
@@ -38,13 +38,13 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 				client := sevdesk.NewClient(apiKey)
 				err = client.LoadBasicData()
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 				// try to find the contact
 				contacts, err := client.GetContacts()
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 
@@ -61,7 +61,7 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					// create a new company contact where invoices to this project will attach
 					contact, err := client.CreateCompanyContact(client.NewCompanyContact(fmt.Sprintf("[gotime] Project: %s", invoiceData.projectName), fmt.Sprintf("[gotime: %s]", invoiceData.projectID)))
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 					contactID = contact.ID
 				}
@@ -80,23 +80,23 @@ func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 					invoiceData.address)
 
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 				resp, err := client.CreateInvoice(invoice)
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 				for _, line := range invoiceData.lines {
 					posDef, err := client.NewInvoicePosition(resp.ID, line.ProjectName, line.Hours, "hours", line.HourlyRate, 0)
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 
 					_, err = client.CreateInvoicePos(posDef)
 					if err != nil {
-						fatal(err)
+						Fatal(err)
 					}
 				}
 

@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/text/message"
 
+	"github.com/jansorg/tom/go-tom/cmd/report"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/i18n"
@@ -41,7 +42,7 @@ func init() {
 	newStartCommand(&ctx, RootCmd)
 	newStopCommand(&ctx, RootCmd)
 	newCancelCommand(&ctx, RootCmd)
-	newReportCommand(&ctx, RootCmd)
+	report.NewCommand(&ctx, RootCmd)
 	newImportCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
 	newInvoiceCommand(&ctx, RootCmd)
@@ -50,11 +51,11 @@ func init() {
 	newCompletionCommand(&ctx, RootCmd)
 
 	if err := viper.BindPFlag(config.KeyDataDir, RootCmd.PersistentFlags().Lookup("data-dir")); err != nil {
-		fatal(err)
+		Fatal(err)
 	}
 }
 
-func fatal(err ...interface{}) {
+func Fatal(err ...interface{}) {
 	_, _ = fmt.Fprintln(os.Stderr, append([]interface{}{"Error: "}, err...)...)
 	os.Exit(1)
 }
@@ -74,7 +75,7 @@ func initConfig() {
 	dataDir := viper.GetString(config.KeyDataDir)
 	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(dataDir, 0700); err != nil {
-			fatal(err)
+			Fatal(err)
 		}
 	}
 
@@ -84,7 +85,7 @@ func initConfig() {
 
 	dataStore, err := store.NewStore(dataDir)
 	if err != nil {
-		fatal(err)
+		Fatal(err)
 	}
 
 	ctx.Store = dataStore

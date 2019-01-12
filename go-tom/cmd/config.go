@@ -22,7 +22,7 @@ func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				if cfg, err := settings(); err != nil {
-					fatal(err)
+					Fatal(err)
 				} else {
 					fmt.Println(cfg)
 				}
@@ -31,7 +31,7 @@ func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 					value := viper.Get(name)
 					bs, err := yaml.Marshal(value)
 					if err != nil {
-						fatal(fmt.Errorf("unable to marshal config to YAML: %v", err))
+						Fatal(fmt.Errorf("unable to marshal config to YAML: %v", err))
 					}
 					fmt.Printf("%s=%s", name, string(bs))
 				}

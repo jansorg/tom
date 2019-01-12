@@ -73,7 +73,7 @@ func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command)
 			})
 
 			if err := printList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 		},
 	}

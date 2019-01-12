@@ -47,7 +47,7 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 			tags, err := argsToTags(ctx, args)
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			var stoppedFrames []*model.Frame
@@ -58,9 +58,9 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 			frame, err := control.Start(projectName, "", tags)
 			if err == activity.ProjectNotFoundErr {
-				fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
+				Fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
 			} else if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			if stoppedFrames != nil {
@@ -77,12 +77,12 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 	cmd.Flags().Bool("create-missing", false, "")
 	if err := viper.BindPFlag(config.KeyProjectCreateMissing, cmd.Flag("create-missing")); err != nil {
-		fatal(err)
+		Fatal(err)
 	}
 
 	cmd.Flags().Bool("stop-on-start", false, "")
 	if err := viper.BindPFlag(config.KeyActivityStopOnStart, cmd.Flag("stop-on-start")); err != nil {
-		fatal(err)
+		Fatal(err)
 	}
 
 	cmd.Flags().StringVarP(&notes, "notes", "", "", "Optional notes for the new time frame")

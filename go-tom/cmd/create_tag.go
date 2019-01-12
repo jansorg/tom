@@ -15,7 +15,7 @@ func newCreateTagCommand(context *context.GoTimeContext, parent *cobra.Command) 
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
 				if _, err := context.Store.AddTag(model.Tag{Name: name}); err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 			}
 		},

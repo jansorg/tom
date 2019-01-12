@@ -35,18 +35,43 @@ func init() {
 	message.DefaultCatalog = cat
 }
 
-var messageKeyToIndex = map[string]int{}
+var messageKeyToIndex = map[string]int{
+	"Date":                8,
+	"Duration":            0,
+	"End":                 10,
+	"Exact duration":      1,
+	"Exact tracked time:": 6,
+	"Frames:":             7,
+	"Notes":               11,
+	"Project":             3,
+	"Start":               9,
+	"Time range:":         4,
+	"Total":               2,
+	"Tracked time:":       5,
+}
 
-var deIndex = []uint32{ // 1 elements
-	0x00000000,
-} // Size: 28 bytes
+var deIndex = []uint32{ // 13 elements
+	0x00000000, 0x00000006, 0x00000013, 0x0000001a,
+	0x00000022, 0x0000002f, 0x0000003e, 0x00000053,
+	0x0000005d, 0x00000063, 0x0000006a, 0x0000006f,
+	0x0000007b,
+} // Size: 76 bytes
 
-const deData string = ""
+const deData string = "" + // Size: 123 bytes
+	"\x02Dauer\x02Exakte Dauer\x02Gesamt\x02Projekt\x02Zeitbereich:\x02Erfass" +
+	"te Zeit:\x02Exakt erfasste Zeit:\x02Einträge\x02Datum\x02Beginn\x02Ende" +
+	"\x02Anmerkungen"
 
-var enIndex = []uint32{ // 1 elements
-	0x00000000,
-} // Size: 28 bytes
+var enIndex = []uint32{ // 13 elements
+	0x00000000, 0x00000009, 0x00000018, 0x0000001e,
+	0x00000026, 0x00000032, 0x00000040, 0x00000054,
+	0x0000005c, 0x00000061, 0x00000067, 0x0000006b,
+	0x00000071,
+} // Size: 76 bytes
 
-const enData string = ""
+const enData string = "" + // Size: 113 bytes
+	"\x02Duration\x02Exact duration\x02Total\x02Project\x02Time range:\x02Tra" +
+	"cked time:\x02Exact tracked time:\x02Frames:\x02Date\x02Start\x02End\x02" +
+	"Notes"
 
-// Total table size 56 bytes (0KiB); checksum: 32CC3CAD
+	// Total table size 388 bytes (0KiB); checksum: D4EDAE7D

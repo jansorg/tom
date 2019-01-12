@@ -77,14 +77,14 @@ func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				if err != nil {
 					project, err = ctx.Query.ProjectByFullName(strings.Split(projectIDOrName, "/"))
 					if err != nil {
-						fatal(fmt.Errorf("no project found for %s", projectIDOrName))
+						Fatal(fmt.Errorf("no project found for %s", projectIDOrName))
 					}
 				}
 				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
 			if err := printList(cmd, frames, ctx); err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 		},
 	}

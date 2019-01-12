@@ -18,7 +18,7 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 			for _, name := range args {
 				project, created, err := context.StoreHelper.GetOrCreateNestedProject(name)
 				if err != nil {
-					fatal(err)
+					Fatal(err)
 				}
 
 				if created {

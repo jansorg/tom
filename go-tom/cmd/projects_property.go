@@ -18,7 +18,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 		Run: func(cmd *cobra.Command, args []string) {
 			project, err := ctx.Query.ProjectByFullName(strings.Split(args[0], "/"))
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 
 			if len(args) == 1 {
@@ -55,7 +55,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 				ctx.Store.UpdateProject(*project)
 				fmt.Printf("%s=%v (previously: %s)\n", args[1], args[2], old)
 			} else {
-				fatal(fmt.Errorf("unsupported configuration"))
+				Fatal(fmt.Errorf("unsupported configuration"))
 			}
 		},
 	}

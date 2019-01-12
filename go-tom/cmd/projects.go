@@ -54,7 +54,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 			list := projectList{projects: projects, nameDelimiter: nameDelimiter}
 			err := printList(cmd, list, ctx)
 			if err != nil {
-				fatal(err)
+				Fatal(err)
 			}
 		},
 	}
