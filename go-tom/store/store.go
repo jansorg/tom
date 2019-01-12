@@ -72,7 +72,7 @@ func (d *DataStore) StopBatch() {
 
 func (d *DataStore) sortProjects() {
 	sort.SliceStable(d.projects, func(i, j int) bool {
-		return strings.Compare(d.projects[i].FullName, d.projects[j].FullName) < 0
+		return strings.Compare(d.projects[i].GetFullName("/"), d.projects[j].GetFullName("/")) < 0
 	})
 }
 
@@ -146,7 +146,7 @@ func (d *DataStore) save() error {
 
 func (d *DataStore) saveLocked() error {
 	if atomic.LoadInt32(&d.batchMode) == 1 {
-		return nil;
+		return nil
 	}
 
 	d.sortProjects()
@@ -239,7 +239,7 @@ func (d *DataStore) updateProjectInternals(p *model.Project) {
 		p.Properties = make(map[string]string)
 	}
 
-	p.FullName = p.Name
+	p.FullName = []string{p.Name}
 	if p.ParentID == "" {
 		return
 	}
@@ -260,7 +260,7 @@ func (d *DataStore) updateProjectInternals(p *model.Project) {
 		parents = append([]string{parent.Name}, parents...)
 	}
 
-	p.FullName = strings.Join(parents, "/")
+	p.FullName = parents
 }
 
 func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error) {

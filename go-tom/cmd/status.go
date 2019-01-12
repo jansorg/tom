@@ -14,6 +14,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 	verbose := false
 	format := ""
 	delimiter := ""
+	nameDelimiter := ""
 
 	var cmd = &cobra.Command{
 		Use:   "status",
@@ -41,7 +42,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 						case "projectName":
 							value = project.Name
 						case "projectFullName":
-							value = project.FullName
+							value = project.GetFullName(nameDelimiter)
 						case "projectParentID":
 							value = project.ParentID
 						case "startTime":
@@ -80,6 +81,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 
 	cmd.Flags().StringVarP(&format, "format", "f", "", "Properties to print for each active frame. Possible values: id,projectID,projectName,projectFullName,projectParentID,startTime")
 	cmd.Flags().StringVarP(&delimiter, "delimiter", "d", "\t", "Delimiter to separate flags on the same line. Only used when --format is specified.")
+	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", verbose, "Print details about the currently stored projects, tags and frames")
 
 	newProjectsStatusCommand(ctx, cmd)

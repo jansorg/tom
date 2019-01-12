@@ -70,7 +70,7 @@ func (q *defaultStoreQuery) IsToplevelProject(id string) bool {
 
 func (q *defaultStoreQuery) ProjectByFullName(name string) (*model.Project, error) {
 	return q.store.FindFirstProject(func(p *model.Project) bool {
-		return p.FullName == name
+		return p.GetFullName("/") == name
 	})
 }
 
@@ -78,10 +78,7 @@ func (q *defaultStoreQuery) ProjectByFullNameOrID(nameOrID string) (*model.Proje
 	if p, err := q.ProjectByID(nameOrID); err == nil {
 		return p, nil
 	}
-
-	return q.store.FindFirstProject(func(p *model.Project) bool {
-		return p.FullName == nameOrID
-	})
+	return q.ProjectByFullName(nameOrID)
 }
 
 func (q *defaultStoreQuery) ProjectsByShortName(name string) []*model.Project {
@@ -91,9 +88,10 @@ func (q *defaultStoreQuery) ProjectsByShortName(name string) []*model.Project {
 }
 
 func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*model.Project {
-	return q.store.FindProjects(func(p *model.Project) bool {
-		return p.ID == nameOrID || p.FullName == nameOrID
-	})
+	if p, err := q.ProjectByID(nameOrID); err == nil {
+		return []*model.Project{p}
+	}
+	return q.ProjectsByShortName(nameOrID)
 }
 
 // Iterates the project and its parent hierarchy until there's not parent or the function returns false

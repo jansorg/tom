@@ -27,20 +27,20 @@ func Test_RenameProject(t *testing.T) {
 	renamed, err := ctx.StoreHelper.RenameProject(c1, "childNewName")
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
-	require.EqualValues(t, "childNewName", renamed.FullName)
+	require.EqualValues(t, "childNewName", renamed.GetFullName("/"))
 
 	// childNewName -> top1/childNewName
 	renamed, err = ctx.StoreHelper.RenameProject(renamed, "top1/childNewName")
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
-	require.EqualValues(t, "top1/childNewName", renamed.FullName)
+	require.EqualValues(t, "top1/childNewName", renamed.GetFullName("/"))
 
 	// top1/childNewName -> top1/child
 	renamed, err = ctx.StoreHelper.RenameProjectByName("top1/childNewName", "top1/child")
 	require.NoError(t, err, "renaming under same parent must succeed")
 	require.EqualValues(t, "child", renamed.Name)
-	require.EqualValues(t, "top1/child", renamed.FullName)
-	require.EqualValues(t, "top1", renamed.Parent().FullName)
+	require.EqualValues(t, "top1/child", renamed.GetFullName("/"))
+	require.EqualValues(t, "top1", renamed.Parent().GetFullName("/"))
 
 	// top1/child -> top1/childExisting
 	renamed, err = ctx.StoreHelper.RenameProjectByName("top1/child", "top1/childExisting")
@@ -54,13 +54,13 @@ func Test_RenameProject(t *testing.T) {
 	renamed, err = ctx.StoreHelper.RenameProjectByName("top1/child", "top2/childNewName")
 	require.NoError(t, err, "moving a child from one parent to another must succeed")
 	require.EqualValues(t, "childNewName", renamed.Name)
-	require.EqualValues(t, "top2/childNewName", renamed.FullName)
+	require.EqualValues(t, "top2/childNewName", renamed.GetFullName("/"))
 
 	// top2/childNewName -> newParent/sub/childName
 	renamed, err = ctx.StoreHelper.RenameProjectByName("top2/childNewName", "newParent/sub/childName")
 	require.NoError(t, err, "moving a child from one parent to another must succeed")
 	require.EqualValues(t, "childName", renamed.Name)
-	require.EqualValues(t, "newParent/sub/childName", renamed.FullName)
+	require.EqualValues(t, "newParent/sub/childName", renamed.GetFullName("/"))
 
 	newParent, err := ctx.Query.ProjectByFullNameOrID("newParent/sub")
 	require.NoError(t, err)

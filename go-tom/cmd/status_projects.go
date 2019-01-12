@@ -13,7 +13,8 @@ import (
 )
 
 type projectStatusList struct {
-	reports []*report.ProjectSummary
+	nameDelimiter string
+	reports       []*report.ProjectSummary
 }
 
 func (o projectStatusList) size() int {
@@ -29,7 +30,7 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 	case "parentID":
 		return summary.Project.ParentID, nil
 	case "fullName":
-		return summary.Project.FullName, nil
+		return summary.Project.GetFullName(o.nameDelimiter), nil
 	case "name":
 		return summary.Project.Name, nil
 	case "trackedDay":
@@ -57,6 +58,7 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 
 func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	showEmpty := false
+	nameDelimiter := ""
 
 	var cmd = &cobra.Command{
 		Use:   "projects",
@@ -69,16 +71,17 @@ func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command)
 				reportList = append(reportList, v)
 			}
 			sort.Slice(reportList, func(i, j int) bool {
-				return strings.Compare(reportList[i].Project.FullName, reportList[j].Project.FullName) < 0
+				return strings.Compare(reportList[i].Project.GetFullName("/"), reportList[j].Project.GetFullName("/")) < 0
 			})
 
-			if err := printList(cmd, projectStatusList{reports: reportList}, ctx); err != nil {
+			if err := printList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
 				fatal(err)
 			}
 		},
 	}
 
 	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "e", showEmpty, "Includes projects without tracked time in the output")
+	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 
 	addListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{"id", "fullName", "name", "parentID", "trackedDay", "trackedWeek", "trackedMonth", "trackedYear", "totalTrackedDay", "totalTrackedWeek", "totalTrackedMonth", "totalTrackedYear"})
 	parent.AddCommand(cmd)

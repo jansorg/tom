@@ -57,7 +57,7 @@ func Test_ProjectReportTest(t *testing.T) {
 	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday})
 	require.NoError(t, err)
 
-	reports := CreateProjectReports(refDate, ctx)
+	reports := CreateProjectReports(refDate, false, ctx)
 	require.EqualValues(t, 1, len(reports))
 	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedYear)
 	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth)
