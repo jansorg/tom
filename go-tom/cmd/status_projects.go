@@ -44,11 +44,9 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 	case "totalTrackedDay":
 		return summary.TotalTrackedDay, nil
 	case "totalTrackedWeek":
-		duration := summary.TotalTrackedWeek
-		return duration, nil
+		return summary.TotalTrackedWeek, nil
 	case "totalTrackedMonth":
-		duration := summary.TotalTrackedMonth
-		return duration, nil
+		return summary.TotalTrackedMonth, nil
 	case "totalTrackedYear":
 		return summary.TotalTrackedYear, nil
 	default:
