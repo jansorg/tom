@@ -444,8 +444,8 @@ func (d *DataStore) AddFrame(frame model.Frame) (*model.Frame, error) {
 }
 
 func (d *DataStore) UpdateFrame(frame model.Frame) (*model.Frame, error) {
-	if frame.ID == "" {
-		return nil, fmt.Errorf("id of frame undefined")
+	if err := frame.Validate(); err != nil {
+		return nil, err
 	}
 
 	d.mu.Lock()

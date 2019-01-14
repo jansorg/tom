@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"sort"
 	"time"
 )
@@ -101,4 +102,13 @@ func (f *Frame) IsBefore(other *Frame) bool {
 
 func (f *Frame) IsAfter(other *Frame) bool {
 	return !f.IsBefore(other) && f.Start != nil && other.Start != nil && f.Start.After(*other.Start)
+}
+
+func (f *Frame) Validate() error {
+	if f.ID == "" {
+		return fmt.Errorf("id of frame undefined")
+	} else if f.Start == nil || f.Start.IsZero() {
+		return fmt.Errorf("start time undefined")
+	}
+	return nil
 }

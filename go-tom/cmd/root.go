@@ -42,6 +42,7 @@ func init() {
 	newStartCommand(&ctx, RootCmd)
 	newStopCommand(&ctx, RootCmd)
 	newCancelCommand(&ctx, RootCmd)
+	newEditCommand(&ctx, RootCmd)
 	report.NewCommand(&ctx, RootCmd)
 	newImportCommand(&ctx, RootCmd)
 	newStatusCommand(&ctx, RootCmd)
