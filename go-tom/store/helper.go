@@ -79,7 +79,11 @@ func (s *Helper) GetOrCreateProject(shortName string, parentID string) (*model.P
 	return project, true, err
 }
 
-func (s *Helper) RenameProjectByName(oldName, newName string) (*model.Project, error) {
+func (s *Helper) RenameProjectByIDOrName(oldName, newName string) (*model.Project, error) {
+	if strings.TrimSpace(newName) == "" {
+		return nil, fmt.Errorf("new project name must not be empty")
+	}
+
 	p, err := s.query.ProjectByID(oldName)
 	if err != nil {
 		p, err = s.query.ProjectByFullName(strings.Split(oldName, "/"))

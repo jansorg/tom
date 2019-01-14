@@ -1,6 +1,9 @@
 package model
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type Project struct {
 	Store Store `json:"-"`
@@ -28,4 +31,14 @@ func (p *Project) Parent() *Project {
 
 	parent, _ := p.Store.ProjectByID(p.ParentID)
 	return parent
+}
+
+func (p *Project) Validate() error {
+	if p.ID == "" {
+		return fmt.Errorf("project id must not be empty")
+	}
+	if strings.TrimSpace(p.Name) == "" {
+		return fmt.Errorf("project name must not be empty")
+	}
+	return nil
 }

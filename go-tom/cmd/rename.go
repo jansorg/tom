@@ -20,7 +20,7 @@ func newRenameCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 
 			switch typeName {
 			case "project":
-				if _, err := ctx.StoreHelper.RenameProjectByName(oldName, newName); err != nil {
+				if _, err := ctx.StoreHelper.RenameProjectByIDOrName(oldName, newName); err != nil {
 					fatalf("rename failed: %s", err.Error())
 				}
 			case "tag":

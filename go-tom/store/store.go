@@ -264,6 +264,10 @@ func (d *DataStore) updateProjectInternals(p *model.Project) {
 }
 
 func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error) {
+	if err := project.Validate(); err != nil {
+		return nil, err
+	}
+
 	existing, err := d.ProjectByID(project.ID)
 	if err != nil {
 		return nil, err
@@ -347,6 +351,10 @@ func (d *DataStore) Tags() []*model.Tag {
 }
 
 func (d *DataStore) AddTag(tag model.Tag) (*model.Tag, error) {
+	if err := tag.Validate(); err != nil {
+		return nil, err
+	}
+
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -356,6 +364,10 @@ func (d *DataStore) AddTag(tag model.Tag) (*model.Tag, error) {
 }
 
 func (d *DataStore) UpdateTag(tag model.Tag) (*model.Tag, error) {
+	if err := tag.Validate(); err != nil {
+		return nil, err
+	}
+
 	existing, err := d.FindTag(tag.ID)
 	if err != nil {
 		return nil, err
