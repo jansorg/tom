@@ -71,7 +71,7 @@ func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 		Run: func(cmd *cobra.Command, args []string) {
 			var frames frameList
 			if projectIDOrName == "" {
-				frames = ctx.Store.Frames()
+				frames = []*model.Frame(ctx.Store.Frames())
 			} else {
 				project, err := ctx.Query.ProjectByID(projectIDOrName)
 				if err != nil {

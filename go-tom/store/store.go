@@ -202,7 +202,7 @@ func (d *DataStore) Reset(projects, tags, frames bool) (int, int, int, error) {
 	return projectCount, tagCount, frameCount, d.saveLocked()
 }
 
-func (d *DataStore) Projects() []*model.Project {
+func (d *DataStore) Projects() model.ProjectList {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -427,7 +427,7 @@ func (d *DataStore) FindTags(filter func(*model.Tag) bool) []*model.Tag {
 	return result
 }
 
-func (d *DataStore) Frames() []*model.Frame {
+func (d *DataStore) Frames() model.FrameList {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

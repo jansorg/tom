@@ -11,7 +11,7 @@ type Store interface {
 
 	Reset(projects, tags, frames bool) (int, int, int, error)
 
-	Projects() []*Project
+	Projects() ProjectList
 	ProjectByID(id string) (*Project, error)
 	ProjectIsChild(parentID, id string) bool
 	AddProject(project Project) (*Project, error)
@@ -27,7 +27,7 @@ type Store interface {
 	FindFirstTag(func(*Tag) bool) (*Tag, error)
 	FindTags(func(*Tag) bool) []*Tag
 
-	Frames() []*Frame
+	Frames() FrameList
 	AddFrame(frame Frame) (*Frame, error)
 	UpdateFrame(frame Frame) (*Frame, error)
 	RemoveFrame(id string) error
