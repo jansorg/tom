@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"sort"
-	"strings"
+	"log"
 
 	"github.com/spf13/cobra"
 
@@ -40,16 +39,22 @@ func (o projectList) get(index int, prop string, format string) (interface{}, er
 
 func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	nameDelimiter := ""
+	recentProjects := 0
 
 	var cmd = &cobra.Command{
 		Use:   "projects",
 		Short: "Prints projects",
 		Run: func(cmd *cobra.Command, args []string) {
-			// fixme replace with ProjectList
-			projects := ctx.Store.Projects()
-			sort.SliceStable(projects, func(i, j int) bool {
-				return strings.Compare(projects[i].GetFullName("/"), projects[j].GetFullName("/")) < 0
-			})
+			var projects model.ProjectList
+			if cmd.Flag("recent").Changed {
+				var err error
+				if projects, err = ctx.Query.FindRecentlyTrackedProjects(recentProjects); err != nil {
+					log.Fatal(err)
+				}
+			} else {
+				projects = ctx.Store.Projects()
+				projects.SortByFullname()
+			}
 
 			list := projectList{projects: projects, nameDelimiter: nameDelimiter}
 			err := printList(cmd, list, ctx)
@@ -59,6 +64,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 		},
 	}
 
+	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 
 	addListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})

@@ -17,6 +17,8 @@ type StoreQuery interface {
 	ProjectsByShortName(name string) []*model.Project
 	ProjectsByShortNameOrID(nameOrID string) []*model.Project
 	WithProjectAndParents(id string, f func(*model.Project) bool) bool
+	FindRecentlyTrackedProjects(max int) (model.ProjectList, error)
+
 	GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool)
 	GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool)
 	GetInheritedIntProp(projectID string, prop config.IntProperty) (int64, bool)
@@ -103,6 +105,29 @@ func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *mod
 		id = current.ParentID
 	}
 	return false
+}
+
+func (q *defaultStoreQuery) FindRecentlyTrackedProjects(max int) (model.ProjectList, error) {
+	// frames are always sorted, collect the max distict projects
+	result := model.ProjectList{}
+	projectMap := map[string]bool{}
+
+	frames := q.store.Frames()
+	for i := len(frames) - 1; i >= 0; i-- {
+		frame := frames[i]
+		if _, ok := projectMap[frame.ProjectId]; !ok {
+			projectMap[frame.ProjectId] = true
+			if project, err := q.store.ProjectByID(frame.ProjectId); err != nil {
+				return nil, err
+			} else {
+				result = append(result, project)
+				if len(result) >= max {
+					break
+				}
+			}
+		}
+	}
+	return result, nil
 }
 
 func (q *defaultStoreQuery) GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool) {
