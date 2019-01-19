@@ -27,7 +27,7 @@ func init() {
 
 	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.tom)")
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.tom/tom.yaml)")
-	RootCmd.PersistentFlags().StringVarP(&configFile, "format", "o", "", "output format of the response: plain | json")
+	// RootCmd.PersistentFlags().StringVarP(&configFile, "format", "o", "", "output format of the response: plain | json")
 
 	RootCmd.PersistentFlags().String("cpu-profile", "", "create a cpu profile for performance measurement")
 	RootCmd.Flag("cpu-profile").Hidden = true

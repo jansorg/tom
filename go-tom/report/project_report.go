@@ -9,16 +9,28 @@ import (
 )
 
 type ProjectSummary struct {
-	Project      *model.Project
+	Project *model.Project
+
+	TrackedAll   time.Duration
 	TrackedYear  time.Duration
 	TrackedMonth time.Duration
 	TrackedWeek  time.Duration
 	TrackedDay   time.Duration
 
+	TotalTrackedAll   time.Duration
 	TotalTrackedYear  time.Duration
 	TotalTrackedMonth time.Duration
 	TotalTrackedWeek  time.Duration
 	TotalTrackedDay   time.Duration
+}
+
+func (p *ProjectSummary) addAll(d time.Duration) {
+	p.TrackedAll += d
+	p.TotalTrackedAll += d
+}
+
+func (p *ProjectSummary) addTotalAll(d time.Duration) {
+	p.TotalTrackedAll += d
 }
 
 func (p *ProjectSummary) addYear(d time.Duration) {
@@ -72,9 +84,9 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, ctx *context.G
 		}
 	}
 
-	frames.FilterByDateRange(year, false)
-
 	for _, frame := range frames.Frames() {
+		duration := frame.Duration()
+
 		isYear := year.ContainsP(frame.Start) && year.ContainsP(frame.End)
 		isMonth := month.ContainsP(frame.Start) && month.ContainsP(frame.End)
 		isWeek := week.ContainsP(frame.Start) && week.ContainsP(frame.End)
@@ -88,30 +100,34 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, ctx *context.G
 			}
 
 			if project.ID == frame.ProjectId {
+				target.addAll(duration)
+
 				if isYear {
-					target.addYear(frame.Duration())
+					target.addYear(duration)
 				}
 				if isMonth {
-					target.addMonth(frame.Duration())
+					target.addMonth(duration)
 				}
 				if isWeek {
-					target.addWeek(frame.Duration())
+					target.addWeek(duration)
 				}
 				if isDay {
-					target.addDay(frame.Duration())
+					target.addDay(duration)
 				}
 			} else {
+				target.addTotalAll(duration)
+
 				if isYear {
-					target.addTotalYear(frame.Duration())
+					target.addTotalYear(duration)
 				}
 				if isMonth {
-					target.addTotalMonth(frame.Duration())
+					target.addTotalMonth(duration)
 				}
 				if isWeek {
-					target.addTotalWeek(frame.Duration())
+					target.addTotalWeek(duration)
 				}
 				if isDay {
-					target.addTotalDay(frame.Duration())
+					target.addTotalDay(duration)
 				}
 			}
 			return true
