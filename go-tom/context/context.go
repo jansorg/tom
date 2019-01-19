@@ -11,7 +11,14 @@ import (
 	"github.com/jansorg/tom/go-tom/store"
 )
 
+type OutputFormat int8
+const (
+	Plain OutputFormat = iota + 1
+	Json
+)
+
 type GoTimeContext struct {
+
 	Store                  model.Store
 	StoreHelper            *store.Helper
 	Query                  query.StoreQuery
