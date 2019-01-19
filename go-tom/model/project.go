@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -42,4 +43,17 @@ func (p *Project) Validate() error {
 		return fmt.Errorf("project name must not be empty")
 	}
 	return nil
+}
+
+type DetailedProject Project
+
+func (p *DetailedProject) MarshalJSON() ([]byte, error) {
+	type Alias DetailedProject
+	return json.Marshal(&struct {
+		FullName []string `json:"fullName"`
+		*Alias
+	}{
+		FullName: p.FullName,
+		Alias:    (*Alias)(p),
+	})
 }

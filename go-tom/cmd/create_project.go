@@ -12,6 +12,8 @@ import (
 func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var parentID string
 
+	var output string
+
 	var cmd = &cobra.Command{
 		Use:     "project",
 		Short:   "Create a new project",
@@ -33,15 +35,19 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 					Fatal(err)
 				}
 
-				if created {
-					fmt.Printf("created project %s\n", project.FullName)
+				if !created {
+					Fatal(fmt.Printf("the project %s does already exist\n", project.FullName))
+
+				} else if output == "json" {
+					printJSON((*model.DetailedProject)(project))
 				} else {
-					fmt.Printf("the project %s does already exist\n", project.FullName)
-					// os.Exit(1)
+					fmt.Printf("created project %s\n", project.FullName)
 				}
 			}
 		},
 	}
+
+	cmd.Flags().StringVarP(&output, "output", "o", "plain", "Output format. Supported: plain | json. Default: plain")
 
 	cmd.Flags().StringVarP(&parentID, "parent", "p", "", "Optional parent project ID. If defined the new project will be made a child project of this. If defined the name will be used as is for the name of the new project.")
 	parent.AddCommand(cmd)

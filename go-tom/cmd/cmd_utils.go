@@ -74,15 +74,19 @@ func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) er
 			fmt.Println(strings.Join(rowValues, delimiter))
 		}
 	case "json":
-		if bytes, err := json.MarshalIndent(rows, "", "  "); err != nil {
-			Fatal(err)
-		} else {
-			fmt.Println(string(bytes))
-		}
+		printJSON(rows)
 	default:
 		Fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
+}
+
+func printJSON(value interface{}) {
+	if bytes, err := json.MarshalIndent(value, "", "  "); err != nil {
+		Fatal(err)
+	} else {
+		fmt.Println(string(bytes))
+	}
 }
 
 func stringValue(v interface{}, ctx *context.GoTimeContext) string {

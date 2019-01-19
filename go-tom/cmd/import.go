@@ -14,6 +14,7 @@ func newImportCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 
 	newImportFanurioCommand(ctx, cmd)
 	newImportWatsonCommand(ctx, cmd)
+	newImportMacTimeTrackCommand(ctx, cmd)
 
 	parent.AddCommand(cmd)
 	return cmd
