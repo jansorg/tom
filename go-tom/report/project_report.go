@@ -69,7 +69,21 @@ func (p *ProjectSummary) addTotalDay(d time.Duration) {
 	p.TotalTrackedDay += d
 }
 
-func CreateProjectReports(referenceDay time.Time, showEmpty bool, ctx *context.GoTimeContext) map[string]*ProjectSummary {
+func (p *ProjectSummary) Add(v *ProjectSummary) {
+	p.TotalTrackedDay += v.TotalTrackedDay
+	p.TotalTrackedWeek += v.TotalTrackedWeek
+	p.TotalTrackedMonth += v.TotalTrackedMonth
+	p.TotalTrackedYear += v.TotalTrackedYear
+	p.TotalTrackedAll += v.TotalTrackedAll
+
+	p.TrackedDay += v.TrackedDay
+	p.TrackedWeek += v.TrackedWeek
+	p.TrackedMonth += v.TrackedMonth
+	p.TrackedYear += v.TrackedYear
+	p.TrackedAll += v.TrackedAll
+}
+
+func CreateProjectReports(referenceDay time.Time, showEmpty bool, overallSummaryID string, ctx *context.GoTimeContext) map[string]*ProjectSummary {
 	frames := model.NewFrameList(ctx.Store.Frames())
 
 	year := dateUtil.NewYearRange(referenceDay, ctx.Locale)
@@ -132,6 +146,18 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, ctx *context.G
 			}
 			return true
 		})
+	}
+
+	if overallSummaryID != "" {
+		overall := ProjectSummary{Project: &model.Project{ID: overallSummaryID, FullName: []string{overallSummaryID}}}
+
+		// sum up all project summaries of top-level projects
+		for _, v := range result {
+			if v.Project.ParentID == "" {
+				overall.Add(v)
+			}
+		}
+		result[overallSummaryID] = &overall;
 	}
 
 	return result

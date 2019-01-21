@@ -60,13 +60,14 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 
 func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	showEmpty := false
+	showOverall := false
 	nameDelimiter := ""
 
 	var cmd = &cobra.Command{
 		Use:   "projects",
 		Short: "Prints project status",
 		Run: func(cmd *cobra.Command, args []string) {
-			projectReports := report.CreateProjectReports(time.Now(), showEmpty, ctx)
+			projectReports := report.CreateProjectReports(time.Now(), showEmpty, "ALL", ctx)
 
 			var reportList []*report.ProjectSummary
 			for _, v := range projectReports {
@@ -83,6 +84,7 @@ func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command)
 	}
 
 	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "e", showEmpty, "Includes projects without tracked time in the output")
+	cmd.Flags().BoolVarP(&showOverall, "show-overall", "", showOverall, "Show a summary of all projects, e.g. overall today. The used project ID is 'ALL'.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 
 	addListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
