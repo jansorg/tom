@@ -1,67 +1,25 @@
 package macTimeTracker
 
 import (
-	"bytes"
 	"encoding/csv"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Azure/go-autorest/autorest/date"
-	"howett.net/plist"
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
-
-func Import(filename string, ctx *context.GoTimeContext) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		return err
-	}
-
-	decoder := plist.NewDecoder(file)
-	data := map[string]interface{}{}
-	err = decoder.Decode(&data)
-
-	if err == nil {
-		for _, v := range data {
-			// fmt.Printf("%v\n", k)
-
-			if m, ok := v.([]interface{}); ok {
-				data := m[18]
-				if d, ok := data.(map[string]interface{}); ok {
-					entries, ok := d["NS.data"]
-					if ok {
-						if b, ok := entries.([]byte); ok {
-							dec := plist.NewDecoder(bytes.NewReader(b))
-							list := map[string]interface{}{}
-							err = dec.Decode(&list)
-							if err != nil {
-								fmt.Println("error reading data bytes")
-							} else {
-								for k1, v1 := range list {
-									fmt.Printf("%s = %v\n\n", k1, v1)
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	} else {
-		fmt.Printf("error: %v", err)
-	}
-
-	return err
-}
 
 func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return 0, err
 	}
+	defer file.Close()
 
 	ctx.Store.StartBatch()
 	defer ctx.Store.StopBatch()
@@ -70,6 +28,7 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 	reader.TrimLeadingSpace = true
 	reader.LazyQuotes = true
 	reader.Comma = ';'
+
 	rows, err := reader.ReadAll()
 	if err != nil {
 		return 0, err
@@ -90,7 +49,9 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 		taskName := strings.TrimSpace(row[1])
 		// ignore start date
 		startString := row[3] // 2015-12-18 17:00:37
-		endString := row[4]   // 2015-12-18 17:00:37
+		// ignore end date, using start+duration instead
+		// 00:23:17, the duration is sometimes different from end-start (off by 1s), we assume that TimeTracker is tracking in ms values and is rounding the duration
+		durationString := row[5]
 		// ignoring duration column
 		notes := strings.TrimSpace(row[6])
 
@@ -99,23 +60,24 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 			return 0, err
 		}
 
-		endTime, err := parseTime(endString)
+		duration, err := parseDuration(durationString)
 		if err != nil {
 			return 0, err
 		}
+
+		endTime := startTime.Add(duration)
 
 		project, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(projectName, taskName)
 		if err != nil {
 			return 0, err
 		}
 
-		_, err = ctx.Store.AddFrame(model.Frame{
+		if _, err = ctx.Store.AddFrame(model.Frame{
 			ProjectId: project.ID,
 			Notes:     notes,
 			Start:     &startTime,
 			End:       &endTime,
-		})
-		if err != nil {
+		}); err != nil {
 			return 0, err
 		}
 
@@ -128,4 +90,22 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 func parseTime(value string) (time.Time, error) {
 	d, err := date.ParseTime("2006-01-02 15:04:05", value)
 	return d, err
+}
+
+func parseDuration(value string) (time.Duration, error) {
+	values := strings.Split(value, ":")
+
+	var hours, minutes, seconds int
+	var err error
+	if hours, err = strconv.Atoi(values[0]); err != nil {
+		return 0, err
+	}
+	if minutes, err = strconv.Atoi(values[1]); err != nil {
+		return 0, err
+	}
+	if seconds, err = strconv.Atoi(values[2]); err != nil {
+		return 0, err
+	}
+
+	return time.Duration(hours)*time.Hour + time.Duration(minutes)*time.Minute + time.Duration(seconds)*time.Second, nil
 }
