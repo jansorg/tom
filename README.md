@@ -5,6 +5,8 @@
 
 **This project is still in an early phase. It's usable and working but not yet recommended for production.**
 
+**A simple UI is developed at https://github.com/jansorg/tom-ui (Qt5 tested on Linux and macOS). A preview for mac is available there.**
+
 # tom
 
 tom is a command line application to track time and to simplify office work.
@@ -12,10 +14,27 @@ It's able to track time, to create HTML and PDF reports and to create invoice dr
 
 `tom` tracks time locally. Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
 
+## Get tom
+Instructions to get started until better documentation is available:
+```
+go get github.com/jansorg/tom
+```
+After that `tom` will be available, assuming that your `$GODIR/bin` is in the `$PATH`. 
+
+If you want to build in place, then run this:
+```bash
+git clone https://github.com/jansorg/tom.git
+cd tom
+go build .
+```
+The binaryy `tom` will be in the current directory.
+
 ## Basic usage
 A typical session looks like this:
 ```bash
+tom create project acme
 tom start acme
+sleep 10
 tom stop
 tom report --month 0
 ```
@@ -87,6 +106,13 @@ This needs a custom CSV export (to be documented).
 ```bash
 tom import fanurio complete-export.csv
 ```
+
+### Import data from Mac Time Tracker
+This imports the CSV format exported by Mac Time Tracker.
+```bash
+tom import macTimeTracker export.csv
+```
+
 
 ## License
 To be decided
