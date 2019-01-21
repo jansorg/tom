@@ -1,18 +1,12 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"time"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/dataImport/watson"
 )
 
 func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -21,86 +15,11 @@ func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *
 		Short: "",
 		Args:  cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			dir := ""
-			if len(args) == 1 {
-				dir = args[1]
-			} else {
-				home, err := homedir.Dir()
-				if err != nil {
-					Fatal(err)
-				}
-				dir = filepath.Join(home, ".config", "watson")
-			}
-
-			framesFile := filepath.Join(dir, "frames")
-			if _, err := os.Stat(framesFile); os.IsNotExist(err) {
-				Fatal(fmt.Errorf("file %s not found", framesFile))
-			}
-
-			var frames [][]interface{}
-			bytes, err := ioutil.ReadFile(framesFile)
-			if err != nil {
+			if result, err := watson.NewImporter().Import(args[0], ctx); err != nil {
 				Fatal(err)
+			} else {
+				fmt.Println(result.String())
 			}
-			if err := json.Unmarshal(bytes, &frames); err != nil {
-				Fatal(fmt.Errorf("error parsing json file %s: %s", framesFile, err.Error()))
-			}
-
-			epoch := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
-
-			createdProjects := 0
-			createdTags := 0
-
-			ctx.Store.StartBatch()
-			defer ctx.Store.StopBatch()
-
-			for _, f := range frames {
-				start := f[0].(float64)
-				stop := f[1].(float64)
-				projectName := f[2].(string)
-				// frameID := f[3].(string)
-				tagNames := f[4].([]interface{})
-				updated := f[5].(float64)
-
-				startTime := epoch.Add(time.Duration(start) * time.Second)
-				stopTime := epoch.Add(time.Duration(stop) * time.Second)
-				udpatedTime := epoch.Add(time.Duration(updated) * time.Second)
-
-				project, createdProject, err := ctx.StoreHelper.GetOrCreateNestedProject(projectName)
-				if err != nil {
-					Fatal(err)
-				}
-
-				if createdProject {
-					createdProjects++
-				}
-
-				var tagIDs []string
-				for _, tagName := range tagNames {
-					tag, createdTag, err := ctx.StoreHelper.GetOrCreateTag(tagName.(string))
-					if err != nil {
-						Fatal(err)
-					}
-					tagIDs = append(tagIDs, tag.ID)
-
-					if createdTag {
-						createdTags++
-					}
-				}
-
-				_, err = ctx.Store.AddFrame(model.Frame{
-					Start:     &startTime,
-					End:       &stopTime,
-					Updated:   &udpatedTime,
-					ProjectId: project.ID,
-					TagIDs:    tagIDs,
-				})
-				if err != nil {
-					Fatal(err)
-				}
-			}
-
-			fmt.Printf("Successfully imported %d projects, %d tags, and %d frames.\n", createdProjects, createdTags, len(frames))
 		},
 	}
 

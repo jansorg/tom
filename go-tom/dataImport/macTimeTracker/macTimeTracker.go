@@ -11,13 +11,20 @@ import (
 	"github.com/Azure/go-autorest/autorest/date"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dataImport"
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err error) {
+func NewImporter() dataImport.Handler {
+	return &macImporter{}
+}
+
+type macImporter struct{}
+
+func (macImporter) Import(filename string, ctx *context.GoTimeContext) (dataImport.Result, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return 0, err
+		return dataImport.Result{}, err
 	}
 	defer file.Close()
 
@@ -31,10 +38,13 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 
 	rows, err := reader.ReadAll()
 	if err != nil {
-		return 0, err
+		return dataImport.Result{}, err
 	}
 
 	createdFrames := 0
+	createdProjects := 0
+	reusedProjects := 0
+
 	for i, row := range rows {
 		if i == 0 {
 			// ignore header
@@ -42,7 +52,7 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 		}
 
 		if len(row) != 7 {
-			return 0, fmt.Errorf("unexpected number of columns %d instead of 7 expected", len(row))
+			return dataImport.Result{}, fmt.Errorf("unexpected number of columns %d instead of 7 expected", len(row))
 		}
 
 		projectName := strings.TrimSpace(row[0])
@@ -57,19 +67,25 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 
 		startTime, err := parseTime(startString)
 		if err != nil {
-			return 0, err
+			return dataImport.Result{}, err
 		}
 
 		duration, err := parseDuration(durationString)
 		if err != nil {
-			return 0, err
+			return dataImport.Result{}, err
 		}
 
 		endTime := startTime.Add(duration)
 
-		project, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(projectName, taskName)
+		project, created, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(projectName, taskName)
 		if err != nil {
-			return 0, err
+			return dataImport.Result{}, err
+		}
+
+		if created {
+			createdProjects++
+		} else {
+			reusedProjects++
 		}
 
 		if _, err = ctx.Store.AddFrame(model.Frame{
@@ -78,13 +94,17 @@ func ImportCSV(filename string, ctx *context.GoTimeContext) (created int, err er
 			Start:     &startTime,
 			End:       &endTime,
 		}); err != nil {
-			return 0, err
+			return dataImport.Result{}, err
 		}
 
 		createdFrames++
 	}
 
-	return createdFrames, nil
+	return dataImport.Result{
+		CreatedProjects: createdProjects,
+		ReusedProjects:  reusedProjects,
+		CreatedFrames:   createdFrames,
+	}, nil
 }
 
 func parseTime(value string) (time.Time, error) {

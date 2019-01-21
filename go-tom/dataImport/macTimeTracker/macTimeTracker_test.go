@@ -21,9 +21,10 @@ func Test_ImportCSV(t *testing.T) {
 	csvPath, err := filepath.Abs("test/Time Tracker Data.csv")
 	require.NoError(t, err)
 
-	created, err := ImportCSV(csvPath, ctx)
+	created, err := NewImporter().Import(csvPath, ctx)
 	require.NoError(t, err)
-	assert.EqualValues(t, 6112, created)
+	assert.EqualValues(t, 24, created.CreatedProjects)
+	assert.EqualValues(t, 6112, created.CreatedFrames)
 
 	projectReports := report.CreateProjectReports(time.Date(2019, 1, 21, 0, 0, 0, 0, time.UTC), false, ctx)
 

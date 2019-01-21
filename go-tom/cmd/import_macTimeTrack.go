@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/import/macTimeTracker"
+	"github.com/jansorg/tom/go-tom/dataImport/macTimeTracker"
 )
 
 func newImportMacTimeTrackCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
@@ -15,11 +15,10 @@ func newImportMacTimeTrackCommand(ctx *context.GoTimeContext, parent *cobra.Comm
 		Short: "",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			created, err := macTimeTracker.ImportCSV(args[0], ctx)
-			if err != nil {
+			if result, err := macTimeTracker.NewImporter().Import(args[0], ctx); err != nil {
 				Fatal(err)
 			} else {
-				fmt.Printf("created %d frames\n", created)
+				fmt.Println(result.String())
 			}
 		},
 	}
