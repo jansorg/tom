@@ -2,10 +2,24 @@ before:
   hooks:
     - go generate ./...
 builds:
-- goos:
-    - windows
-    - darwin
-    - linux
+  -
+    main: .
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+  -
+    main: ./go-tom-pdf/.
+    binary: tom-pdf
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+
 archive:
   replacements:
     darwin: Darwin
