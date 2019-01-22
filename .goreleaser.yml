@@ -3,6 +3,10 @@ before:
     - go generate ./...
 builds:
 - env:
+goos:
+  - linux
+  - darwin
+  - windows
 archive:
   replacements:
     darwin: Darwin
