@@ -1,3 +1,4 @@
 /update-build.bash
+/dist
 .idea/workspace.xml
 go-tom/dataImport/macTimeTracker/test/
