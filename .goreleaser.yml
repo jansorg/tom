@@ -4,6 +4,8 @@ before:
 builds:
 - goos:
     - windows
+    - darwin
+    - linux
 archive:
   replacements:
     darwin: Darwin
