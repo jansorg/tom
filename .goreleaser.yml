@@ -3,8 +3,6 @@ before:
     - go generate ./...
 builds:
 - env:
-- goos:
-   - windows
 - ignore:
   - goos: darwin
     goarch: 386
