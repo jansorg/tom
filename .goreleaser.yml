@@ -2,10 +2,11 @@ before:
   hooks:
     - go generate ./...
 builds:
-  goos:
-    - linux
-    - darwin
-    - windows
+- env:
+- goos:
+   - linux
+   - darwin
+   - windows
 archive:
   replacements:
     darwin: Darwin
