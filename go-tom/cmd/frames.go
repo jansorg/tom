@@ -27,6 +27,8 @@ func (f frameList) get(index int, prop string, format string) (interface{}, erro
 		} else {
 			return project.Name, nil
 		}
+	case "projectID":
+		return f[index].ProjectId, nil
 	case "projectFullName":
 		if project, err := ctx.Query.ProjectByID(f[index].ProjectId); err != nil {
 			return "", err
