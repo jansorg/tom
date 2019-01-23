@@ -92,10 +92,10 @@ func (s *Helper) RenameProjectByIDOrName(oldName, newName string) (*model.Projec
 		}
 	}
 
-	return s.RenameProject(p, strings.Split(newName, "/"))
+	return s.RenameProject(p, strings.Split(newName, "/"), true)
 }
 
-func (s *Helper) RenameProject(project *model.Project, newName []string) (*model.Project, error) {
+func (s *Helper) RenameProject(project *model.Project, newName []string, allowHierarchyUpdate bool) (*model.Project, error) {
 	if project == nil {
 		return nil, fmt.Errorf("project is undefined")
 	} else if len(newName) == 0 {
@@ -104,8 +104,15 @@ func (s *Helper) RenameProject(project *model.Project, newName []string) (*model
 		return nil, fmt.Errorf("project %s already exists", newName)
 	}
 
-	// now find parent if newName indicates a nested project, just rename if it's a top-level project
+	if !allowHierarchyUpdate {
+		if len(newName) != 1 {
+			return nil, fmt.Errorf("project rename without hierarchy update needs just one name element")
+		}
+		project.Name = newName[0]
+		return s.store.UpdateProject(*project)
+	}
 
+	// now find parent if newName indicates a nested project, just rename if it's a top-level project
 	if len(newName) == 1 {
 		// now top-level
 		project.ParentID = ""

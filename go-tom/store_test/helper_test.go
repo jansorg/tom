@@ -26,19 +26,29 @@ func Test_RenameProject(t *testing.T) {
 	require.NoError(t, err)
 
 	// top1/child -> childNewName
-	renamed, err := ctx.StoreHelper.RenameProject(c1, []string{"childNewName"})
+	renamed, err := ctx.StoreHelper.RenameProject(c1, []string{"childNewName"}, true)
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
 	require.EqualValues(t, "childNewName", renamed.GetFullName("/"))
 
+	// childNewName -> top1/childNewName without allowd hierarchy change must fail
+	_, err = ctx.StoreHelper.RenameProject(renamed, []string{"top1", "childNewName"}, false)
+	require.Error(t, err)
+
 	// childNewName -> top1/childNewName
-	renamed, err = ctx.StoreHelper.RenameProject(renamed, []string{"top1", "childNewName"})
+	renamed, err = ctx.StoreHelper.RenameProject(renamed, []string{"top1", "childNewName"}, true)
 	require.NoError(t, err)
 	require.EqualValues(t, "childNewName", renamed.Name)
 	require.EqualValues(t, "top1/childNewName", renamed.GetFullName("/"))
 
+	// top1/childNewName -> top1/childNewName2 (with hierarchyUpdate disabled)
+	renamed, err = ctx.StoreHelper.RenameProject(renamed, []string{"childNewName2"}, false)
+	require.NoError(t, err)
+	require.EqualValues(t, "childNewName2", renamed.Name)
+	require.EqualValues(t, "top1/childNewName2", renamed.GetFullName("/"))
+
 	// top1/childNewName -> top1/child
-	renamed, err = ctx.StoreHelper.RenameProjectByIDOrName("top1/childNewName", "top1/child")
+	renamed, err = ctx.StoreHelper.RenameProjectByIDOrName("top1/childNewName2", "top1/child")
 	require.NoError(t, err, "renaming under same parent must succeed")
 	require.EqualValues(t, "child", renamed.Name)
 	require.EqualValues(t, "top1/child", renamed.GetFullName("/"))
