@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v1"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 )
@@ -22,7 +23,7 @@ func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) == 0 {
 				if cfg, err := settings(); err != nil {
-					Fatal(err)
+					util.Fatal(err)
 				} else {
 					fmt.Println(cfg)
 				}
@@ -31,7 +32,7 @@ func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 					value := viper.Get(name)
 					bs, err := yaml.Marshal(value)
 					if err != nil {
-						Fatal(fmt.Errorf("unable to marshal config to YAML: %v", err))
+						util.Fatal(fmt.Errorf("unable to marshal config to YAML: %v", err))
 					}
 					fmt.Printf("%s=%s", name, string(bs))
 				}

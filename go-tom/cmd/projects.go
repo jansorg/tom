@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -59,7 +60,7 @@ func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobr
 			list := projectList{projects: projects, nameDelimiter: nameDelimiter}
 			err := printList(cmd, list, ctx)
 			if err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 		},
 	}

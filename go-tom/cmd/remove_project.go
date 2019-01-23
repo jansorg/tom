@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 )
 
@@ -24,13 +25,13 @@ func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 					frames := context.Query.FramesByProject(p.ID, true)
 					for _, f := range frames {
 						if err := context.Store.RemoveFrame(f.ID); err != nil {
-							Fatal(err)
+							util.Fatal(err)
 						}
 						removedFrameCount++
 					}
 
 					if err := context.Store.RemoveProject(p.ID); err != nil {
-						Fatal(err)
+						util.Fatal(err)
 					}
 					removedProjects++
 				}

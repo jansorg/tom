@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/model"
@@ -14,6 +15,7 @@ type StoreQuery interface {
 
 	ProjectByID(id string) (*model.Project, error)
 	ProjectByFullName(names []string) (*model.Project, error)
+	ProjectByFullNameOrID(nameOrID string, delimiter string) (*model.Project, error)
 	ProjectsByShortName(name string) []*model.Project
 	ProjectsByShortNameOrID(nameOrID string) []*model.Project
 	WithProjectAndParents(id string, f func(*model.Project) bool) bool
@@ -74,6 +76,13 @@ func (q *defaultStoreQuery) ProjectByFullName(name []string) (*model.Project, er
 	return q.store.FindFirstProject(func(p *model.Project) bool {
 		return slices.StringsEqual(name, p.FullName)
 	})
+}
+
+func (q *defaultStoreQuery) ProjectByFullNameOrID(nameOrID string, delimiter string) (*model.Project, error) {
+	if project, err := q.store.ProjectByID(nameOrID); err == nil {
+		return project, err
+	}
+	return q.ProjectByFullName(strings.Split(nameOrID, delimiter))
 }
 
 func (q *defaultStoreQuery) ProjectsByShortName(name string) []*model.Project {

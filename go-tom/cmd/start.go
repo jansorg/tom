@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/jansorg/tom/go-tom/activity"
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
@@ -47,7 +48,7 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 			tags, err := argsToTags(ctx, args)
 			if err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 
 			var stoppedFrames []*model.Frame
@@ -58,9 +59,9 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 			frame, err := control.Start(projectName, "", tags)
 			if err == activity.ProjectNotFoundErr {
-				Fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
+				util.Fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
 			} else if err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 
 			if stoppedFrames != nil {
@@ -77,12 +78,12 @@ func newStartCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.C
 
 	cmd.Flags().Bool("create-missing", false, "")
 	if err := viper.BindPFlag(config.KeyProjectCreateMissing, cmd.Flag("create-missing")); err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	}
 
 	cmd.Flags().Bool("stop-on-start", false, "")
 	if err := viper.BindPFlag(config.KeyActivityStopOnStart, cmd.Flag("stop-on-start")); err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	}
 
 	cmd.Flags().StringVarP(&notes, "notes", "", "", "Optional notes for the new time frame")

@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -39,7 +40,7 @@ func newTagsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 			})
 
 			if err := printList(cmd, tags, ctx); err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 		},
 	}

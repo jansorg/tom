@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 )
 
@@ -23,7 +24,7 @@ func newRemoveAllCommand(context *context.GoTimeContext, parent *cobra.Command) 
 			frames := arg == "all" || arg == "frames"
 
 			if removedProjects, removedTags, removedFrames, err := context.Store.Reset(projects, tags, frames); err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			} else {
 				fmt.Printf("Successfully removed %d projects, %d tags and %d frames\n", removedProjects, removedTags, removedFrames)
 			}

@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/report"
 )
@@ -78,7 +79,7 @@ func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command)
 			})
 
 			if err := printList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 		},
 	}

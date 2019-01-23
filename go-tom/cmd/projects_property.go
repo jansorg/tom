@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -18,7 +19,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 		Run: func(cmd *cobra.Command, args []string) {
 			project, err := ctx.Query.ProjectByFullName(strings.Split(args[0], "/"))
 			if err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 
 			if len(args) == 1 {
@@ -55,7 +56,7 @@ func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Comman
 				ctx.Store.UpdateProject(*project)
 				fmt.Printf("%s=%v (previously: %s)\n", args[1], args[2], old)
 			} else {
-				Fatal(fmt.Errorf("unsupported configuration"))
+				util.Fatal(fmt.Errorf("unsupported configuration"))
 			}
 		},
 	}

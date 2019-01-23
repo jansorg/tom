@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 )
@@ -20,7 +21,7 @@ func newConfigSetCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cob
 
 			viper.Set(args[0], args[1])
 			if err := viper.WriteConfig(); err != nil {
-				Fatal("error updating configuration file: ", err)
+				util.Fatal("error updating configuration file: ", err)
 			}
 
 			fmt.Println("Successfully updated the configuration value of " + args[0])

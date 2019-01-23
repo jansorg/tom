@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 )
 
@@ -28,7 +29,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				for _, frame := range activeFrames() {
 					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
-						Fatal(err)
+						util.Fatal(err)
 					}
 
 					var values []string
@@ -48,7 +49,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 						case "startTime":
 							value = frame.Start.Format(time.RFC3339)
 						default:
-							Fatal(fmt.Errorf("unknown flag %s", flag))
+							util.Fatal(fmt.Errorf("unknown flag %s", flag))
 						}
 
 						values = append(values, value)
@@ -66,7 +67,7 @@ func newStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				for _, frame := range activeFrames() {
 					project, err := ctx.Query.ProjectByID(frame.ProjectId)
 					if err != nil {
-						Fatal(err)
+						util.Fatal(err)
 					}
 
 					fmt.Printf("Project %s was started %s\n", project.FullName, ctx.DateTimePrinter.DateTime(*frame.Start))

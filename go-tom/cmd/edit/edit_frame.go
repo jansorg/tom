@@ -1,4 +1,4 @@
-package cmd
+package edit
 
 import (
 	"fmt"
@@ -10,13 +10,13 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newEditCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newEditFrameCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
 	var startTime string
 	var endTime string
 	var notes string
 
 	var cmd = &cobra.Command{
-		Use:   "edit ID",
+		Use:   "frame ID",
 		Short: "edit properties of a frame",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {

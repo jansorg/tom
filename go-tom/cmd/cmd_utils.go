@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
 )
@@ -47,7 +48,7 @@ type propList interface {
 func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	}
 
 	type row map[string]interface{}
@@ -76,14 +77,14 @@ func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) er
 	case "json":
 		printJSON(rows)
 	default:
-		Fatal(fmt.Errorf("unsupported output type %s", output))
+		util.Fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
 }
 
 func printJSON(value interface{}) {
 	if bytes, err := json.MarshalIndent(value, "", "  "); err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	} else {
 		fmt.Println(string(bytes))
 	}

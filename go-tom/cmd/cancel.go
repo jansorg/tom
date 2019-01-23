@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 )
 
@@ -20,7 +21,7 @@ func newCancelCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 			if cancelAll {
 				for _, f := range frames {
 					if err := ctx.Store.RemoveFrame(f.ID); err != nil {
-						Fatal(err)
+						util.Fatal(err)
 					}
 				}
 				fmt.Printf("Successfully removed %d frames", len(frames))
@@ -29,7 +30,7 @@ func newCancelCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 					return frames[i].IsBefore(frames[j])
 				})
 				if err := ctx.Store.RemoveFrame(frames[0].ID); err != nil {
-					Fatal(err)
+					util.Fatal(err)
 				}
 				fmt.Println("Successfully stopped frame")
 			} else {

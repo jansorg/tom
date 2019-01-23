@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -32,11 +33,11 @@ func newCreateProjectCommand(context *context.GoTimeContext, parent *cobra.Comma
 				}
 
 				if err != nil {
-					Fatal(err)
+					util.Fatal(err)
 				}
 
 				if !created {
-					Fatal(fmt.Printf("the project %s does already exist\n", project.FullName))
+					util.Fatal(fmt.Printf("the project %s does already exist\n", project.FullName))
 
 				} else if output == "json" {
 					printJSON((*model.DetailedProject)(project))

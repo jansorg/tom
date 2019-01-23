@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -79,14 +80,14 @@ func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.
 				if err != nil {
 					project, err = ctx.Query.ProjectByFullName(strings.Split(projectIDOrName, "/"))
 					if err != nil {
-						Fatal(fmt.Errorf("no project found for %s", projectIDOrName))
+						util.Fatal(fmt.Errorf("no project found for %s", projectIDOrName))
 					}
 				}
 				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
 			if err := printList(cmd, frames, ctx); err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 		},
 	}

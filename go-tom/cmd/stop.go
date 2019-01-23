@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/activity"
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 )
@@ -25,18 +26,18 @@ func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Co
 
 			tags, err := argsToTags(ctx, args)
 			if err != nil {
-				Fatal(err)
+				util.Fatal(err)
 			}
 
 			var frames []*model.Frame
 			if all {
 				if frames, err = a.StopAll(notes, tags); err != nil {
-					Fatal(err)
+					util.Fatal(err)
 				}
 			} else {
 				frame, err := a.StopNewest(notes, tags)
 				if err != nil {
-					Fatal(err)
+					util.Fatal(err)
 				}
 				frames = []*model.Frame{frame}
 			}
