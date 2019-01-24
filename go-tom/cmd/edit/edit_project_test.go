@@ -65,3 +65,21 @@ func Test_EditProjectMoveToTop(t *testing.T) {
 	require.EqualValues(t, "child 1", p.Name)
 	require.EqualValues(t, "child 1", p.GetFullName("/"))
 }
+
+func Test_EditProjectMoveToOwnChild(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.English)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	top, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("parent")
+	require.NoError(t, err)
+
+	child, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("parent", "child 1")
+	require.NoError(t, err)
+
+	err = doEditProjectCommand("", &child.ID, "/", []string{top.ID}, ctx)
+	require.Error(t, err, "moving a project into it's own child scope must fail")
+
+	err = doEditProjectCommand("", &top.ID, "/", []string{top.ID}, ctx)
+	require.Error(t, err, "making a project its own child must fail")
+}

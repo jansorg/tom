@@ -131,3 +131,21 @@ func (s *Helper) RenameProject(project *model.Project, newName []string, allowHi
 	project.Name = newName[len(newName)-1]
 	return s.store.UpdateProject(*project)
 }
+
+func (s *Helper) MoveProject(project *model.Project, newParentID string) (*model.Project, error) {
+	if newParentID != "" {
+		// return an error if moved onto itself or into own child scope
+		reject := false
+		s.query.WithProjectAndParents(newParentID, func(parent *model.Project) bool {
+			reject = reject || parent.ID == project.ID
+			return !reject
+		})
+
+		if reject{
+			return nil, fmt.Errorf("moving a project into its own child scope is not allowed")
+		}
+	}
+
+	project.ParentID = newParentID
+	return project, nil
+}

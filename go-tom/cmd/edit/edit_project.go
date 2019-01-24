@@ -71,7 +71,7 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 		var project *model.Project
 		if project, err = ctx.Query.ProjectByID(idOrName); err != nil {
 			if project, err = ctx.Query.ProjectByFullName(strings.Split(idOrName, nameDelimiter)); err != nil {
-				util.Fatalf("project %s not found", idOrName)
+				return err
 			}
 		}
 		projects = append(projects, project)
@@ -83,11 +83,13 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 		}
 
 		if parentNameOrID != nil {
-			p.ParentID = parentProjectID
+			if p, err = ctx.StoreHelper.MoveProject(p, parentProjectID); err != nil {
+				return err
+			}
 		}
 
 		if _, err = ctx.Store.UpdateProject(*p); err != nil {
-			util.Fatalf("error updating project %s: %s", p.GetFullName(nameDelimiter), err.Error())
+			return err
 		}
 	}
 
