@@ -53,7 +53,8 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 	var err error
 	var parentProjectID string
 
-	if parentNameOrID != nil {
+	// a non-nil, but empty parentNameOrID points to the top-level
+	if parentNameOrID != nil && *parentNameOrID != "" {
 		if parent, err := ctx.Query.ProjectByFullNameOrID(*parentNameOrID, nameDelimiter); err != nil {
 			return fmt.Errorf("parent project %s not found", *parentNameOrID)
 		} else {

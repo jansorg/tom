@@ -43,3 +43,25 @@ func Test_EditProject(t *testing.T) {
 	assert.EqualValues(t, newParent.ID, p.ParentID)
 	assert.EqualValues(t, "my new project name", p.Name)
 }
+
+func Test_EditProjectMoveToTop(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.English)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("parent", "child 1")
+	require.NoError(t, err)
+
+	emptyID := ""
+	err = doEditProjectCommand("", &emptyID, "/", []string{p1.ID}, ctx)
+	require.NoError(t, err)
+
+	p, err := ctx.Query.ProjectByFullName([]string{"child 1"})
+	require.NoError(t, err)
+	require.EqualValues(t, p1.ID, p.ID)
+
+	p, err = ctx.Query.ProjectByID(p.ID)
+	require.NoError(t, err)
+	require.EqualValues(t, "child 1", p.Name)
+	require.EqualValues(t, "child 1", p.GetFullName("/"))
+}
