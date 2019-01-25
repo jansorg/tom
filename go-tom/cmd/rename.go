@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func newRenameCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newRenameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "rename TYPE {name | ID} newName",
 		Short: "rename a project or a tag",

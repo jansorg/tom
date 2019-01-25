@@ -8,7 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newCompletionCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCompletionCommand(context *context.TomContext, parent *cobra.Command) *cobra.Command {
 	// completionCmd represents the completion command
 	var completionCmd = &cobra.Command{
 		Use:    "completion",

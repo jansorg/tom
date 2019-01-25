@@ -64,7 +64,7 @@ func (f frameList) get(index int, prop string, format string) (interface{}, erro
 	}
 }
 
-func newFramesCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newFramesCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	projectIDOrName := ""
 	includeSubprojects := false
 

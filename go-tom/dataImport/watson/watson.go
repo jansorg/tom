@@ -19,7 +19,7 @@ func NewImporter() dataImport.Handler {
 
 type watsonImporter struct{}
 
-func (watsonImporter) Import(filename string, ctx *context.GoTimeContext) (dataImport.Result, error) {
+func (watsonImporter) Import(filename string, ctx *context.TomContext) (dataImport.Result, error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return dataImport.Result{}, err

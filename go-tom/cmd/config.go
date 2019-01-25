@@ -15,7 +15,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newConfigCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newConfigCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "config",
 		Short: "prints the current configuration on stdout",

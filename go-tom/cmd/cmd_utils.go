@@ -45,7 +45,7 @@ type propList interface {
 	get(index int, prop string, format string) (interface{}, error)
 }
 
-func printList(cmd *cobra.Command, data propList, ctx *context.GoTimeContext) error {
+func printList(cmd *cobra.Command, data propList, ctx *context.TomContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
 		util.Fatal(err)
@@ -90,7 +90,7 @@ func printJSON(value interface{}) {
 	}
 }
 
-func stringValue(v interface{}, ctx *context.GoTimeContext) string {
+func stringValue(v interface{}, ctx *context.TomContext) string {
 	if s, ok := v.(string); ok {
 		return s
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func newEditProjectCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var name string
 	var parentNameOrID string
 	var nameDelimiter string
@@ -49,7 +49,7 @@ func newEditProjectCommand(ctx *context.GoTimeContext, parent *cobra.Command) *c
 	return cmd
 }
 
-func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, projectIDsOrNames []string, ctx *context.GoTimeContext) error {
+func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, projectIDsOrNames []string, ctx *context.TomContext) error {
 	var err error
 	var parentProjectID string
 

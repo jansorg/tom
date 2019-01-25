@@ -13,14 +13,14 @@ import (
 var ProjectNotFoundErr = fmt.Errorf("project not found")
 
 type Control struct {
-	ctx                   *context.GoTimeContext
+	ctx                   *context.TomContext
 	createMissingProjects bool
 	createMissingTags     bool
 	allowMultipleActives  bool
 	startStopTime         time.Time
 }
 
-func NewActivityControl(ctx *context.GoTimeContext, createMissing bool, allowMultipleActives bool, startStopTime time.Time) *Control {
+func NewActivityControl(ctx *context.TomContext, createMissing bool, allowMultipleActives bool, startStopTime time.Time) *Control {
 	return &Control{
 		ctx:                   ctx,
 		createMissingProjects: createMissing,

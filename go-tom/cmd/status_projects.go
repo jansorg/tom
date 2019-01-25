@@ -59,7 +59,7 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 	}
 }
 
-func newProjectsStatusCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	showEmpty := false
 	showOverall := false
 	nameDelimiter := ""

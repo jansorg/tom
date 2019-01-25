@@ -21,7 +21,7 @@ func NewImporter() dataImport.Handler {
 
 type macImporter struct{}
 
-func (macImporter) Import(filename string, ctx *context.GoTimeContext) (dataImport.Result, error) {
+func (macImporter) Import(filename string, ctx *context.TomContext) (dataImport.Result, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return dataImport.Result{}, err

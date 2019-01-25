@@ -435,6 +435,10 @@ func (d *DataStore) Frames() model.FrameList {
 }
 
 func (d *DataStore) AddFrame(frame model.Frame) (*model.Frame, error) {
+	if err := frame.Validate(false); err != nil {
+		return nil, err
+	}
+
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
@@ -444,7 +448,7 @@ func (d *DataStore) AddFrame(frame model.Frame) (*model.Frame, error) {
 }
 
 func (d *DataStore) UpdateFrame(frame model.Frame) (*model.Frame, error) {
-	if err := frame.Validate(); err != nil {
+	if err := frame.Validate(true); err != nil {
 		return nil, err
 	}
 
@@ -484,17 +488,19 @@ func (d *DataStore) FindFirstFrame(filter func(*model.Frame) bool) (*model.Frame
 	return nil, fmt.Errorf("no matching frame found")
 }
 
-func (d *DataStore) FindFrames(filter func(*model.Frame) bool) []*model.Frame {
+func (d *DataStore) FindFrames(filter func(*model.Frame) (bool, error)) ([]*model.Frame, error) {
 	d.mu.RLock()
 	defer d.mu.RUnlock()
 
 	var result []*model.Frame
 	for _, frame := range d.frames {
-		if filter(frame) {
+		if ok, err := filter(frame); err != nil {
+			return nil, err
+		} else if ok {
 			result = append(result, frame)
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (d *DataStore) updateProjectsMapping() {

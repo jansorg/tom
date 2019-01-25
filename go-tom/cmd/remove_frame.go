@@ -8,7 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newRemoveFrameCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newRemoveFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "frame ID ...",
 		Short: "removes one or more frames, identified by ID",

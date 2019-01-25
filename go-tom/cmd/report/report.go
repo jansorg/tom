@@ -16,7 +16,7 @@ import (
 	"github.com/jansorg/tom/go-tom/report"
 )
 
-func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var includeActiveFrames bool
 
 	var jsonOutput bool
@@ -176,7 +176,7 @@ func NewCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Comman
 	return cmd
 }
 
-func printTemplate(ctx *context.GoTimeContext, templatePath string, report *report.BucketReport, opts htmlreport.Options) error {
+func printTemplate(ctx *context.TomContext, templatePath string, report *report.BucketReport, opts htmlreport.Options) error {
 	t := htmlreport.NewReport("", templatePath, opts, ctx)
 	out, err := t.Render(report)
 	if err != nil {
@@ -195,7 +195,7 @@ func parseDate(dateString *string) (*time.Time, error) {
 	return &result, nil
 }
 
-func printReport(report *report.ResultBucket, ctx *context.GoTimeContext, level int) {
+func printReport(report *report.ResultBucket, ctx *context.TomContext, level int) {
 	title := report.Title()
 	if title != "" {
 		printlnIndenting(level-1, title)

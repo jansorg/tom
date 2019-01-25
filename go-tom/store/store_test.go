@@ -83,9 +83,11 @@ func Test_Store(t *testing.T) {
 
 	err = s.RemoveFrame(addedFrame.ID)
 	require.NoError(t, err)
-	require.Empty(t, s.FindFrames(func(f *model.Frame) bool {
-		return f.ID == addedFrame.ID
-	}))
+	frames, err := s.FindFrames(func(f *model.Frame) (bool, error) {
+		return f.ID == addedFrame.ID, nil
+	})
+	require.NoError(t, err)
+	require.Empty(t, frames)
 
 	// at this point save() must have been called and files must exists
 	dataStore := s.(*store.DataStore)

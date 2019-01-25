@@ -8,7 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func argsToTags(ctx *context.GoTimeContext, args []string) ([]*model.Tag, error) {
+func argsToTags(ctx *context.TomContext, args []string) ([]*model.Tag, error) {
 	if len(args) == 0 {
 		return []*model.Tag{}, nil
 	}

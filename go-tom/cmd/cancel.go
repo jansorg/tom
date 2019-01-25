@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newCancelCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCancelCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cancelAll := false
 
 	var cmd = &cobra.Command{

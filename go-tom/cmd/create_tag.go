@@ -8,7 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func newCreateTagCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCreateTagCommand(context *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "tag name...",
 		Short: "create a new tag",

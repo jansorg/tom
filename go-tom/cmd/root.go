@@ -21,7 +21,7 @@ import (
 	"github.com/jansorg/tom/go-tom/store"
 )
 
-var ctx context.GoTimeContext
+var ctx context.TomContext
 var configFile string
 
 func init() {

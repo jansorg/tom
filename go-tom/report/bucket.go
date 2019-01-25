@@ -10,7 +10,7 @@ import (
 )
 
 type ResultBucket struct {
-	ctx *context.GoTimeContext
+	ctx *context.TomContext
 
 	DateRange        dateUtil.DateRange `json:"dateRange,omitempty"`
 	TrackedDateRange dateUtil.DateRange `json:"trackedTime,omitempty"`

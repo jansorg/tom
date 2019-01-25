@@ -16,14 +16,14 @@ type Report struct {
 	workingDir   string
 	templatePath string
 	options      Options
-	ctx          *context.GoTimeContext
+	ctx          *context.TomContext
 }
 
 type Options struct {
 	DecimalDurationn bool
 }
 
-func NewReport(workingDir string, templatePath string, opts Options, ctx *context.GoTimeContext) *Report {
+func NewReport(workingDir string, templatePath string, opts Options, ctx *context.TomContext) *Report {
 	return &Report{
 		options:      opts,
 		workingDir:   workingDir,

@@ -83,7 +83,7 @@ func (p *ProjectSummary) Add(v *ProjectSummary) {
 	p.TrackedAll += v.TrackedAll
 }
 
-func CreateProjectReports(referenceDay time.Time, showEmpty bool, overallSummaryID string, ctx *context.GoTimeContext) map[string]*ProjectSummary {
+func CreateProjectReports(referenceDay time.Time, showEmpty bool, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
 	frames := model.NewFrameList(ctx.Store.Frames())
 
 	year := dateUtil.NewYearRange(referenceDay, ctx.Locale)

@@ -24,7 +24,7 @@ const (
 )
 
 type BucketReport struct {
-	ctx    *context.GoTimeContext
+	ctx    *context.TomContext
 	source *model.FrameList
 
 	Result *ResultBucket `json:"result"`
@@ -42,7 +42,7 @@ type BucketReport struct {
 	RoundTotalsTo      time.Duration         `json:"roundTotalsTo"`
 }
 
-func NewBucketReport(frameList *model.FrameList, context *context.GoTimeContext) *BucketReport {
+func NewBucketReport(frameList *model.FrameList, context *context.TomContext) *BucketReport {
 	report := &BucketReport{
 		ctx:    context,
 		source: frameList,

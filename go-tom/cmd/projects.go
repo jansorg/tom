@@ -38,7 +38,7 @@ func (o projectList) get(index int, prop string, format string) (interface{}, er
 	}
 }
 
-func newProjectsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	nameDelimiter := ""
 	recentProjects := 0
 

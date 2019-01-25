@@ -2,6 +2,7 @@ package query_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -62,17 +63,18 @@ func Test_RecentlyTracked(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, recent, "no projects without frames")
 
-	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p1.ID})
+	start := time.Now()
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p1.ID, Start: &start})
 	require.NoError(t, err)
 	recent, err = ctx.Query.FindRecentlyTrackedProjects(5)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, recent.Size(), "expected the only project")
 	assert.EqualValues(t, p1.ID, recent.First().ID, "expected the only project")
 
-	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p2.ID})
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p2.ID, Start: &start})
 	require.NoError(t, err)
 
-	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p3.ID})
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p3.ID, Start: &start})
 	require.NoError(t, err)
 
 	recent, err = ctx.Query.FindRecentlyTrackedProjects(5)

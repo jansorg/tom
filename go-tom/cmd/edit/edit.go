@@ -6,7 +6,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func NewEditCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func NewEditCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "edit project | frame",
 		Short: "edit properties of projects or frames",

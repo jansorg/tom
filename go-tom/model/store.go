@@ -32,5 +32,5 @@ type Store interface {
 	UpdateFrame(frame Frame) (*Frame, error)
 	RemoveFrame(id string) error
 	FindFirstFrame(func(*Frame) bool) (*Frame, error)
-	FindFrames(func(*Frame) bool) []*Frame
+	FindFrames(func(*Frame) (bool, error)) ([]*Frame, error)
 }

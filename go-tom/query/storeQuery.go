@@ -30,6 +30,7 @@ type StoreQuery interface {
 	TagsByName(names ...string) ([]*model.Tag, error)
 
 	FrameByID(id string) (*model.Frame, error)
+	FramesByID(id ...string) ([]*model.Frame, error)
 	FramesByProject(id string, includeSubprojects bool) []*model.Frame
 	FramesByTag(id string) []*model.Frame
 	ActiveFrames() []*model.Frame
@@ -215,20 +216,40 @@ func (q *defaultStoreQuery) FrameByID(id string) (*model.Frame, error) {
 	})
 }
 
+func (q *defaultStoreQuery) FramesByID(ids ...string) ([]*model.Frame, error) {
+	var set = map[string]bool{}
+	for _, id := range ids {
+		set[id] = true
+	}
+
+	var frames []*model.Frame
+	for _, id := range ids {
+		if f, err := q.FrameByID(id); err != nil {
+			return nil, err
+		} else {
+			frames = append(frames, f)
+		}
+	}
+	return frames, nil
+}
+
 func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) []*model.Frame {
-	return q.store.FindFrames(func(f *model.Frame) bool {
-		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsChild(id, f.ProjectId)
+	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
+		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsChild(id, f.ProjectId), nil
 	})
+	return frames
 }
 
 func (q *defaultStoreQuery) FramesByTag(id string) []*model.Frame {
-	return q.store.FindFrames(func(f *model.Frame) bool {
-		return false
+	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
+		return false, nil
 	})
+	return frames
 }
 
 func (q *defaultStoreQuery) ActiveFrames() []*model.Frame {
-	return q.store.FindFrames(func(f *model.Frame) bool {
-		return f.IsActive()
+	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
+		return f.IsActive(), nil
 	})
+	return frames
 }

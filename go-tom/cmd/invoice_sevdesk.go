@@ -12,7 +12,7 @@ import (
 	"github.com/jansorg/tom/go-tom/invoice/sevdesk"
 )
 
-func newSevdeskCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	apiKey := ""
 
 	var cmd = &cobra.Command{

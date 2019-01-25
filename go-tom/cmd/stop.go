@@ -12,7 +12,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func newStopCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newStopCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	all := false
 	notes := ""
 	// var tags []string

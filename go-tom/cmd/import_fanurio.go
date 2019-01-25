@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/dataImport/fanurio"
 )
 
-func newImportFanurioCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newImportFanurioCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "fanurio",
 		Short: "import frames and projects from Fanurio CSV output",

@@ -20,7 +20,7 @@ func NewCSVImporter() dataImport.Handler {
 
 type fanurioImporter struct{}
 
-func (fanurioImporter) Import(filePath string, ctx *context.GoTimeContext) (dataImport.Result, error) {
+func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (dataImport.Result, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return dataImport.Result{}, err

@@ -13,7 +13,7 @@ import (
 	"github.com/jansorg/tom/go-tom/report"
 )
 
-func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newInvoiceCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "invoice",
 		Short: "Create a new invoice in a cloud based service. See the list of command to see which service APIs are supported at this time.",
@@ -37,7 +37,7 @@ func newInvoiceCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra
 }
 
 type invoiceCmdConfig struct {
-	ctx             *context.GoTimeContext
+	ctx             *context.TomContext
 	dryRun          bool
 	project         *model.Project
 	filterRange     dateUtil.DateRange
@@ -100,7 +100,7 @@ type ProjectInvoiceLine struct {
 	Currency    string
 }
 
-func parseInvoiceCmd(ctx *context.GoTimeContext, cmd *cobra.Command) (invoiceCmdConfig, error) {
+func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdConfig, error) {
 	var filterRange dateUtil.DateRange
 
 	// fixme add start and end date

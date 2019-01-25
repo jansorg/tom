@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/dataImport/watson"
 )
 
-func newImportWatsonCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newImportWatsonCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "watson",
 		Short: "",

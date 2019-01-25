@@ -13,7 +13,7 @@ import (
 	store2 "github.com/jansorg/tom/go-tom/store"
 )
 
-func CreateTestContext(lang language.Tag) (*context.GoTimeContext, error) {
+func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
 	dir, err := ioutil.TempDir("", "gotime")
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func CreateTestContext(lang language.Tag) (*context.GoTimeContext, error) {
 		return nil, err
 	}
 
-	return &context.GoTimeContext{
+	return &context.TomContext{
 		Store:           store,
 		StoreHelper:     store2.NewStoreHelper(store),
 		Query:           query.NewStoreQuery(store),
@@ -35,7 +35,7 @@ func CreateTestContext(lang language.Tag) (*context.GoTimeContext, error) {
 	}, nil
 }
 
-func CleanupTestContext(ctx *context.GoTimeContext) {
+func CleanupTestContext(ctx *context.TomContext) {
 	dir := ctx.Store.DirPath()
 	os.RemoveAll(dir)
 }

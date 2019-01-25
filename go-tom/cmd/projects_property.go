@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func newProjectsPropertyCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newProjectsPropertyCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "property",
 		Short: "Get/set project properties. Usage: <projectName> [propertyName] --set [optional new value]",

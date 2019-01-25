@@ -18,5 +18,5 @@ func (r Result) String() string {
 }
 
 type Handler interface {
-	Import(filename string, ctx *context.GoTimeContext) (Result, error)
+	Import(filename string, ctx *context.TomContext) (Result, error)
 }

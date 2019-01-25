@@ -29,7 +29,7 @@ func (t tagList) get(index int, prop string, format string) (interface{}, error)
 	}
 }
 
-func newTagsCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newTagsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "tags",
 		Short: "Prints tags",

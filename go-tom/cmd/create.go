@@ -6,7 +6,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newCreateCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newCreateCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "create",
 		Short: "create new content. See the available sub commands.",

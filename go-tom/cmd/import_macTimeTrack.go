@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/dataImport/macTimeTracker"
 )
 
-func newImportMacTimeTrackCommand(ctx *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newImportMacTimeTrackCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "macTimeTracker timeTrackerExport.csv",
 		Short: "",

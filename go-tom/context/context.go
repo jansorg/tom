@@ -17,7 +17,7 @@ const (
 	Json
 )
 
-type GoTimeContext struct {
+type TomContext struct {
 
 	Store                  model.Store
 	StoreHelper            *store.Helper

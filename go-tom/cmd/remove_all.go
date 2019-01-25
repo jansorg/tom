@@ -9,7 +9,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newRemoveAllCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newRemoveAllCommand(context *context.TomContext, parent *cobra.Command) *cobra.Command {
 	validArgs := []string{"all", "projects", "tags", "frames"}
 
 	var cmd = &cobra.Command{

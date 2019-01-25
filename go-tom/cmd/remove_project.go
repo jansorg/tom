@@ -9,7 +9,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newRemoveProjectCommand(context *context.GoTimeContext, parent *cobra.Command) *cobra.Command {
+func newRemoveProjectCommand(context *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "project <project name or project ID> ...",
 		Short: "removes new project and all its associated data (including subprojects)",

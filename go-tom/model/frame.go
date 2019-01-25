@@ -104,11 +104,13 @@ func (f *Frame) IsAfter(other *Frame) bool {
 	return !f.IsBefore(other) && f.Start != nil && other.Start != nil && f.Start.After(*other.Start)
 }
 
-func (f *Frame) Validate() error {
-	if f.ID == "" {
+func (f *Frame) Validate(requireID bool) error {
+	if f.ID == "" && requireID {
 		return fmt.Errorf("id of frame undefined")
 	} else if f.Start == nil || f.Start.IsZero() {
 		return fmt.Errorf("start time undefined")
+	} else if f.ProjectId == "" {
+		return fmt.Errorf("project id undefined")
 	}
 	return nil
 }
