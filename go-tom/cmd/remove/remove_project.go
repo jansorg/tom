@@ -17,19 +17,16 @@ func newRemoveProjectCommand(ctx *context.TomContext, parent *cobra.Command) *co
 		Short: "removes new project and all its associated data, including subprojects and time entries",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			removedProjects, removedFrames, err := doRemoveProjects(ctx, nameDelimiter, args)
-			if err != nil {
+			if removedProjects, removedFrames, err := doRemoveProjects(ctx, nameDelimiter, args); err != nil {
 				util.Fatal("Error removing projects: %s", err.Error())
 			} else {
-				fmt.Printf("Successfully removed %d proejcts and %d frames\n", removedProjects, removedFrames)
+				fmt.Printf("Successfully removed %d projects and %d frames\n", removedProjects, removedFrames)
 			}
 		},
 	}
 
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in full project names")
-
 	parent.AddCommand(cmd)
-
 	return cmd
 }
 
