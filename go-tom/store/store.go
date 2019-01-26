@@ -321,7 +321,7 @@ func (d *DataStore) FindProjects(filter func(*model.Project) bool) []*model.Proj
 	return result
 }
 
-func (d *DataStore) ProjectIsChild(parentID, id string) bool {
+func (d *DataStore) ProjectIsSameOrChild(parentID, id string) bool {
 	if parentID == id {
 		return true
 	}

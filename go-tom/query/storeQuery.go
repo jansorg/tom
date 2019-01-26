@@ -19,6 +19,7 @@ type StoreQuery interface {
 	ProjectsByShortName(name string) []*model.Project
 	ProjectsByShortNameOrID(nameOrID string) []*model.Project
 	WithProjectAndParents(id string, f func(*model.Project) bool) bool
+	CollectProjectAndSubprojects(id string) ([]*model.Project, error)
 	FindRecentlyTrackedProjects(max int) (model.ProjectList, error)
 
 	GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool)
@@ -115,6 +116,21 @@ func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *mod
 		id = current.ParentID
 	}
 	return false
+}
+
+// Iterates the project and its hierarchy below, it stops as soon as f returns false
+func (q *defaultStoreQuery) CollectProjectAndSubprojects(id string) ([]*model.Project, error) {
+	if _, err := q.store.ProjectByID(id); err != nil {
+		return nil, err
+	}
+
+	var result []*model.Project
+	for _, p := range q.store.Projects() {
+		if q.store.ProjectIsSameOrChild(id, p.ID) {
+			result = append(result, p)
+		}
+	}
+	return result, nil
 }
 
 func (q *defaultStoreQuery) FindRecentlyTrackedProjects(max int) (model.ProjectList, error) {
@@ -235,7 +251,7 @@ func (q *defaultStoreQuery) FramesByID(ids ...string) ([]*model.Frame, error) {
 
 func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) []*model.Frame {
 	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
-		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsChild(id, f.ProjectId), nil
+		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsSameOrChild(id, f.ProjectId), nil
 	})
 	return frames
 }

@@ -1,4 +1,4 @@
-package cmd
+package remove
 
 import (
 	"github.com/spf13/cobra"
@@ -6,7 +6,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newRemoveCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "remove [all projects | tags | frames] or remove project <project name> or frame ID",
 		Short: "remove projects, tags or frames",

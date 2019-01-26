@@ -62,7 +62,7 @@ func (b *BucketReport) Update() {
 		projectIDs = []string{}
 		for _, p := range b.ctx.Store.Projects() {
 			for _, parentID := range b.ProjectIDs {
-				if b.ctx.Store.ProjectIsChild(parentID, p.ID) {
+				if b.ctx.Store.ProjectIsSameOrChild(parentID, p.ID) {
 					projectIDs = append(projectIDs, p.ID)
 				}
 			}

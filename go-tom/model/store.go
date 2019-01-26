@@ -13,7 +13,7 @@ type Store interface {
 
 	Projects() ProjectList
 	ProjectByID(id string) (*Project, error)
-	ProjectIsChild(parentID, id string) bool
+	ProjectIsSameOrChild(parentID, id string) bool
 	AddProject(project Project) (*Project, error)
 	UpdateProject(project Project) (*Project, error)
 	RemoveProject(id string) error

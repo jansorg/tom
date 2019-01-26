@@ -141,11 +141,42 @@ func (s *Helper) MoveProject(project *model.Project, newParentID string) (*model
 			return !reject
 		})
 
-		if reject{
+		if reject {
 			return nil, fmt.Errorf("moving a project into its own child scope is not allowed")
 		}
 	}
 
 	project.ParentID = newParentID
 	return project, nil
+}
+
+func (s *Helper) RemoveProject(project *model.Project) (int, int, error) {
+	if project == nil {
+		return 0, 0, fmt.Errorf("project undefined")
+	}
+
+	// collect all sub projects
+	projects, err := s.query.CollectProjectAndSubprojects(project.ID)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	removedProjects := 0
+	removedFrames := 0
+	for _, p := range projects {
+		frames := s.query.FramesByProject(p.ID, true)
+		for _, f := range frames {
+			if err := s.store.RemoveFrame(f.ID); err != nil {
+				return 0, 0, err
+			}
+			removedFrames++
+		}
+
+		if err := s.store.RemoveProject(p.ID); err != nil {
+			return 0, 0, err
+		}
+		removedProjects++
+	}
+
+	return removedProjects, removedFrames, nil
 }
