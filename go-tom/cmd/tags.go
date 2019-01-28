@@ -14,11 +14,11 @@ import (
 
 type tagList []*model.Tag
 
-func (o tagList) size() int {
+func (o tagList) Size() int {
 	return len(o)
 }
 
-func (t tagList) get(index int, prop string, format string) (interface{}, error) {
+func (t tagList) Get(index int, prop string, format string) (interface{}, error) {
 	switch prop {
 	case "id":
 		return t[index].ID, nil
@@ -39,13 +39,13 @@ func newTagsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comma
 				return strings.Compare(tags[i].Name, tags[j].Name) < 0
 			})
 
-			if err := printList(cmd, tags, ctx); err != nil {
+			if err := util.PrintList(cmd, tags, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
 	}
 
-	addListOutputFlags(cmd, "name", []string{"id", "name"})
+	util.AddListOutputFlags(cmd, "name", []string{"id", "name"})
 	parent.AddCommand(cmd)
 	return cmd
 }

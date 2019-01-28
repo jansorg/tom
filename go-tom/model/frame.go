@@ -96,6 +96,13 @@ func (f *Frame) Duration() time.Duration {
 	return time.Duration(0)
 }
 
+func (f *Frame) ActiveDuration(end time.Time) time.Duration {
+	if f.IsStopped() {
+		return f.End.Sub(*f.Start)
+	}
+	return end.Sub(*f.Start)
+}
+
 func (f *Frame) IsBefore(other *Frame) bool {
 	return f.Start != nil && other.Start != nil && f.Start.Before(*other.Start)
 }

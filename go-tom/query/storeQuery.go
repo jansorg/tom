@@ -35,6 +35,7 @@ type StoreQuery interface {
 	FramesByProject(id string, includeSubprojects bool) []*model.Frame
 	FramesByTag(id string) []*model.Frame
 	ActiveFrames() []*model.Frame
+
 	IsToplevelProject(id string) bool
 }
 

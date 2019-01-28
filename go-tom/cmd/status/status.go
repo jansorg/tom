@@ -1,4 +1,4 @@
-package cmd
+package status
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newStatusCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	verbose := false
 	format := ""
 	delimiter := ""

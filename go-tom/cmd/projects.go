@@ -16,11 +16,11 @@ type projectList struct {
 	nameDelimiter string
 }
 
-func (o projectList) size() int {
+func (o projectList) Size() int {
 	return len(o.projects)
 }
 
-func (o projectList) get(index int, prop string, format string) (interface{}, error) {
+func (o projectList) Get(index int, prop string, format string) (interface{}, error) {
 	switch prop {
 	case "id":
 		return o.projects[index].ID, nil
@@ -58,7 +58,7 @@ func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 			}
 
 			list := projectList{projects: projects, nameDelimiter: nameDelimiter}
-			err := printList(cmd, list, ctx)
+			err := util.PrintList(cmd, list, ctx)
 			if err != nil {
 				util.Fatal(err)
 			}
@@ -68,7 +68,7 @@ func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 
-	addListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
+	util.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
 	parent.AddCommand(cmd)
 	return cmd
 }

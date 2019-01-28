@@ -40,7 +40,7 @@ func newCreateProjectCommand(context *context.TomContext, parent *cobra.Command)
 					util.Fatal(fmt.Printf("the project %s does already exist\n", project.FullName))
 
 				} else if output == "json" {
-					printJSON((*model.DetailedProject)(project))
+					util.PrintJSON((*model.DetailedProject)(project))
 				} else {
 					fmt.Printf("created project %s\n", project.FullName)
 				}

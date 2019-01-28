@@ -83,12 +83,12 @@ func (p *ProjectSummary) Add(v *ProjectSummary) {
 	p.TrackedAll += v.TrackedAll
 }
 
-func CreateProjectReports(referenceDay time.Time, showEmpty bool, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
+func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *time.Time, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
 	frames := model.NewFrameList(ctx.Store.Frames())
 
 	year := dateUtil.NewYearRange(referenceDay, ctx.Locale)
-	week := dateUtil.NewWeekRange(referenceDay, ctx.Locale)
 	month := dateUtil.NewMonthRange(referenceDay, ctx.Locale)
+	week := dateUtil.NewWeekRange(referenceDay, ctx.Locale)
 	day := dateUtil.NewDayRange(referenceDay, ctx.Locale)
 
 	result := map[string]*ProjectSummary{}
@@ -99,12 +99,25 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, overallSummary
 	}
 
 	for _, frame := range frames.Frames() {
-		duration := frame.Duration()
+		var duration time.Duration
+		var end *time.Time
+		if activeEndRef != nil && frame.IsActive() {
+			duration = frame.ActiveDuration(*activeEndRef)
+			end = activeEndRef
+		} else {
+			duration = frame.Duration()
+			end = frame.End
+		}
 
-		isYear := year.ContainsP(frame.Start) && year.ContainsP(frame.End)
-		isMonth := month.ContainsP(frame.Start) && month.ContainsP(frame.End)
-		isWeek := week.ContainsP(frame.Start) && week.ContainsP(frame.End)
-		isDay := day.ContainsP(frame.Start) && day.ContainsP(frame.End)
+		if duration == 0 {
+			continue
+
+		}
+
+		isYear := year.ContainsP(frame.Start) && year.ContainsP(end)
+		isMonth := month.ContainsP(frame.Start) && month.ContainsP(end)
+		isWeek := week.ContainsP(frame.Start) && week.ContainsP(end)
+		isDay := day.ContainsP(frame.Start) && day.ContainsP(end)
 
 		ctx.Query.WithProjectAndParents(frame.ProjectId, func(project *model.Project) bool {
 			target, ok := result[project.ID]

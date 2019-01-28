@@ -14,11 +14,11 @@ import (
 
 type frameList []*model.Frame
 
-func (f frameList) size() int {
+func (f frameList) Size() int {
 	return len(f)
 }
 
-func (f frameList) get(index int, prop string, format string) (interface{}, error) {
+func (f frameList) Get(index int, prop string, format string) (interface{}, error) {
 	switch prop {
 	case "id":
 		return f[index].ID, nil
@@ -86,7 +86,7 @@ func newFramesCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
-			if err := printList(cmd, frames, ctx); err != nil {
+			if err := util.PrintList(cmd, frames, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
@@ -94,7 +94,7 @@ func newFramesCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 
 	cmd.Flags().StringVarP(&projectIDOrName, "project", "p", "", "Only frames of this project will be printed. Project IDs or full project names are accepted. Default: no project")
 	cmd.Flags().BoolVarP(&includeSubprojects, "subprojects", "s", false, "Include frames of subprojects")
-	addListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs"})
+	util.AddListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs"})
 
 	parent.AddCommand(cmd)
 	return cmd

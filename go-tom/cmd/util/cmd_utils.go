@@ -1,4 +1,4 @@
-package cmd
+package util
 
 import (
 	"encoding/json"
@@ -9,12 +9,16 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
 )
 
-func addListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
+type PropList interface {
+	Size() int
+	Get(index int, prop string, format string) (interface{}, error)
+}
+
+func AddListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
 	cmd.Flags().StringP("output", "o", "plain", "Output format. Supported: plain | json. Default: plain")
 	cmd.Flags().StringP("format", "f", defaultFormat, fmt.Sprintf("A comma separated list of of properties to output. Default: %s. Possible values: %s", defaultFormat, strings.Join(supportedProps, ",")))
 	cmd.Flags().StringP("delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
@@ -40,24 +44,19 @@ func parseListOutputFlags(cmd *cobra.Command) (props []string, output string, de
 	return props, output, delimiter, nil
 }
 
-type propList interface {
-	size() int
-	get(index int, prop string, format string) (interface{}, error)
-}
-
-func printList(cmd *cobra.Command, data propList, ctx *context.TomContext) error {
+func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
-		util.Fatal(err)
+		Fatal(err)
 	}
 
 	type row map[string]interface{}
 
 	var rows []row
-	for i := 0; i < data.size(); i++ {
+	for i := 0; i < data.Size(); i++ {
 		r := row{}
 		for _, prop := range formatFlags {
-			r[prop], err = data.get(i, prop, output)
+			r[prop], err = data.Get(i, prop, output)
 			if err != nil {
 				return err
 			}
@@ -75,16 +74,16 @@ func printList(cmd *cobra.Command, data propList, ctx *context.TomContext) error
 			fmt.Println(strings.Join(rowValues, delimiter))
 		}
 	case "json":
-		printJSON(rows)
+		PrintJSON(rows)
 	default:
-		util.Fatal(fmt.Errorf("unsupported output type %s", output))
+		Fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
 }
 
-func printJSON(value interface{}) {
+func PrintJSON(value interface{}) {
 	if bytes, err := json.MarshalIndent(value, "", "  "); err != nil {
-		util.Fatal(err)
+		Fatal(err)
 	} else {
 		fmt.Println(string(bytes))
 	}

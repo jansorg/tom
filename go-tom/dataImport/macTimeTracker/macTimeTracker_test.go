@@ -26,7 +26,7 @@ func Test_ImportCSV(t *testing.T) {
 	assert.EqualValues(t, 24, created.CreatedProjects)
 	assert.EqualValues(t, 6112, created.CreatedFrames)
 
-	projectReports := report.CreateProjectReports(time.Date(2019, 1, 21, 0, 0, 0, 0, time.UTC), false, "", ctx)
+	projectReports := report.CreateProjectReports(time.Date(2019, 1, 21, 0, 0, 0, 0, time.UTC), false, nil, "", ctx)
 
 	acme, err := ctx.Query.ProjectByFullName([]string{"ACME Corp."})
 	require.NoError(t, err)

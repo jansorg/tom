@@ -57,7 +57,7 @@ func Test_ProjectReportTest(t *testing.T) {
 	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday})
 	require.NoError(t, err)
 
-	reports := CreateProjectReports(refDate, false, "", ctx)
+	reports := CreateProjectReports(refDate, false, nil, "", ctx)
 	require.EqualValues(t, 1, len(reports))
 	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedYear)
 	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth)
@@ -68,4 +68,23 @@ func Test_ProjectReportTest(t *testing.T) {
 	require.EqualValues(t, 40*time.Minute, reports[p.ID].TotalTrackedMonth)
 	require.EqualValues(t, 30*time.Minute, reports[p.ID].TotalTrackedWeek)
 	require.EqualValues(t, 10*time.Minute, reports[p.ID].TotalTrackedDay)
+
+	// now include active frames, no end defined here
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday})
+	require.NoError(t, err)
+
+	// adds 15 minutes for our active frame
+	activeEnd := startToday.Add(15 * time.Minute)
+
+	reports = CreateProjectReports(refDate, false, &activeEnd, "", ctx)
+	require.EqualValues(t, 1, len(reports))
+	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TrackedYear)
+	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TrackedMonth)
+	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TrackedWeek)
+	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TrackedDay)
+
+	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TotalTrackedYear)
+	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TotalTrackedMonth)
+	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TotalTrackedWeek)
+	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TotalTrackedDay)
 }

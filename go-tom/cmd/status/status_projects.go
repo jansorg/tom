@@ -1,4 +1,4 @@
-package cmd
+package status
 
 import (
 	"fmt"
@@ -18,11 +18,11 @@ type projectStatusList struct {
 	reports       []*report.ProjectSummary
 }
 
-func (o projectStatusList) size() int {
+func (o projectStatusList) Size() int {
 	return len(o.reports)
 }
 
-func (o projectStatusList) get(index int, prop string, format string) (interface{}, error) {
+func (o projectStatusList) Get(index int, prop string, format string) (interface{}, error) {
 	summary := o.reports[index]
 
 	switch prop {
@@ -61,6 +61,7 @@ func (o projectStatusList) get(index int, prop string, format string) (interface
 
 func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	showEmpty := false
+	includeActiveFrames := false
 	showOverall := false
 	nameDelimiter := ""
 
@@ -68,7 +69,14 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 		Use:   "projects",
 		Short: "Prints project status",
 		Run: func(cmd *cobra.Command, args []string) {
-			projectReports := report.CreateProjectReports(time.Now(), showEmpty, "ALL", ctx)
+			refTime := time.Now()
+
+			var refEnd *time.Time
+			if includeActiveFrames {
+				refEnd = &refTime
+			}
+
+			projectReports := report.CreateProjectReports(refTime, showEmpty, refEnd, "ALL", ctx)
 
 			var reportList []*report.ProjectSummary
 			for _, v := range projectReports {
@@ -78,17 +86,18 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 				return strings.Compare(reportList[i].Project.GetFullName("/"), reportList[j].Project.GetFullName("/")) < 0
 			})
 
-			if err := printList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
+			if err := util.PrintList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
 	}
 
-	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "e", showEmpty, "Includes projects without tracked time in the output")
+	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "e", showEmpty, "Include projects without tracked time in the output")
 	cmd.Flags().BoolVarP(&showOverall, "show-overall", "", showOverall, "Show a summary of all projects, e.g. overall today. The used project ID is 'ALL'.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
+	cmd.Flags().BoolVarP(&includeActiveFrames, "include-active", "", includeActiveFrames, "Include active frames in the status. The current time will be used as end time of these frames.")
 
-	addListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
+	util.AddListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
 		"id", "fullName", "name", "parentID",
 		"trackedDay", "trackedWeek", "trackedMonth", "trackedYear", "trackedAll",
 		"totalTrackedDay", "totalTrackedWeek", "totalTrackedMonth", "totalTrackedYear", "totalTrackedAll"})

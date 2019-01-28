@@ -14,6 +14,7 @@ import (
 	"github.com/jansorg/tom/go-tom/cmd/edit"
 	"github.com/jansorg/tom/go-tom/cmd/remove"
 	"github.com/jansorg/tom/go-tom/cmd/report"
+	"github.com/jansorg/tom/go-tom/cmd/status"
 	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
@@ -49,7 +50,7 @@ func init() {
 	edit.NewEditCommand(&ctx, RootCmd)
 	report.NewCommand(&ctx, RootCmd)
 	newImportCommand(&ctx, RootCmd)
-	newStatusCommand(&ctx, RootCmd)
+	status.NewCommand(&ctx, RootCmd)
 	newInvoiceCommand(&ctx, RootCmd)
 	newConfigCommand(&ctx, RootCmd)
 	// hidden command
