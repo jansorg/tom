@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/jansorg/tom/go-tom/dateUtil"
 )
 
 func NewStartedFrame(project *Project) Frame {
@@ -96,11 +98,40 @@ func (f *Frame) Duration() time.Duration {
 	return time.Duration(0)
 }
 
-func (f *Frame) ActiveDuration(end time.Time) time.Duration {
-	if f.IsStopped() {
-		return f.End.Sub(*f.Start)
+func (f *Frame) ActiveDuration(end *time.Time) time.Duration {
+	if f.IsActive() && end != nil {
+		return end.Sub(*f.Start)
 	}
-	return end.Sub(*f.Start)
+	return f.Duration()
+}
+
+func (f *Frame) Intersection(activeEnd *time.Time, timeRange *dateUtil.DateRange) time.Duration {
+	var frameEnd *time.Time
+	if f.IsActive() {
+		if activeEnd == nil {
+			return time.Duration(0)
+		}
+		frameEnd = activeEnd
+	} else {
+		frameEnd = f.End
+	}
+
+	if timeRange.ContainsP(f.Start) && timeRange.ContainsP(frameEnd) {
+		return f.ActiveDuration(activeEnd)
+	}
+
+	// intersection at start of time range
+	if !timeRange.ContainsP(f.Start) && timeRange.ContainsP(frameEnd) {
+		return frameEnd.Sub(*timeRange.Start)
+	}
+
+	// intersection at end of time range
+	if timeRange.ContainsP(f.Start) && !timeRange.ContainsP(frameEnd) {
+		return timeRange.End.Sub(*f.Start)
+	}
+
+	// no intersection
+	return time.Duration(0)
 }
 
 func (f *Frame) IsBefore(other *Frame) bool {

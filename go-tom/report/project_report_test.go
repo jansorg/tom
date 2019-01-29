@@ -88,3 +88,34 @@ func Test_ProjectReportTest(t *testing.T) {
 	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TotalTrackedWeek)
 	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TotalTrackedDay)
 }
+
+func Test_MultipleDays(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p, err := ctx.Store.AddProject(model.Project{Name: "Project1"});
+	require.NoError(t, err)
+
+	// a wednesday, 12 am
+	refDate := time.Date(2018, time.July, 18, 12, 0, 0, 0, time.Local)
+
+	// 12 hours in the day, 11 in the next
+	startToday := refDate
+	endToday := startToday.Add(23 * time.Hour)
+
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday})
+	require.NoError(t, err)
+
+	reports := CreateProjectReports(refDate, false, nil, "", ctx)
+	require.EqualValues(t, 1, len(reports))
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedYear)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedMonth)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedWeek)
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedDay)
+
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedYear)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedMonth)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedWeek)
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TotalTrackedDay)
+}

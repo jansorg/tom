@@ -99,25 +99,15 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *
 	}
 
 	for _, frame := range frames.Frames() {
-		var duration time.Duration
-		var end *time.Time
-		if activeEndRef != nil && frame.IsActive() {
-			duration = frame.ActiveDuration(*activeEndRef)
-			end = activeEndRef
-		} else {
-			duration = frame.Duration()
-			end = frame.End
-		}
-
+		duration := frame.ActiveDuration(activeEndRef)
 		if duration == 0 {
 			continue
-
 		}
 
-		isYear := year.ContainsP(frame.Start) && year.ContainsP(end)
-		isMonth := month.ContainsP(frame.Start) && month.ContainsP(end)
-		isWeek := week.ContainsP(frame.Start) && week.ContainsP(end)
-		isDay := day.ContainsP(frame.Start) && day.ContainsP(end)
+		yearDuration := frame.Intersection(activeEndRef, &year)
+		monthDuration := frame.Intersection(activeEndRef, &month)
+		weekDuration := frame.Intersection(activeEndRef, &week)
+		dayDuration := frame.Intersection(activeEndRef, &day)
 
 		ctx.Query.WithProjectAndParents(frame.ProjectId, func(project *model.Project) bool {
 			target, ok := result[project.ID]
@@ -129,33 +119,17 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *
 			if project.ID == frame.ProjectId {
 				target.addAll(duration)
 
-				if isYear {
-					target.addYear(duration)
-				}
-				if isMonth {
-					target.addMonth(duration)
-				}
-				if isWeek {
-					target.addWeek(duration)
-				}
-				if isDay {
-					target.addDay(duration)
-				}
+				target.addYear(yearDuration)
+				target.addMonth(monthDuration)
+				target.addWeek(weekDuration)
+				target.addDay(dayDuration)
 			} else {
 				target.addTotalAll(duration)
 
-				if isYear {
-					target.addTotalYear(duration)
-				}
-				if isMonth {
-					target.addTotalMonth(duration)
-				}
-				if isWeek {
-					target.addTotalWeek(duration)
-				}
-				if isDay {
-					target.addTotalDay(duration)
-				}
+				target.addTotalYear(yearDuration)
+				target.addTotalMonth(monthDuration)
+				target.addTotalWeek(weekDuration)
+				target.addTotalDay(dayDuration)
 			}
 			return true
 		})
