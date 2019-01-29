@@ -6,4 +6,4 @@ VERSION="$1"
 [[ -z "$VERSION" ]] && echo "No version defined" && exit -1
 
 git tag "v$VERSION"
-gorelease --rm-dist
+goreleaser --rm-dist
