@@ -27,6 +27,13 @@ type ResultBucket struct {
 
 func (b *ResultBucket) Update() {
 	b.FrameCount = b.Frames.Size()
+	for _, f := range b.Frames.Frames() {
+		b.Duration.AddStartEndP(f.Start, f.End)
+	}
+
+	if !b.Empty() && !b.IsDateBucket() {
+		b.dateRange = dateUtil.NewDateRange(b.ChildBuckets[0].DateRange().Start, b.ChildBuckets[len(b.ChildBuckets)-1].DateRange().End, b.ctx.Locale)
+	}
 
 	// tracked range
 	if !b.EmptySource() {
@@ -74,7 +81,7 @@ func (b *ResultBucket) IsRounded() bool {
 }
 
 func (b *ResultBucket) IsDateBucket() bool {
-	return b.SplitByType < SplitByProject && b.dateRange.IsClosed()
+	return b.SplitByType > 0 && b.SplitByType < SplitByProject && b.dateRange.IsClosed()
 }
 
 func (b *ResultBucket) IsProjectBucket() bool {
@@ -171,14 +178,9 @@ func (b *ResultBucket) SortChildBuckets() {
 }
 
 func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool, splitValue func(frame *model.Frame) interface{}, minValues []string) {
-	parts := b.Frames.Split(splitValue)
-
-	// mapping := make(map[string]bool)
-
 	b.ChildBuckets = []*ResultBucket{}
-	for _, segment := range parts {
+	for _, segment := range b.Frames.Split(splitValue) {
 		value := splitValue(segment.First())
-		// mapping[value] = true
 
 		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 			ctx:         b.ctx,

@@ -152,10 +152,6 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 		updateBucket(report, sub)
 	}
 
-	for _, f := range bucket.Frames.Frames() {
-		bucket.Duration.AddStartEndP(f.Start, f.End)
-	}
-
 	bucket.Update()
 	bucket.SortChildBuckets()
 }
