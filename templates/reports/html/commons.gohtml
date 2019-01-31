@@ -17,12 +17,12 @@
         {{end}}
         <tr>
             <td>{{i18n "Tracked time:"}}</td>
-            <td class="time-left">{{minDuration .Duration}}</td>
+            <td class="time-left">{{minDuration .Duration.Get}}</td>
         </tr>
         {{if and .IsRounded (hasFlag "showExact") }}
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
-                <td class="time-left">{{minDuration .ExactDuration}}</td>
+                <td class="time-left">{{minDuration .Duration.GetExact}}</td>
             </tr>
         {{end}}
         {{/*<tr>*/}}

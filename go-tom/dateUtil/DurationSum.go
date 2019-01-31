@@ -8,6 +8,10 @@ func NewDurationSum() *DurationSum {
 	return &DurationSum{}
 }
 
+func NewDurationLike(proto *DurationSum) *DurationSum {
+	return NewDurationSumAll(proto.roundingMode, proto.roundingSize, proto.acceptedRange, proto.referenceTime)
+}
+
 func NewDurationSumFiltered(acceptedRange *DateRange, referenceTime *time.Time) *DurationSum {
 	return &DurationSum{
 		acceptedRange: acceptedRange,
@@ -26,17 +30,21 @@ func NewDurationSumAll(roundingMode RoundingMode, roundingSize time.Duration, ac
 
 type DurationSum struct {
 	referenceTime *time.Time
-	sumRounded    time.Duration
-	sumExact      time.Duration
+	SumRounded    time.Duration `json:"sum_rounded"`
+	SumExact      time.Duration `json:"sum_exact"`
 	roundingMode  RoundingMode
 	roundingSize  time.Duration
 	acceptedRange *DateRange
 }
 
+func (d *DurationSum) IsRounded() bool {
+	return d.SumExact != d.SumRounded
+}
+
 func (d *DurationSum) AddSum(r *DurationSum) {
-	//fixme handle incompatible config values of r?
-	d.sumExact += r.sumExact
-	d.sumRounded += r.sumRounded
+	// fixme handle incompatible config values of r?
+	d.SumExact += r.SumExact
+	d.SumRounded += r.SumRounded
 }
 
 func (d *DurationSum) AddRange(r DateRange) {
@@ -52,16 +60,16 @@ func (d *DurationSum) AddStartEndP(start *time.Time, end *time.Time) {
 }
 
 func (d *DurationSum) Add(duration time.Duration) {
-	d.sumExact += duration
-	d.sumRounded += RoundDuration(duration, d.roundingMode, d.roundingSize)
+	d.SumExact += duration
+	d.SumRounded += RoundDuration(duration, d.roundingMode, d.roundingSize)
 }
 
 func (d *DurationSum) Get() time.Duration {
-	return d.sumRounded
+	return d.SumRounded
 }
 
 func (d *DurationSum) GetExact() time.Duration {
-	return d.sumExact
+	return d.SumExact
 }
 
 func (d *DurationSum) add(a *time.Time, b *time.Time) {

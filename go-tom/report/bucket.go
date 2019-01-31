@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
@@ -17,9 +16,8 @@ type ResultBucket struct {
 	DateRange        dateUtil.DateRange `json:"dateRange,omitempty"`
 	TrackedDateRange dateUtil.DateRange `json:"trackedTime,omitempty"`
 
-	FrameCount    int           `json:"frameCount"`
-	Duration      time.Duration `json:"duration"`
-	ExactDuration time.Duration `json:"duration_exact"`
+	FrameCount int                   `json:"frameCount"`
+	Duration   *dateUtil.DurationSum `json:"duration"`
 
 	SplitBy interface{}      `json:"splitBy,omitempty"`
 	Frames  *model.FrameList `json:"frames,omitempty"`
@@ -35,22 +33,12 @@ func (b *ResultBucket) EmptySource() bool {
 }
 
 func (b *ResultBucket) IsRounded() bool {
-	return b.Duration != b.ExactDuration
+	return b.Duration.IsRounded()
 }
 
 func (b *ResultBucket) IsDateBucket() bool {
 	_, ok := b.SplitBy.(dateUtil.DateRange)
 	return ok
-}
-
-func (b *ResultBucket) FilterResults(accepted func(bucket *ResultBucket) bool) {
-	var result []*ResultBucket
-	for _, r := range b.Results {
-		if accepted(r) {
-			result = append(result, r)
-		}
-	}
-	b.Results = result
 }
 
 func (b *ResultBucket) IsProjectBucket() bool {
@@ -65,6 +53,16 @@ func (b *ResultBucket) FindProjectBucket() (*model.Project, error) {
 		}
 	}
 	return nil, fmt.Errorf("no project found for bucket")
+}
+
+func (b *ResultBucket) FilterResults(accepted func(bucket *ResultBucket) bool) {
+	var result []*ResultBucket
+	for _, r := range b.Results {
+		if accepted(r) {
+			result = append(result, r)
+		}
+	}
+	b.Results = result
 }
 
 func (b *ResultBucket) ProjectResults() []*ResultBucket {
@@ -94,32 +92,6 @@ func (b *ResultBucket) LeafChildren() []*ResultBucket {
 		}
 	}
 	return result
-}
-
-func (b *ResultBucket) Split(splitter func(list *model.FrameList) []*model.FrameList) {
-	parts := splitter(b.Frames)
-	// defer func() {
-	// 	b.Frames = &model.FrameList{}
-	// }()
-
-	b.Results = []*ResultBucket{}
-	for _, p := range parts {
-		b.Results = append(b.Results, &ResultBucket{
-			ctx:    b.ctx,
-			Frames: p,
-		})
-	}
-}
-
-func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
-	if len(b.Results) == 0 {
-		handler(b)
-		return
-	}
-
-	for _, sub := range b.Results {
-		sub.WithLeafBuckets(handler)
-	}
 }
 
 func (b *ResultBucket) Title() string {
@@ -156,4 +128,28 @@ func (b *ResultBucket) Sort() {
 
 		return strings.Compare(b1.Title(), b2.Title()) < 0
 	});
+}
+
+func (b *ResultBucket) Split(splitter func(list *model.FrameList) []*model.FrameList) {
+	parts := splitter(b.Frames)
+
+	b.Results = []*ResultBucket{}
+	for _, p := range parts {
+		b.Results = append(b.Results, &ResultBucket{
+			ctx:      b.ctx,
+			Frames:   p,
+			Duration: dateUtil.NewDurationLike(b.Duration),
+		})
+	}
+}
+
+func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
+	if len(b.Results) == 0 {
+		handler(b)
+		return
+	}
+
+	for _, sub := range b.Results {
+		sub.WithLeafBuckets(handler)
+	}
 }

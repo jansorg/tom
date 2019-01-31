@@ -123,7 +123,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			frameReport.RoundingModeTotals = totalsRoundingNode
 			frameReport.RoundTotalsTo = roundTotals
 			frameReport.SplitOperations = splitOperations
-			frameReport.Update()
+			frameReport.Calculate()
 
 			if jsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
@@ -221,8 +221,8 @@ func printReport(report *report.ResultBucket, ctx *context.TomContext, level int
 	if !report.TrackedDateRange.Empty() {
 		printfIndenting(level, "Tracked dates: %s\n", report.TrackedDateRange.ShortString())
 	}
-	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration))
-	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.ExactDuration))
+	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.Get()))
+	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.GetExact()))
 	fmt.Println()
 
 	for _, r := range report.Results {

@@ -22,9 +22,9 @@
                 {{range $leafs}}
                     <tr>
                         <td>{{.Title}}</td>
-                        <td class="time">{{minDuration .Duration}}</td>
+                        <td class="time">{{minDuration .Duration.Get}}</td>
                         {{if $showExact}}
-                            <td class="time">{{minDuration .ExactDuration}}</td>
+                            <td class="time">{{minDuration .Duration.GetExact}}</td>
                         {{end}}
                     </tr>
                 {{end}}
@@ -32,9 +32,9 @@
                 <tfoot class="subtotal">
                 <tr>
                     <th>{{i18n "Total"}}</th>
-                    <th class="time">{{minDuration $bucket.Duration}}</th>
+                    <th class="time">{{minDuration $bucket.Duration.Get}}</th>
                     {{if $showExact}}
-                        <th class="time">{{minDuration $bucket.ExactDuration}}</th>
+                        <th class="time">{{minDuration $bucket.Duration.GetExact}}</th>
                     {{end}}
                 </tr>
                 </tfoot>

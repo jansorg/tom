@@ -56,7 +56,7 @@ func (b *BucketReport) IsRounding() bool {
 	return b.RoundFramesTo != 0 && b.RoundingModeFrames != dateUtil.RoundNone || b.RoundTotalsTo != 0 && b.RoundingModeTotals != dateUtil.RoundNone
 }
 
-func (b *BucketReport) Update() {
+func (b *BucketReport) Calculate() {
 	b.source.FilterByDatePtr(b.FilterRange.Start, b.FilterRange.End, false)
 
 	projectIDs := b.ProjectIDs
@@ -84,8 +84,10 @@ func (b *BucketReport) Update() {
 		ctx:       b.ctx,
 		Frames:    b.source,
 		DateRange: dateUtil.NewDateRange(nil, nil, b.ctx.Locale),
+		Duration: dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
 	}
 
+	// fixme optimize this
 	for _, op := range b.SplitOperations {
 		switch op {
 		case SplitByYear:
@@ -96,7 +98,8 @@ func (b *BucketReport) Update() {
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
-					leaf.DateRange = dateUtil.NewYearRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
+					year := dateUtil.NewYearRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
+					leaf.DateRange = year
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
@@ -192,9 +195,7 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 	}
 
 	for _, f := range bucket.Frames.Frames() {
-		d := f.Duration()
-		bucket.ExactDuration += d
-		bucket.Duration += dateUtil.RoundDuration(d, report.RoundingModeFrames, report.RoundFramesTo)
+		bucket.Duration.AddStartEndP(f.Start, f.End)
 	}
 
 	if len(bucket.Results) > 0 {

@@ -64,7 +64,7 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	frameReport.FilterRange = c.filterRange
 	frameReport.RoundFramesTo = c.roundFramesTo
 	frameReport.RoundingModeFrames = c.roundFramesMode
-	frameReport.Update()
+	frameReport.Calculate()
 
 	result := frameReport.Result
 
@@ -83,7 +83,7 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 		lines: []ProjectInvoiceLine{
 			{
 				ProjectName: c.project.Name,
-				Hours:       result.Duration.Hours(),
+				Hours:       result.Duration.Get().Hours(),
 				Description: desc,
 				Currency:    currency,
 				HourlyRate:  hourlyRate,

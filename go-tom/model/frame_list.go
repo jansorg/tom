@@ -94,12 +94,12 @@ func (f *FrameList) FilterByDate(start time.Time, end time.Time, acceptUnstopped
 	f.FilterByEndDate(end, acceptUnstopped)
 }
 
-func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, acceptUnstopped bool) {
+func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, includeActive bool) {
 	if start != nil && !start.IsZero() {
 		f.FilterByStartDate(*start)
 	}
 	if end != nil && !end.IsZero() {
-		f.FilterByEndDate(*end, acceptUnstopped)
+		f.FilterByEndDate(*end, includeActive)
 	}
 }
 
