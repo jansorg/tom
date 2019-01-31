@@ -8,8 +8,9 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func NewProjectSummary(year *dateUtil.DateRange, month *dateUtil.DateRange, week *dateUtil.DateRange, day *dateUtil.DateRange, refTime *time.Time) *ProjectSummary {
+func NewProjectSummary(year *dateUtil.DateRange, month *dateUtil.DateRange, week *dateUtil.DateRange, day *dateUtil.DateRange, refTime *time.Time, project *model.Project) *ProjectSummary {
 	return &ProjectSummary{
+		Project:           project,
 		TrackedAll:        dateUtil.NewDurationSum(),
 		TrackedTotalAll:   dateUtil.NewDurationSum(),
 		TrackedYear:       dateUtil.NewDurationSumFiltered(year, refTime),
@@ -92,7 +93,7 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *
 		ctx.Query.WithProjectAndParents(projectID, func(project *model.Project) bool {
 			target, ok := result[project.ID]
 			if !ok {
-				target = NewProjectSummary(&year, &month, &week, &day, activeEndRef)
+				target = NewProjectSummary(&year, &month, &week, &day, activeEndRef, project)
 				result[project.ID] = target
 			}
 
@@ -108,15 +109,15 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *
 	}
 
 	if overallSummaryID != "" {
-		overall := ProjectSummary{Project: &model.Project{ID: overallSummaryID, FullName: []string{overallSummaryID}}}
+		overall := NewProjectSummary(nil, nil, nil, nil, nil, &model.Project{ID: overallSummaryID, FullName: []string{overallSummaryID}})
 
 		// sum up all project summaries of top-level projects
 		for _, v := range result {
-			if v.Project.ParentID == "" {
+			if v.Project != nil && v.Project.ParentID == "" {
 				overall.Add(v)
 			}
 		}
-		result[overallSummaryID] = &overall;
+		result[overallSummaryID] = overall
 	}
 
 	return result
