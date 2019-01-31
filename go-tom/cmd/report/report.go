@@ -19,6 +19,7 @@ import (
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var includeActiveFrames bool
+	var showEmpty bool
 
 	var jsonOutput bool
 
@@ -123,7 +124,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			frameReport.RoundingModeTotals = totalsRoundingNode
 			frameReport.RoundTotalsTo = roundTotals
 			frameReport.SplitOperations = splitOperations
-			frameReport.ShowEmptyBuckets = true
+			frameReport.ShowEmptyBuckets = showEmpty
 			frameReport.Update()
 
 			if jsonOutput {
@@ -157,7 +158,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "The date when the report should start.")
 	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
 
-	// cmd.Flags().BoolVarP(&showAll, "all", "", false, "Reports all activities.")
+	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "", false, "Show empty groups")
 	cmd.Flags().IntVarP(&year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 	// cmd.Flag("year").NoOptDefVal = "0"
 	cmd.Flags().IntVarP(&month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")

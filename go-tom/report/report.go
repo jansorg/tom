@@ -105,69 +105,31 @@ func (b *BucketReport) Update() {
 	}
 
 	b.Result = &ResultBucket{
-		ctx:    b.ctx,
-		Frames: b.source,
-		// fixme filter?
-		Duration: dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
+		ctx:       b.ctx,
+		Frames:    b.source,
+		Duration:  dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
+		dateRange: dateUtil.NewDateRange(b.source.First().Start, b.source.Last().End, b.ctx.Locale),
 	}
 
 	for _, op := range b.SplitOperations {
-		switch op {
-		case SplitByYear:
+		if op <= SplitByDay {
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.yearOf, func(r dateUtil.DateRange) dateUtil.DateRange {
-					return r.Shift(1, 0, 0)
-				})
+				leaf.SplitByDateRange(op, b.ShowEmptyBuckets)
 			})
-		case SplitByMonth:
+		} else if op == SplitByProject {
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.monthOf, func(r dateUtil.DateRange) dateUtil.DateRange {
-					return r.Shift(0, 1, 0)
-				})
+				leaf.SplitByProjectID(op, b.ShowEmptyBuckets, projectOf, projectIDs)
 			})
-		case SplitByWeek:
+		} else if op == SplitByParentProject {
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.weekOf, func(r dateUtil.DateRange) dateUtil.DateRange {
-					// fixme
-					return r.Shift(1, 0, 0)
-				})
+				leaf.SplitByProjectID(op, b.ShowEmptyBuckets, parentProjectOf(b.ctx), projectIDs)
 			})
-		case SplitByDay:
-			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.dayOf, func(r dateUtil.DateRange) dateUtil.DateRange {
-					return r.Shift(0, 0, 1)
-				})
-			})
-		case SplitByProject:
-			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, projectOf, nil)
-			})
-		case SplitByParentProject:
-			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, parentProjectOf(b.ctx), nil)
-			})
-		default:
+		} else {
 			log.Fatal(fmt.Errorf("unknown split operation %d", op))
 		}
 	}
 
 	updateBucket(b, b.Result)
-}
-
-func (b *BucketReport) yearOf(frame *model.Frame) dateUtil.DateRange {
-	return dateUtil.NewYearRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
-}
-
-func (b *BucketReport) monthOf(frame *model.Frame) dateUtil.DateRange {
-	return dateUtil.NewMonthRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
-}
-
-func (b *BucketReport) weekOf(frame *model.Frame) dateUtil.DateRange {
-	return dateUtil.NewWeekRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
-}
-
-func (b *BucketReport) dayOf(frame *model.Frame) dateUtil.DateRange {
-	return dateUtil.NewDayRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
 }
 
 func projectOf(frame *model.Frame) interface{} {

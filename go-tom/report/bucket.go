@@ -13,6 +13,7 @@ import (
 
 type ResultBucket struct {
 	ctx              *context.TomContext
+	parent           *ResultBucket
 	dateRange        dateUtil.DateRange
 	trackedDateRange dateUtil.DateRange
 
@@ -27,33 +28,6 @@ type ResultBucket struct {
 func (b *ResultBucket) Update() {
 	b.FrameCount = b.Frames.Size()
 
-	if !b.Empty() {
-		first := b.ChildBuckets[0]
-		last := b.ChildBuckets[len(b.ChildBuckets)-1]
-		start := first.DateRange().Start
-		b.dateRange = dateUtil.NewDateRange(start, last.DateRange().End, b.ctx.Locale)
-	} else if !b.EmptySource() {
-		start := b.Frames.First().Start
-		switch b.SplitByType {
-		case SplitByYear:
-			// fixme
-			b.dateRange = dateUtil.NewYearRange(*start, b.ctx.Locale, time.Local)
-		case SplitByMonth:
-			// fixme
-			b.dateRange = dateUtil.NewMonthRange(*start, b.ctx.Locale, time.Local)
-		case SplitByWeek:
-			// fixme
-			b.dateRange = dateUtil.NewWeekRange(*start, b.ctx.Locale, time.Local)
-		case SplitByDay:
-			// fixme
-			b.dateRange = dateUtil.NewDayRange(*start, b.ctx.Locale, time.Local)
-		default:
-			b.dateRange = dateUtil.NewDateRange(nil, nil, b.ctx.Locale)
-		}
-	} else {
-		b.dateRange = dateUtil.NewDateRange(nil, nil, b.ctx.Locale)
-	}
-
 	// tracked range
 	if !b.EmptySource() {
 		first := b.Frames.First()
@@ -66,6 +40,17 @@ func (b *ResultBucket) Update() {
 	} else {
 		b.trackedDateRange = dateUtil.DateRange{}
 	}
+}
+
+func (b *ResultBucket) ParentDateRange() dateUtil.DateRange {
+	if b.parent != nil && b.parent.IsDateBucket() {
+		return b.parent.dateRange
+	} else if b.dateRange.IsClosed() {
+		return b.dateRange
+	} else if b.parent != nil {
+		return b.parent.ParentDateRange()
+	}
+	return b.dateRange
 }
 
 func (b *ResultBucket) TrackedDateRange() dateUtil.DateRange {
@@ -185,46 +170,84 @@ func (b *ResultBucket) SortChildBuckets() {
 	});
 }
 
-func (b *ResultBucket) Split(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}, minValues []interface{}) {
+func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool, splitValue func(frame *model.Frame) interface{}, minValues []string) {
 	parts := b.Frames.Split(splitValue)
 
-	mapping := make(map[interface{}]bool)
+	// mapping := make(map[string]bool)
 
 	b.ChildBuckets = []*ResultBucket{}
 	for _, segment := range parts {
 		value := splitValue(segment.First())
-		mapping[value] = true
+		// mapping[value] = true
 
 		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 			ctx:         b.ctx,
+			parent:      b,
 			Frames:      segment,
-			Duration:    dateUtil.NewDurationCopy(b.Duration),
+			Duration:    dateUtil.NewEmptyCopy(b.Duration),
 			SplitByType: splitType,
 			SplitBy:     value,
 		})
 	}
 }
 
-func (b *ResultBucket) SplitByDateRange(splitType SplitOperation, addEmpty bool, splitValue func(frame *model.Frame) dateUtil.DateRange, nextValue func(dateUtil.DateRange) dateUtil.DateRange) {
+func (b *ResultBucket) SplitByDateRange(splitType SplitOperation, showEmpty bool) {
 	b.ChildBuckets = []*ResultBucket{}
 
-	value := splitValue(b.Frames.First())
-	lastFrameDate := b.Frames.Last().Start
+	var start, end *time.Time
+	if !b.EmptySource() {
+		start = b.Frames.First().Start
+		end = b.Frames.Last().End
+	}
 
-	for value.IsClosed() && !value.Start.After(*lastFrameDate) {
+	parentRange := b.ParentDateRange()
+	if parentRange.IsClosed() {
+		start = parentRange.Start
+		end = parentRange.End
+	}
+
+	if start == nil || end == nil {
+		return
+	}
+
+	var value dateUtil.DateRange
+	switch splitType {
+	case SplitByYear:
+		value = dateUtil.NewYearRange(*start, b.ctx.Locale, start.Location())
+	case SplitByMonth:
+		value = dateUtil.NewMonthRange(*start, b.ctx.Locale, start.Location())
+	case SplitByWeek:
+		value = dateUtil.NewWeekRange(*start, b.ctx.Locale, start.Location())
+	case SplitByDay:
+		value = dateUtil.NewDayRange(*start, b.ctx.Locale, start.Location())
+	}
+
+	for value.IsClosed() && value.Start.Before(*end) {
 		matchingFrames := b.Frames.Copy()
 		matchingFrames.FilterByDateRange(value, false)
-		if addEmpty || !matchingFrames.Empty() {
+
+		if showEmpty || !matchingFrames.Empty() {
 			b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 				ctx:         b.ctx,
+				parent:      b,
+				dateRange:   value,
 				Frames:      matchingFrames,
-				Duration:    dateUtil.NewDurationCopy(b.Duration),
+				Duration:    dateUtil.NewEmptyCopy(b.Duration),
 				SplitByType: splitType,
 				SplitBy:     value,
 			})
 		}
 
-		value = nextValue(value)
+		switch splitType {
+		case SplitByYear:
+			value = value.Shift(1, 0, 0)
+		case SplitByMonth:
+			value = value.Shift(0, 1, 0)
+		case SplitByWeek:
+			value = value.Shift(0, 1, 0)
+		case SplitByDay:
+			value = value.Shift(0, 0, 1)
+		}
 	}
 
 }

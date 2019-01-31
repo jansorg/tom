@@ -103,38 +103,24 @@ func (r DateRange) ShortString() string {
 }
 
 func (r DateRange) MinimalString() string {
-	var y1, d1, y2, d2 int
-	var m1, m2 time.Month
-
-	var start, end string
-	if r.Start != nil {
-		start = ShortDateString(*r.Start)
-		y1, m1, d1 = r.Start.Date()
-	}
-	if r.End != nil {
-		end = ShortDateString(*r.End)
-		y2, m2, d2 = r.End.Date()
+	// year
+	if r.Start.AddDate(1, 0, 0).Equal(*r.End) {
+		return fmt.Sprintf("%04d", r.Start.Year())
 	}
 
-	if y1 == y2 {
-		if m1 == m2 {
-			if d1 == d2 {
-				// print just the year
-				return fmt.Sprintf("%04d", y1)
-			}
-		}
+	// month
+	if r.Start.AddDate(0, 1, 0).Equal(*r.End) {
+		y, m, _ := r.Start.Date()
+		return fmt.Sprintf("%s %04d", r.locale.MonthWide(m), y)
 	}
 
-	// return name of month and year if it's exactly spanning a month
-	if d1 == 1 && d2 == 1 && (y1 == y2 && m1 == m2-1 || y1 == y2-1 && m1 == time.December && m2 == time.January) {
-		return fmt.Sprintf("%s %d", r.locale.MonthWide(m1), y1)
+	// date
+	if r.Start.AddDate(0, 0, 1).Equal(*r.End) {
+		return r.locale.FmtDateShort(*r.Start)
 	}
 
-	if y1 == y2-1 && m1 == time.January && m2 == time.January && d1 == 1 && d2 == 1 {
-		return fmt.Sprintf("%d", y1)
-	}
-
-	return fmt.Sprintf("%s - %s", start, end)
+	// fallback: print the range
+	return fmt.Sprintf("%s - %s", r.locale.FmtDateShort(*r.Start), r.locale.FmtDateShort(*r.End))
 }
 
 func (r DateRange) Shift(years, months, days int) DateRange {

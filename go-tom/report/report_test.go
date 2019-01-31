@@ -140,6 +140,49 @@ func Test_ReportSplitDifferentZonesYear(t *testing.T) {
 	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
+func Test_ReportEmptyRanges(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1")
+	require.NoError(t, err)
+
+	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project2")
+	require.NoError(t, err)
+
+	start := newDate(2017, time.January, 10, 10, 0).UTC()
+	end := newDate(2017, time.January, 10, 12, 0).UTC()
+
+	start2 := newDate(2019, time.January, 10, 9, 0).UTC()
+	end2 := newDate(2019, time.January, 10, 10, 0).UTC()
+
+	frameList := []*model.Frame{
+		{Start: &start, End: &end, ProjectId: p.ID},
+		{Start: &start2, End: &end2, ProjectId: p2.ID},
+	}
+
+	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
+	report.SplitOperations = []SplitOperation{SplitByProject, SplitByYear, SplitByMonth}
+	report.ShowEmptyBuckets = true
+	report.Update()
+
+	require.NotNil(t, report.Result, "expected one top-level group (containing two frames)")
+	assert.EqualValues(t, 2, report.Result.FrameCount)
+
+	assert.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected two project buckets")
+
+	for i, projectBucket := range report.Result.ChildBuckets {
+		require.EqualValues(t, 3, len(projectBucket.ChildBuckets), "expected three year bucket, 2017 .. 2019")
+		assert.True(t, projectBucket.IsProjectBucket())
+
+		for j, yearBucket := range projectBucket.ChildBuckets {
+			assert.True(t, yearBucket.IsDateBucket())
+			require.EqualValues(t, 12, len(yearBucket.ChildBuckets), "bucket doesn't contain months, index %d | %d", i, j)
+		}
+	}
+}
+
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
 	date := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &date
