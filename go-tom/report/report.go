@@ -220,4 +220,6 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 			bucket.TrackedDateRange.End = bucket.Frames.Last().End
 		}
 	}
+
+	bucket.Sort()
 }

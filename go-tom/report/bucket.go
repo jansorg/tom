@@ -2,6 +2,8 @@ package report
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
@@ -141,4 +143,17 @@ func (b *ResultBucket) Title() string {
 		return fmt.Sprintf("%v", b.SplitBy)
 	}
 	return ""
+}
+
+func (b *ResultBucket) Sort() {
+	sort.Slice(b.Results, func(i, j int) bool {
+		b1 := b.Results[i]
+		b2 := b.Results[j]
+
+		if b1.IsDateBucket() && b2.IsDateBucket() {
+			return b1.DateRange.Start.Before(*b2.DateRange.Start)
+		}
+
+		return strings.Compare(b1.Title(), b2.Title()) < 0
+	});
 }

@@ -39,20 +39,21 @@
                 </tr>
                 </tfoot>
             </table>
-        {{end}}
-
-        {{if .Empty}}
-            {{if not .DateRange.Empty}}
-                <div class="title range">{{.DateRange}}</div>
-            {{end}}
         {{else}}
-            <div class="buckets">
-                {{range .Results}}
-                    {{if not .Empty}}
-                        {{template "Bucket" .}}
-                    {{end}}
+            {{if .Empty}}
+                {{if not .DateRange.Empty}}
+                    <div class="title range">{{.DateRange}}</div>
                 {{end}}
-            </div>
+            {{else}}
+                <div class="buckets">
+                    <span class="title">{{.Title}}</span>
+                    {{range .Results}}
+                        {{if not .Empty}}
+                            {{template "Bucket" .}}
+                        {{end}}
+                    {{end}}
+                </div>
+            {{end}}
         {{end}}
     </div>
 {{end}}
@@ -61,7 +62,8 @@
 <html lang="{{ langBase }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <title></title>
