@@ -59,15 +59,15 @@ func Test_ProjectReportTest(t *testing.T) {
 
 	reports := CreateProjectReports(refDate, false, nil, "", ctx)
 	require.EqualValues(t, 1, len(reports))
-	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedYear)
-	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth)
-	require.EqualValues(t, 30*time.Minute, reports[p.ID].TrackedWeek)
-	require.EqualValues(t, 10*time.Minute, reports[p.ID].TrackedDay)
+	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedYear.Get())
+	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth.Get())
+	require.EqualValues(t, 30*time.Minute, reports[p.ID].TrackedWeek.Get())
+	require.EqualValues(t, 10*time.Minute, reports[p.ID].TrackedDay.Get())
 
-	require.EqualValues(t, 50*time.Minute, reports[p.ID].TotalTrackedYear)
-	require.EqualValues(t, 40*time.Minute, reports[p.ID].TotalTrackedMonth)
-	require.EqualValues(t, 30*time.Minute, reports[p.ID].TotalTrackedWeek)
-	require.EqualValues(t, 10*time.Minute, reports[p.ID].TotalTrackedDay)
+	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedTotalYear.Get())
+	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedTotalMonth.Get())
+	require.EqualValues(t, 30*time.Minute, reports[p.ID].TrackedTotalWeek.Get())
+	require.EqualValues(t, 10*time.Minute, reports[p.ID].TrackedTotalDay.Get())
 
 	// now include active frames, no end defined here
 	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday})
@@ -78,15 +78,15 @@ func Test_ProjectReportTest(t *testing.T) {
 
 	reports = CreateProjectReports(refDate, false, &activeEnd, "", ctx)
 	require.EqualValues(t, 1, len(reports))
-	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TrackedYear)
-	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TrackedMonth)
-	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TrackedWeek)
-	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TrackedDay)
+	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TrackedYear.Get())
+	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TrackedMonth.Get())
+	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TrackedWeek.Get())
+	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TrackedDay.Get())
 
-	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TotalTrackedYear)
-	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TotalTrackedMonth)
-	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TotalTrackedWeek)
-	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TotalTrackedDay)
+	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TrackedTotalYear.Get())
+	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TrackedTotalMonth.Get())
+	require.EqualValues(t, 15*time.Minute+30*time.Minute, reports[p.ID].TrackedTotalWeek.Get())
+	require.EqualValues(t, 15*time.Minute+10*time.Minute, reports[p.ID].TrackedTotalDay.Get())
 }
 
 func Test_MultipleDays(t *testing.T) {
@@ -109,13 +109,13 @@ func Test_MultipleDays(t *testing.T) {
 
 	reports := CreateProjectReports(refDate, false, nil, "", ctx)
 	require.EqualValues(t, 1, len(reports))
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedYear)
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedMonth)
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedWeek)
-	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedDay)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedYear.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedMonth.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedWeek.Get())
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedDay.Get())
 
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedYear)
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedMonth)
-	require.EqualValues(t, 23*time.Hour, reports[p.ID].TotalTrackedWeek)
-	require.EqualValues(t, 12*time.Hour, reports[p.ID].TotalTrackedDay)
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalYear.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalMonth.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalWeek.Get())
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedTotalDay.Get())
 }

@@ -35,25 +35,25 @@ func (o projectStatusList) Get(index int, prop string, format string) (interface
 	case "name":
 		return summary.Project.Name, nil
 	case "trackedDay":
-		return summary.TrackedDay, nil
+		return summary.TrackedDay.Get(), nil
 	case "trackedWeek":
-		return summary.TrackedWeek, nil
+		return summary.TrackedWeek.Get(), nil
 	case "trackedMonth":
-		return summary.TrackedMonth, nil
+		return summary.TrackedMonth.Get(), nil
 	case "trackedYear":
-		return summary.TrackedYear, nil
+		return summary.TrackedYear.Get(), nil
 	case "trackedAll":
-		return summary.TrackedAll, nil
+		return summary.TrackedAll.Get(), nil
 	case "totalTrackedDay":
-		return summary.TotalTrackedDay, nil
+		return summary.TrackedTotalDay.Get(), nil
 	case "totalTrackedWeek":
-		return summary.TotalTrackedWeek, nil
+		return summary.TrackedTotalWeek.Get(), nil
 	case "totalTrackedMonth":
-		return summary.TotalTrackedMonth, nil
+		return summary.TrackedTotalMonth.Get(), nil
 	case "totalTrackedYear":
-		return summary.TotalTrackedYear, nil
+		return summary.TrackedTotalYear.Get(), nil
 	case "totalTrackedAll":
-		return summary.TotalTrackedAll, nil
+		return summary.TrackedTotalAll.Get(), nil
 	default:
 		return "", fmt.Errorf("unknown property %s", prop)
 	}

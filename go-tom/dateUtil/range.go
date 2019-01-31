@@ -35,7 +35,7 @@ func NewMonthRange(date time.Time, locale locales.Translator, location *time.Loc
 	return NewDateRange(&start, &end, locale)
 }
 
-func NewWeekRange(date time.Time, locale locales.Translator, location* time.Location) DateRange {
+func NewWeekRange(date time.Time, locale locales.Translator, location *time.Location) DateRange {
 	d := date.In(location)
 
 	// e.g. Tuesday = 2-0 -> 2 days to shift back
@@ -166,4 +166,31 @@ func (r DateRange) Contains(date time.Time) bool {
 
 func (r DateRange) ContainsP(date *time.Time) bool {
 	return date != nil && r.Contains(*date)
+}
+
+func (r DateRange) Intersection(start *time.Time, end *time.Time) time.Duration {
+	if start == nil || end == nil || r.IsOpen() {
+		return 0
+	}
+
+	containsStart := r.ContainsP(start)
+	containsEnd := r.ContainsP(end)
+
+	if containsStart && containsEnd {
+		return end.Sub(*start)
+	}
+
+	if containsStart && !containsEnd {
+		return r.End.Sub(*start)
+	}
+
+	if !containsStart && containsEnd {
+		return end.Sub(*r.Start)
+	}
+
+	if start.Before(*r.Start) && end.After(*r.End) {
+		return r.End.Sub(*r.Start)
+	}
+
+	return 0
 }

@@ -186,3 +186,18 @@ func (f *FrameList) Split(key func(f *Frame) interface{}) []*FrameList {
 	})
 	return parts
 }
+
+func (f *FrameList) MapByProject() map[string]*FrameList {
+	result := make(map[string]*FrameList)
+
+	for _, f := range *f {
+		id := f.ProjectId
+		if sub, ok := result[id]; !ok {
+			result[id] = NewFrameList([]*Frame{f})
+		} else {
+			sub.Append(f)
+		}
+	}
+
+	return result
+}

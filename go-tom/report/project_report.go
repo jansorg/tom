@@ -8,79 +8,67 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
+func NewProjectSummary(year *dateUtil.DateRange, month *dateUtil.DateRange, week *dateUtil.DateRange, day *dateUtil.DateRange, refTime *time.Time) *ProjectSummary {
+	return &ProjectSummary{
+		TrackedAll:        dateUtil.NewDurationSum(),
+		TrackedTotalAll:   dateUtil.NewDurationSum(),
+		TrackedYear:       dateUtil.NewDurationSumFiltered(year, refTime),
+		TrackedTotalYear:  dateUtil.NewDurationSumFiltered(year, refTime),
+		TrackedMonth:      dateUtil.NewDurationSumFiltered(month, refTime),
+		TrackedTotalMonth: dateUtil.NewDurationSumFiltered(month, refTime),
+		TrackedWeek:       dateUtil.NewDurationSumFiltered(week, refTime),
+		TrackedTotalWeek:  dateUtil.NewDurationSumFiltered(week, refTime),
+		TrackedDay:        dateUtil.NewDurationSumFiltered(day, refTime),
+		TrackedTotalDay:   dateUtil.NewDurationSumFiltered(day, refTime),
+	}
+}
+
 type ProjectSummary struct {
 	Project *model.Project
 
-	TrackedAll   time.Duration
-	TrackedYear  time.Duration
-	TrackedMonth time.Duration
-	TrackedWeek  time.Duration
-	TrackedDay   time.Duration
+	TrackedAll   *dateUtil.DurationSum
+	TrackedYear  *dateUtil.DurationSum
+	TrackedMonth *dateUtil.DurationSum
+	TrackedWeek  *dateUtil.DurationSum
+	TrackedDay   *dateUtil.DurationSum
 
-	TotalTrackedAll   time.Duration
-	TotalTrackedYear  time.Duration
-	TotalTrackedMonth time.Duration
-	TotalTrackedWeek  time.Duration
-	TotalTrackedDay   time.Duration
+	TrackedTotalAll   *dateUtil.DurationSum
+	TrackedTotalYear  *dateUtil.DurationSum
+	TrackedTotalMonth *dateUtil.DurationSum
+	TrackedTotalWeek  *dateUtil.DurationSum
+	TrackedTotalDay   *dateUtil.DurationSum
 }
 
-func (p *ProjectSummary) addAll(d time.Duration) {
-	p.TrackedAll += d
-	p.TotalTrackedAll += d
+func (p *ProjectSummary) add(frame *model.Frame) {
+	p.TrackedAll.AddStartEndP(frame.Start, frame.End)
+	p.TrackedYear.AddStartEndP(frame.Start, frame.End)
+	p.TrackedMonth.AddStartEndP(frame.Start, frame.End)
+	p.TrackedWeek.AddStartEndP(frame.Start, frame.End)
+	p.TrackedDay.AddStartEndP(frame.Start, frame.End)
+
+	p.addTotal(frame)
 }
 
-func (p *ProjectSummary) addTotalAll(d time.Duration) {
-	p.TotalTrackedAll += d
-}
-
-func (p *ProjectSummary) addYear(d time.Duration) {
-	p.TrackedYear += d
-	p.TotalTrackedYear += d
-}
-
-func (p *ProjectSummary) addTotalYear(d time.Duration) {
-	p.TotalTrackedYear += d
-}
-
-func (p *ProjectSummary) addMonth(d time.Duration) {
-	p.TrackedMonth += d
-	p.TotalTrackedMonth += d
-}
-
-func (p *ProjectSummary) addTotalMonth(d time.Duration) {
-	p.TotalTrackedMonth += d
-}
-
-func (p *ProjectSummary) addWeek(d time.Duration) {
-	p.TrackedWeek += d
-	p.TotalTrackedWeek += d
-}
-
-func (p *ProjectSummary) addTotalWeek(d time.Duration) {
-	p.TotalTrackedWeek += d
-}
-
-func (p *ProjectSummary) addDay(d time.Duration) {
-	p.TrackedDay += d
-	p.TotalTrackedDay += d
-}
-
-func (p *ProjectSummary) addTotalDay(d time.Duration) {
-	p.TotalTrackedDay += d
+func (p *ProjectSummary) addTotal(frame *model.Frame) {
+	p.TrackedTotalAll.AddStartEndP(frame.Start, frame.End)
+	p.TrackedTotalYear.AddStartEndP(frame.Start, frame.End)
+	p.TrackedTotalMonth.AddStartEndP(frame.Start, frame.End)
+	p.TrackedTotalWeek.AddStartEndP(frame.Start, frame.End)
+	p.TrackedTotalDay.AddStartEndP(frame.Start, frame.End)
 }
 
 func (p *ProjectSummary) Add(v *ProjectSummary) {
-	p.TotalTrackedDay += v.TotalTrackedDay
-	p.TotalTrackedWeek += v.TotalTrackedWeek
-	p.TotalTrackedMonth += v.TotalTrackedMonth
-	p.TotalTrackedYear += v.TotalTrackedYear
-	p.TotalTrackedAll += v.TotalTrackedAll
+	p.TrackedAll.AddSum(v.TrackedAll)
+	p.TrackedYear.AddSum(v.TrackedYear)
+	p.TrackedMonth.AddSum(v.TrackedMonth)
+	p.TrackedWeek.AddSum(v.TrackedWeek)
+	p.TrackedDay.AddSum(v.TrackedDay)
 
-	p.TrackedDay += v.TrackedDay
-	p.TrackedWeek += v.TrackedWeek
-	p.TrackedMonth += v.TrackedMonth
-	p.TrackedYear += v.TrackedYear
-	p.TrackedAll += v.TrackedAll
+	p.TrackedTotalAll.AddSum(v.TrackedTotalAll)
+	p.TrackedTotalYear.AddSum(v.TrackedTotalYear)
+	p.TrackedTotalMonth.AddSum(v.TrackedTotalMonth)
+	p.TrackedTotalWeek.AddSum(v.TrackedTotalWeek)
+	p.TrackedTotalDay.AddSum(v.TrackedTotalDay)
 }
 
 func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *time.Time, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
@@ -98,38 +86,22 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *
 		}
 	}
 
-	for _, frame := range frames.Frames() {
-		duration := frame.ActiveDuration(activeEndRef)
-		if duration == 0 {
-			continue
-		}
-
-		yearDuration := frame.Intersection(activeEndRef, &year)
-		monthDuration := frame.Intersection(activeEndRef, &month)
-		weekDuration := frame.Intersection(activeEndRef, &week)
-		dayDuration := frame.Intersection(activeEndRef, &day)
-
-		ctx.Query.WithProjectAndParents(frame.ProjectId, func(project *model.Project) bool {
+	// fixme optimize, projects first, then frames
+	mapping := frames.MapByProject()
+	for projectID, frames := range mapping {
+		ctx.Query.WithProjectAndParents(projectID, func(project *model.Project) bool {
 			target, ok := result[project.ID]
 			if !ok {
-				target = &ProjectSummary{Project: project}
+				target = NewProjectSummary(&year, &month, &week, &day, activeEndRef)
 				result[project.ID] = target
 			}
 
-			if project.ID == frame.ProjectId {
-				target.addAll(duration)
-
-				target.addYear(yearDuration)
-				target.addMonth(monthDuration)
-				target.addWeek(weekDuration)
-				target.addDay(dayDuration)
-			} else {
-				target.addTotalAll(duration)
-
-				target.addTotalYear(yearDuration)
-				target.addTotalMonth(monthDuration)
-				target.addTotalWeek(weekDuration)
-				target.addTotalDay(dayDuration)
+			for _, frame := range frames.Frames() {
+				if project.ID == frame.ProjectId {
+					target.add(frame)
+				} else {
+					target.addTotal(frame)
+				}
 			}
 			return true
 		})

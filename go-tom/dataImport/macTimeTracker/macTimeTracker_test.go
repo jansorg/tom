@@ -56,7 +56,7 @@ func Test_ImportCSV(t *testing.T) {
 }
 
 func assertSummary(t *testing.T, expected time.Duration, summary *report.ProjectSummary) bool {
-	return assert.EqualValues(t, expected, summary.TotalTrackedAll, "unexpected duration "+summary.TotalTrackedAll.String())
+	return assert.EqualValues(t, expected, summary.TrackedTotalAll.Get(), "unexpected duration "+summary.TrackedAll.Get().String())
 }
 
 func d(hours, minutes int64, seconds int64) time.Duration {
