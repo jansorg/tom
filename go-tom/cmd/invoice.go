@@ -64,7 +64,7 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	frameReport.FilterRange = c.filterRange
 	frameReport.RoundFramesTo = c.roundFramesTo
 	frameReport.RoundingModeFrames = c.roundFramesMode
-	frameReport.Calculate()
+	frameReport.Update()
 
 	result := frameReport.Result
 

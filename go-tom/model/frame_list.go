@@ -4,6 +4,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/go-playground/locales"
+
 	"github.com/jansorg/tom/go-tom/dateUtil"
 )
 
@@ -161,4 +163,12 @@ func (f *FrameList) MapByProject() map[string]*FrameList {
 	}
 
 	return result
+}
+
+func (f *FrameList) DateRange(locale locales.Translator) dateUtil.DateRange {
+	if f.Empty() {
+		return dateUtil.NewDateRange(nil, nil, locale)
+	}
+
+	return dateUtil.NewDateRange(f.First().Start, f.Last().End, locale)
 }

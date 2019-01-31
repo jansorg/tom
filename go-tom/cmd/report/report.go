@@ -123,7 +123,8 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			frameReport.RoundingModeTotals = totalsRoundingNode
 			frameReport.RoundTotalsTo = roundTotals
 			frameReport.SplitOperations = splitOperations
-			frameReport.Calculate()
+			frameReport.ShowEmptyBuckets = true
+			frameReport.Update()
 
 			if jsonOutput {
 				data, err := json.MarshalIndent(frameReport.Result, "", "  ")

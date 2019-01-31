@@ -55,6 +55,7 @@ type BucketReport struct {
 	IncludeSubprojects  bool               `json:"includeSubprojects,omitempty"`
 	FilterRange         dateUtil.DateRange `json:"dateRange,omitempty"`
 	SplitOperations     []SplitOperation   `json:"splitOperations"`
+	ShowEmptyBuckets    bool
 
 	RoundingModeFrames dateUtil.RoundingMode `json:"roundingModeFrames"`
 	RoundFramesTo      time.Duration         `json:"roundFramesTo"`
@@ -76,7 +77,7 @@ func (b *BucketReport) IsRounding() bool {
 	return b.RoundFramesTo != 0 && b.RoundingModeFrames != dateUtil.RoundNone || b.RoundTotalsTo != 0 && b.RoundingModeTotals != dateUtil.RoundNone
 }
 
-func (b *BucketReport) Calculate() {
+func (b *BucketReport) Update() {
 	b.source.FilterByDatePtr(b.FilterRange.Start, b.FilterRange.End, false)
 	if b.source.Empty() {
 		return
@@ -104,36 +105,46 @@ func (b *BucketReport) Calculate() {
 	}
 
 	b.Result = &ResultBucket{
-		ctx:       b.ctx,
-		Frames:    b.source,
-		Duration:  dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
+		ctx:    b.ctx,
+		Frames: b.source,
+		// fixme filter?
+		Duration: dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
 	}
 
 	for _, op := range b.SplitOperations {
 		switch op {
 		case SplitByYear:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, yearOf)
+				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.yearOf, func(r dateUtil.DateRange) dateUtil.DateRange {
+					return r.Shift(1, 0, 0)
+				})
 			})
 		case SplitByMonth:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, yearMonthOf)
+				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.monthOf, func(r dateUtil.DateRange) dateUtil.DateRange {
+					return r.Shift(0, 1, 0)
+				})
 			})
 		case SplitByWeek:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, weekOf)
+				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.weekOf, func(r dateUtil.DateRange) dateUtil.DateRange {
+					// fixme
+					return r.Shift(1, 0, 0)
+				})
 			})
 		case SplitByDay:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, dayOf)
+				leaf.SplitByDateRange(op, b.ShowEmptyBuckets, b.dayOf, func(r dateUtil.DateRange) dateUtil.DateRange {
+					return r.Shift(0, 0, 1)
+				})
 			})
 		case SplitByProject:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, projectOf)
+				leaf.Split(op, projectOf, nil)
 			})
 		case SplitByParentProject:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.Split(op, parentProjectOf(b.ctx))
+				leaf.Split(op, parentProjectOf(b.ctx), nil)
 			})
 		default:
 			log.Fatal(fmt.Errorf("unknown split operation %d", op))
@@ -143,23 +154,20 @@ func (b *BucketReport) Calculate() {
 	updateBucket(b, b.Result)
 }
 
-func yearOf(frame *model.Frame) interface{} {
-	return frame.Start.Year()
+func (b *BucketReport) yearOf(frame *model.Frame) dateUtil.DateRange {
+	return dateUtil.NewYearRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
 }
 
-func yearMonthOf(frame *model.Frame) interface{} {
-	date := frame.Start
-	return date.Year()*1000 + int(date.Month())
+func (b *BucketReport) monthOf(frame *model.Frame) dateUtil.DateRange {
+	return dateUtil.NewMonthRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
 }
 
-func weekOf(frame *model.Frame) interface{} {
-	y, week := frame.Start.ISOWeek()
-	return y*1000 + week
+func (b *BucketReport) weekOf(frame *model.Frame) dateUtil.DateRange {
+	return dateUtil.NewWeekRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
 }
 
-func dayOf(frame *model.Frame) interface{} {
-	y, m, d := frame.Start.In(time.Local).Date()
-	return time.Date(y, m, d, 0, 0, 0, 0, time.Local)
+func (b *BucketReport) dayOf(frame *model.Frame) dateUtil.DateRange {
+	return dateUtil.NewDayRange(*frame.Start, b.ctx.Locale, frame.Start.Location())
 }
 
 func projectOf(frame *model.Frame) interface{} {

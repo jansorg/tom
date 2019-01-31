@@ -22,7 +22,7 @@ func Test_Report(t *testing.T) {
 
 	frameList := []*model.Frame{{Start: start, End: end}}
 	report := NewBucketReport(model.NewFrameList(frameList), ctx)
-	report.Calculate()
+	report.Update()
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.Get())
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.GetExact())
@@ -51,17 +51,17 @@ func Test_ReportSplitYear(t *testing.T) {
 
 	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
 	report.SplitOperations = []SplitOperation{SplitByYear}
-	report.Calculate()
+	report.Update()
 
 	require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
+	require.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected a sub-report for each year")
+
 	assert.EqualValues(t, 2, report.Result.FrameCount)
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
 	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange().Start)
 	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
-
-	require.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected a sub-report for each year")
 
 	firstYear := report.Result.ChildBuckets[0]
 	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange().Start)
@@ -101,7 +101,7 @@ func Test_ReportSplitDifferentZones(t *testing.T) {
 
 	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
 	report.SplitOperations = []SplitOperation{SplitByDay}
-	report.Calculate()
+	report.Update()
 
 	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
 	assert.EqualValues(t, 2, report.Result.FrameCount)
@@ -132,7 +132,7 @@ func Test_ReportSplitDifferentZonesYear(t *testing.T) {
 
 	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
 	report.SplitOperations = []SplitOperation{SplitByYear}
-	report.Calculate()
+	report.Update()
 
 	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
 	assert.EqualValues(t, 2, report.Result.FrameCount)

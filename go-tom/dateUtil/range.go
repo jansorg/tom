@@ -138,14 +138,14 @@ func (r DateRange) MinimalString() string {
 }
 
 func (r DateRange) Shift(years, months, days int) DateRange {
+	var start, end time.Time
 	if r.Start != nil && !r.Start.IsZero() {
-		*r.Start = r.Start.AddDate(years, months, days)
+		start = r.Start.AddDate(years, months, days)
 	}
 	if r.End != nil && !r.End.IsZero() {
-		*r.End = r.End.AddDate(years, months, days)
+		end = r.End.AddDate(years, months, days)
 	}
-	r.debug = r.String()
-	return r
+	return NewDateRange(&start, &end, r.locale)
 }
 
 func (r DateRange) IsClosed() bool {
@@ -197,11 +197,35 @@ func (r DateRange) Intersection(start *time.Time, end *time.Time) time.Duration 
 
 func (r DateRange) Years(loc *time.Location) []DateRange {
 	first := r.Start.In(loc).Year()
-	last := r.Start.In(loc).Year()
+	last := r.End.In(loc).Year()
 
 	var result []DateRange
 	for i := first; i <= last; i++ {
 		result = append(result, NewYearRange(time.Date(i, time.January, 1, 0, 0, 0, 0, loc), r.locale, loc))
+	}
+	return result
+}
+
+func (r DateRange) Months(loc *time.Location) []DateRange {
+	end := r.End.In(loc)
+	month := NewMonthRange(*r.Start, r.locale, loc)
+
+	var result []DateRange
+	for !month.Start.After(end) {
+		result = append(result, month)
+		month = month.Shift(0, 1, 0)
+	}
+	return result
+}
+
+func (r DateRange) Days(loc *time.Location) []DateRange {
+	end := r.End.In(loc)
+	month := NewDayRange(*r.Start, r.locale, loc)
+
+	var result []DateRange
+	for !month.Start.After(end) {
+		result = append(result, month)
+		month = month.Shift(0, 0, 1)
 	}
 	return result
 }

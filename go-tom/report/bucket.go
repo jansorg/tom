@@ -89,7 +89,7 @@ func (b *ResultBucket) IsRounded() bool {
 }
 
 func (b *ResultBucket) IsDateBucket() bool {
-	return b.SplitByType >= SplitByProject
+	return b.SplitByType < SplitByProject && b.dateRange.IsClosed()
 }
 
 func (b *ResultBucket) IsProjectBucket() bool {
@@ -169,6 +169,10 @@ func (b *ResultBucket) Title() string {
 }
 
 func (b *ResultBucket) SortChildBuckets() {
+	if b.Empty() {
+		return
+	}
+
 	sort.Slice(b.ChildBuckets, func(i, j int) bool {
 		b1 := b.ChildBuckets[i]
 		b2 := b.ChildBuckets[j]
@@ -181,19 +185,48 @@ func (b *ResultBucket) SortChildBuckets() {
 	});
 }
 
-func (b *ResultBucket) Split(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}) {
+func (b *ResultBucket) Split(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}, minValues []interface{}) {
 	parts := b.Frames.Split(splitValue)
+
+	mapping := make(map[interface{}]bool)
 
 	b.ChildBuckets = []*ResultBucket{}
 	for _, segment := range parts {
+		value := splitValue(segment.First())
+		mapping[value] = true
+
 		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 			ctx:         b.ctx,
 			Frames:      segment,
-			Duration:    dateUtil.NewDurationLike(b.Duration),
+			Duration:    dateUtil.NewDurationCopy(b.Duration),
 			SplitByType: splitType,
-			SplitBy:     splitValue(segment.First()),
+			SplitBy:     value,
 		})
 	}
+}
+
+func (b *ResultBucket) SplitByDateRange(splitType SplitOperation, addEmpty bool, splitValue func(frame *model.Frame) dateUtil.DateRange, nextValue func(dateUtil.DateRange) dateUtil.DateRange) {
+	b.ChildBuckets = []*ResultBucket{}
+
+	value := splitValue(b.Frames.First())
+	lastFrameDate := b.Frames.Last().Start
+
+	for value.IsClosed() && !value.Start.After(*lastFrameDate) {
+		matchingFrames := b.Frames.Copy()
+		matchingFrames.FilterByDateRange(value, false)
+		if addEmpty || !matchingFrames.Empty() {
+			b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
+				ctx:         b.ctx,
+				Frames:      matchingFrames,
+				Duration:    dateUtil.NewDurationCopy(b.Duration),
+				SplitByType: splitType,
+				SplitBy:     value,
+			})
+		}
+
+		value = nextValue(value)
+	}
+
 }
 
 func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {

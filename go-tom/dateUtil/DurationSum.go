@@ -8,7 +8,7 @@ func NewDurationSum() *DurationSum {
 	return &DurationSum{}
 }
 
-func NewDurationLike(proto *DurationSum) *DurationSum {
+func NewDurationCopy(proto *DurationSum) *DurationSum {
 	return NewDurationSumAll(proto.roundingMode, proto.roundingSize, proto.acceptedRange, proto.referenceTime)
 }
 
