@@ -78,6 +78,68 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration)
 }
 
+// tests that frame dates in different time zones are not ending up in different split intervals
+func Test_ReportSplitDifferentZones(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	// two hours, UTC+0
+	start := newDate(2018, time.March, 10, 10, 0).UTC()
+	end := newDate(2018, time.March, 10, 12, 0).UTC()
+
+	// one hour, UTC+2
+	utc2, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+	start2 := newDate(2018, time.March, 10, 9, 0).In(utc2)
+	end2 := newDate(2018, time.March, 10, 10, 0).In(utc2)
+
+	frameList := []*model.Frame{
+		{Start: &start, End: &end},
+		{Start: &start2, End: &end2},
+	}
+
+	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
+	report.SplitOperations = []SplitOperation{SplitByDay}
+	report.Update()
+
+	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
+	assert.EqualValues(t, 2, report.Result.FrameCount)
+
+	assert.EqualValues(t, 1, len(report.Result.Results), "expected a single day bucket, even if different time zones were used")
+}
+
+// tests that frame dates in different time zones are not ending up in different split intervals
+func Test_ReportSplitDifferentZonesYear(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	// two hours, UTC+0
+	start := newDate(2018, time.January, 10, 10, 0).UTC()
+	end := newDate(2018, time.January, 10, 12, 0).UTC()
+
+	// one hour, UTC+2
+	utc2, err := time.LoadLocation("Europe/Berlin")
+	require.NoError(t, err)
+	start2 := newDate(2018, time.January, 10, 9, 0).In(utc2)
+	end2 := newDate(2018, time.January, 10, 10, 0).In(utc2)
+
+	frameList := []*model.Frame{
+		{Start: &start, End: &end},
+		{Start: &start2, End: &end2},
+	}
+
+	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
+	report.SplitOperations = []SplitOperation{SplitByYear}
+	report.Update()
+
+	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
+	assert.EqualValues(t, 2, report.Result.FrameCount)
+
+	assert.EqualValues(t, 1, len(report.Result.Results), "expected a single day bucket, even if different time zones were used")
+}
+
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
 	date := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &date

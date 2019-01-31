@@ -109,7 +109,7 @@ func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdCon
 		if month, err := cmd.Flags().GetInt("month"); err != nil {
 			return invoiceCmdConfig{}, err
 		} else {
-			filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale).Shift(0, month, 0)
+			filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
 		}
 	}
 

@@ -29,6 +29,7 @@ type BucketReport struct {
 
 	Result *ResultBucket `json:"result"`
 
+	TargetLocation      *time.Location     `json:"timezone"`
 	IncludeActiveFrames bool               `json:"includeActiveFrames"`
 	ProjectIDs          []string           `json:"projectIDs,omitempty"`
 	IncludeSubprojects  bool               `json:"includeSubprojects,omitempty"`
@@ -44,8 +45,9 @@ type BucketReport struct {
 
 func NewBucketReport(frameList *model.FrameList, context *context.TomContext) *BucketReport {
 	report := &BucketReport{
-		ctx:    context,
-		source: frameList,
+		ctx:            context,
+		source:         frameList,
+		TargetLocation: time.Local,
 	}
 	return report
 }
@@ -89,48 +91,48 @@ func (b *BucketReport) Update() {
 		case SplitByYear:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.Split(func(list *model.FrameList) []*model.FrameList {
-					return list.SplitByYear()
+					return list.SplitByYear(b.TargetLocation)
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
-					leaf.DateRange = dateUtil.NewYearRange(*leaf.Frames.First().Start, b.ctx.Locale)
+					leaf.DateRange = dateUtil.NewYearRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByMonth:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.Split(func(list *model.FrameList) []*model.FrameList {
-					return list.SplitByMonth()
+					return list.SplitByMonth(b.TargetLocation)
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
-					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Frames.First().Start, b.ctx.Locale)
+					leaf.DateRange = dateUtil.NewMonthRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByWeek:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.Split(func(list *model.FrameList) []*model.FrameList {
-					return list.SplitByWeek()
+					return list.SplitByWeek(b.TargetLocation)
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
-					leaf.DateRange = dateUtil.NewWeekRange(*leaf.Frames.First().Start, b.ctx.Locale)
+					leaf.DateRange = dateUtil.NewWeekRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})
 		case SplitByDay:
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				leaf.Split(func(list *model.FrameList) []*model.FrameList {
-					return list.SplitByDay()
+					return list.SplitByDay(b.TargetLocation)
 				})
 			})
 			b.Result.WithLeafBuckets(func(leaf *ResultBucket) {
 				if !leaf.Frames.Empty() {
-					leaf.DateRange = dateUtil.NewDayRange(*leaf.Frames.First().Start, b.ctx.Locale)
+					leaf.DateRange = dateUtil.NewDayRange(*leaf.Frames.First().Start, b.ctx.Locale, b.TargetLocation).In(b.TargetLocation)
 				}
 				leaf.SplitBy = leaf.DateRange
 			})

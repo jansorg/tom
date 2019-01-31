@@ -86,10 +86,10 @@ func (p *ProjectSummary) Add(v *ProjectSummary) {
 func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *time.Time, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
 	frames := model.NewFrameList(ctx.Store.Frames())
 
-	year := dateUtil.NewYearRange(referenceDay, ctx.Locale)
-	month := dateUtil.NewMonthRange(referenceDay, ctx.Locale)
-	week := dateUtil.NewWeekRange(referenceDay, ctx.Locale)
-	day := dateUtil.NewDayRange(referenceDay, ctx.Locale)
+	year := dateUtil.NewYearRange(referenceDay, ctx.Locale, time.Local)
+	month := dateUtil.NewMonthRange(referenceDay, ctx.Locale, time.Local)
+	week := dateUtil.NewWeekRange(referenceDay, ctx.Locale, time.Local)
+	day := dateUtil.NewDayRange(referenceDay, ctx.Locale, time.Local)
 
 	result := map[string]*ProjectSummary{}
 	if showEmpty {

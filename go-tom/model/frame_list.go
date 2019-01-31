@@ -131,30 +131,30 @@ func (f *FrameList) SplitByParentProject(store Store) []*FrameList {
 	})
 }
 
-func (f *FrameList) SplitByYear() []*FrameList {
+func (f *FrameList) SplitByYear(l *time.Location) []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
-		return frame.Start.Year()
+		return frame.Start.In(l).Year()
 	})
 }
 
-func (f *FrameList) SplitByMonth() []*FrameList {
+func (f *FrameList) SplitByMonth(l *time.Location) []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
-		y, m, _ := frame.Start.Date()
-		return time.Date(y, m, 1, 0, 0, 0, 0, frame.Start.Location())
+		y, m, _ := frame.Start.In(l).Date()
+		return time.Date(y, m, 1, 0, 0, 0, 0, l)
 	})
 }
 
-func (f *FrameList) SplitByWeek() []*FrameList {
+func (f *FrameList) SplitByWeek(l *time.Location) []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
-		y, week := frame.Start.ISOWeek()
+		y, week := frame.Start.In(l).ISOWeek()
 		return y*1000 + week
 	})
 }
 
-func (f *FrameList) SplitByDay() []*FrameList {
+func (f *FrameList) SplitByDay(l *time.Location) []*FrameList {
 	return f.Split(func(frame *Frame) interface{} {
-		y, m, d := frame.Start.Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, frame.Start.Location())
+		y, m, d := frame.Start.In(l).Date()
+		return time.Date(y, m, d, 0, 0, 0, 0, l)
 	})
 }
 

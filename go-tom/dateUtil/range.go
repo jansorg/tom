@@ -21,18 +21,27 @@ func NewDateRange(start *time.Time, end *time.Time, locale locales.Translator) D
 	return dateRange
 }
 
-func NewYearRange(date time.Time, locale locales.Translator) DateRange {
-	start := time.Date(date.Year(), time.January, 1, 0, 0, 0, 0, date.Location())
+func NewYearRange(date time.Time, locale locales.Translator, location *time.Location) DateRange {
+	start := time.Date(date.In(location).Year(), time.January, 1, 0, 0, 0, 0, location)
 	end := start.AddDate(1, 0, 0)
+	return NewDateRange(&start, &end, locale)
+}
+
+func NewMonthRange(date time.Time, locale locales.Translator, location *time.Location) DateRange {
+	y, m, _ := date.In(location).Date()
+	start := time.Date(y, m, 1, 0, 0, 0, 0, location)
+	end := start.AddDate(0, 1, 0)
 
 	return NewDateRange(&start, &end, locale)
 }
 
-func NewWeekRange(date time.Time, locale locales.Translator) DateRange {
-	// e.g. Tuesday = 2-0 -> 2 days to shift back
-	daysShift := int(date.Weekday() - time.Sunday)
+func NewWeekRange(date time.Time, locale locales.Translator, location* time.Location) DateRange {
+	d := date.In(location)
 
-	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	// e.g. Tuesday = 2-0 -> 2 days to shift back
+	daysShift := int(d.Weekday() - time.Sunday)
+
+	start := time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, d.Location())
 	start = start.AddDate(0, 0, -daysShift)
 
 	end := start.AddDate(0, 0, 7)
@@ -40,17 +49,9 @@ func NewWeekRange(date time.Time, locale locales.Translator) DateRange {
 	return NewDateRange(&start, &end, locale)
 }
 
-func NewMonthRange(date time.Time, locale locales.Translator) DateRange {
-	y, m, _ := date.Date()
-	start := time.Date(y, m, 1, 0, 0, 0, 0, date.Location())
-	end := start.AddDate(0, 1, 0)
-
-	return NewDateRange(&start, &end, locale)
-}
-
-func NewDayRange(date time.Time, locale locales.Translator) DateRange {
-	y, m, d := date.Date()
-	start := time.Date(y, m, d, 0, 0, 0, 0, date.Location())
+func NewDayRange(date time.Time, locale locales.Translator, location *time.Location) DateRange {
+	y, m, d := date.In(location).Date()
+	start := time.Date(y, m, d, 0, 0, 0, 0, location)
 	end := start.AddDate(0, 0, 1)
 
 	return NewDateRange(&start, &end, locale)
@@ -61,6 +62,22 @@ type DateRange struct {
 	End    *time.Time `json:"end"`
 	debug  string
 	locale locales.Translator
+}
+
+func (r DateRange) In(location *time.Location) DateRange {
+	start := r.Start
+	if start != nil {
+		in := start.In(location)
+		start = &in
+	}
+
+	end := r.End
+	if end != nil {
+		in := end.In(location)
+		end = &in
+	}
+
+	return NewDateRange(start, end, r.locale)
 }
 
 func (r DateRange) String() string {

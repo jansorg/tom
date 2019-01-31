@@ -2,10 +2,12 @@ package htmlreport
 
 import (
 	"bytes"
+	htmlTemplate "html/template"
 	"path"
+	"path/filepath"
 	"time"
 
-	"github.com/arschles/go-bindata-html-template"
+	assetTemplate "github.com/arschles/go-bindata-html-template"
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
@@ -13,22 +15,22 @@ import (
 )
 
 type Report struct {
-	workingDir   string
-	templatePath string
-	options      Options
-	ctx          *context.TomContext
+	workingDir string
+	options    Options
+	ctx        *context.TomContext
 }
 
 type Options struct {
-	DecimalDurationn bool
+	DecimalDuration  bool
+	TemplateName     string
+	TemplateFilePath string
 }
 
-func NewReport(workingDir string, templatePath string, opts Options, ctx *context.TomContext) *Report {
+func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report {
 	return &Report{
-		options:      opts,
-		workingDir:   workingDir,
-		templatePath: templatePath,
-		ctx:          ctx,
+		options:    opts,
+		workingDir: workingDir,
+		ctx:        ctx,
 	}
 }
 
@@ -54,40 +56,61 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 			return r.ctx.DateTimePrinter.DateTime(date)
 		},
 		"minDuration": func(duration time.Duration) string {
-			if r.options.DecimalDurationn {
+			if r.options.DecimalDuration {
 				return r.ctx.DecimalDurationPrinter.Minimal(duration)
 			}
 			return r.ctx.DurationPrinter.Minimal(duration)
 		},
 		"shortDuration": func(duration time.Duration) string {
-			if r.options.DecimalDurationn {
+			if r.options.DecimalDuration {
 				return r.ctx.DecimalDurationPrinter.Short(duration)
 			}
 			return r.ctx.DurationPrinter.Short(duration)
 		},
 		"longDuration": func(duration time.Duration) string {
-			if r.options.DecimalDurationn {
+			if r.options.DecimalDuration {
 				return r.ctx.DecimalDurationPrinter.Long(duration)
 			}
 			return r.ctx.DurationPrinter.Long(duration)
 		},
 	}
 
-	baseDir := path.Join("reports", "html")
-	templateFiles := []string{
-		path.Join(baseDir, r.templatePath+".gohtml"),
-		path.Join(baseDir, "commons.gohtml"),
-	}
+	if r.options.TemplateFilePath != "" {
+		templatePath := r.options.TemplateFilePath
+		if !filepath.IsAbs(templatePath) {
+			templatePath = filepath.Join(r.workingDir, templatePath)
+		}
 
-	tmpl, err := template.New(r.templatePath, tom.Asset).Funcs(functionMap).ParseFiles(templateFiles...)
-	if err != nil {
-		return "", err
-	}
+		files, err := filepath.Glob(filepath.Join(filepath.Dir(templatePath), "*.gohtml"))
 
-	out := bytes.NewBuffer([]byte{})
-	if err = tmpl.Execute(out, results); err != nil {
-		return "", err
-	}
+		tmpl, err := htmlTemplate.New(filepath.Base(templatePath)).Funcs(functionMap).ParseFiles(append(files, templatePath)...)
+		if err != nil {
+			return "", err
+		}
+		out := bytes.NewBuffer([]byte{})
+		if err = tmpl.Execute(out, results); err != nil {
+			return "", err
+		}
 
-	return out.String(), nil
+		return out.String(), nil
+	} else {
+		templatePath := r.options.TemplateName
+
+		baseDir := path.Join("reports", "html")
+		templateFiles := []string{
+			path.Join(baseDir, templatePath+".gohtml"),
+			path.Join(baseDir, "commons.gohtml"),
+		}
+
+		tmpl, err := assetTemplate.New(templatePath, tom.Asset).Funcs(functionMap).ParseFiles(templateFiles...)
+		if err != nil {
+			return "", err
+		}
+		out := bytes.NewBuffer([]byte{})
+		if err = tmpl.Execute(out, results); err != nil {
+			return "", err
+		}
+
+		return out.String(), nil
+	}
 }

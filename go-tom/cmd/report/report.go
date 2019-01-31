@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -39,7 +40,8 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	var decimalDurations bool
 
-	var templatePath string
+	var templateName string
+	var templateFilePath string
 
 	var cmd = &cobra.Command{
 		Use:   "report",
@@ -65,11 +67,11 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 			// day, month, year params override the filter values
 			if cmd.Flag("day").Changed {
-				filterRange = dateUtil.NewDayRange(time.Now(), ctx.Locale).Shift(0, 0, day)
+				filterRange = dateUtil.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, day)
 			} else if cmd.Flag("month").Changed {
-				filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale).Shift(0, month, 0)
+				filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
 			} else if cmd.Flag("year").Changed {
-				filterRange = dateUtil.NewYearRange(time.Now(), ctx.Locale).Shift(year, 0, 0)
+				filterRange = dateUtil.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(year, 0, 0)
 			}
 
 			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
@@ -117,9 +119,9 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			frameReport.IncludeSubprojects = true
 			frameReport.FilterRange = filterRange
 			frameReport.RoundFramesTo = roundFrames
-			frameReport.RoundTotalsTo = roundTotals
 			frameReport.RoundingModeFrames = frameRoundingMode
 			frameReport.RoundingModeTotals = totalsRoundingNode
+			frameReport.RoundTotalsTo = roundTotals
 			frameReport.SplitOperations = splitOperations
 			frameReport.Update()
 
@@ -129,20 +131,25 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 					log.Fatal(err)
 				}
 				fmt.Println(string(data))
-			} else if templatePath != "" {
-				if err := printTemplate(ctx, templatePath, frameReport, htmlreport.Options{DecimalDurationn: decimalDurations}); err != nil {
-					log.Fatal(fmt.Errorf("error rendering with template: %s", err.Error()))
-				}
 			} else {
-				printReport(frameReport.Result, ctx, 1)
+				options := htmlreport.Options{
+					DecimalDuration:  decimalDurations,
+					TemplateName:     templateName,
+					TemplateFilePath: templateFilePath,
+				}
+				if err := printTemplate(ctx, frameReport, options); err != nil {
+					log.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
+				}
 			}
 		},
 	}
 
+	cmd.Flags().StringVarP(&templateName, "template", "", "default", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
+
 	templateAnnotations := make(map[string][]string)
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
-	cmd.Flags().StringVarP(&templatePath, "template", "r", "default", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
-	cmd.Flag("template").Annotations = templateAnnotations
+	cmd.Flags().StringVarP(&templateFilePath, "template-file", "", "", "Custom gohtml template file to use for rendering. See the website for more details.")
+	cmd.Flag("template-file").Annotations = templateAnnotations
 
 	// fixme add defaults?
 	// cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
@@ -159,10 +166,13 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
-	cmd.Flags().StringVarP(&splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,day,project")
+	cmd.Flags().StringVarP(&splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
 
 	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest")
+
+	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
 
 	cmd.Flags().BoolVarP(&decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
 
@@ -176,8 +186,10 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	return cmd
 }
 
-func printTemplate(ctx *context.TomContext, templatePath string, report *report.BucketReport, opts htmlreport.Options) error {
-	t := htmlreport.NewReport("", templatePath, opts, ctx)
+func printTemplate(ctx *context.TomContext, report *report.BucketReport, opts htmlreport.Options) error {
+	dir, _ := os.Getwd()
+
+	t := htmlreport.NewReport(dir, opts, ctx)
 	out, err := t.Render(report)
 	if err != nil {
 		return err
