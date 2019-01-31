@@ -215,17 +215,17 @@ func printReport(report *report.ResultBucket, ctx *context.TomContext, level int
 		printlnIndenting(level-1, "Overall")
 	}
 
-	if !report.DateRange.Empty() {
-		printfIndenting(level, "Date range: %s\n", report.DateRange.MinimalString())
+	if !report.DateRange().Empty() {
+		printfIndenting(level, "Date range: %s\n", report.DateRange().MinimalString())
 	}
-	if !report.TrackedDateRange.Empty() {
-		printfIndenting(level, "Tracked dates: %s\n", report.TrackedDateRange.ShortString())
+	if !report.TrackedDateRange().Empty() {
+		printfIndenting(level, "Tracked dates: %s\n", report.TrackedDateRange().ShortString())
 	}
 	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.Get()))
 	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.GetExact()))
 	fmt.Println()
 
-	for _, r := range report.Results {
+	for _, r := range report.ChildBuckets {
 		printReport(r, ctx, level+1)
 	}
 }

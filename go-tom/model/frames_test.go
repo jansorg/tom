@@ -25,7 +25,10 @@ func TestSplitByDay(t *testing.T) {
 			Start: newDay(13, 1, 0),
 			End:   newDay(13, 3, 0),
 		},
-	}).SplitByDay(time.Local)
+	}).Split(func(f *Frame) interface{} {
+		y, m, d := f.Start.Date()
+		return time.Date(y, m, d, 0, 0, 0, 0, f.Start.Location())
+	})
 
 	assert.EqualValues(t, 3, len(buckets))
 	assert.EqualValues(t, 2, buckets[0].Size())
@@ -47,7 +50,10 @@ func TestSplitByMonth(t *testing.T) {
 			Start: newDate(2018, time.February, 14, 12, 0),
 			End:   newDate(2018, time.February, 16, 12, 0),
 		},
-	}).SplitByMonth(time.Local)
+	}).Split(func(f *Frame) interface{} {
+		y, m, _ := f.Start.Date()
+		return time.Date(y, m, 1, 0, 0, 0, 0, f.Start.Location())
+	})
 
 	assert.EqualValues(t, 2, len(buckets))
 	assert.EqualValues(t, 1, buckets[0].Size())
@@ -72,7 +78,9 @@ func TestSplitByYear(t *testing.T) {
 			Start: newDate(2018, time.March, 14, 12, 0),
 			End:   newDate(2018, time.April, 16, 12, 0),
 		},
-	}).SplitByYear(time.Local)
+	}).Split(func(f *Frame) interface{} {
+		return f.Start.Year()
+	})
 
 	assert.EqualValues(t, 2, len(buckets))
 	assert.EqualValues(t, 1, buckets[0].Size())

@@ -194,3 +194,14 @@ func (r DateRange) Intersection(start *time.Time, end *time.Time) time.Duration 
 
 	return 0
 }
+
+func (r DateRange) Years(loc *time.Location) []DateRange {
+	first := r.Start.In(loc).Year()
+	last := r.Start.In(loc).Year()
+
+	var result []DateRange
+	for i := first; i <= last; i++ {
+		result = append(result, NewYearRange(time.Date(i, time.January, 1, 0, 0, 0, 0, loc), r.locale, loc))
+	}
+	return result
+}

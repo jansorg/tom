@@ -24,6 +24,10 @@ func NewEmptyFrameList() *FrameList {
 
 type FrameList []*Frame
 
+func (f *FrameList) Copy() *FrameList {
+	return NewFrameList(*f)
+}
+
 func (f *FrameList) Empty() bool {
 	return len(*f) == 0
 }
@@ -113,49 +117,6 @@ func (f *FrameList) Filter(accepted func(frame *Frame) bool) {
 
 	*f = result
 	f.Sort()
-}
-
-func (f *FrameList) SplitByProject() []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		return frame.ProjectId
-	})
-}
-
-func (f *FrameList) SplitByParentProject(store Store) []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		project, err := store.ProjectByID(frame.ProjectId)
-		if err != nil {
-			return ""
-		}
-		return project.ParentID
-	})
-}
-
-func (f *FrameList) SplitByYear(l *time.Location) []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		return frame.Start.In(l).Year()
-	})
-}
-
-func (f *FrameList) SplitByMonth(l *time.Location) []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		y, m, _ := frame.Start.In(l).Date()
-		return time.Date(y, m, 1, 0, 0, 0, 0, l)
-	})
-}
-
-func (f *FrameList) SplitByWeek(l *time.Location) []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		y, week := frame.Start.In(l).ISOWeek()
-		return y*1000 + week
-	})
-}
-
-func (f *FrameList) SplitByDay(l *time.Location) []*FrameList {
-	return f.Split(func(frame *Frame) interface{} {
-		y, m, d := frame.Start.In(l).Date()
-		return time.Date(y, m, d, 0, 0, 0, 0, l)
-	})
 }
 
 // Split splits all frames into one ore more parts

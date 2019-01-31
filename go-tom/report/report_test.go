@@ -26,8 +26,8 @@ func Test_Report(t *testing.T) {
 	assert.EqualValues(t, 1, report.Result.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.Get())
 	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.GetExact())
-	assert.EqualValues(t, start, report.Result.TrackedDateRange.Start)
-	assert.EqualValues(t, end, report.Result.TrackedDateRange.End)
+	assert.EqualValues(t, start, report.Result.TrackedDateRange().Start)
+	assert.EqualValues(t, end, report.Result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 }
 
@@ -57,22 +57,22 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 2, report.Result.FrameCount)
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange.Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange.End)
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange().Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 
-	require.EqualValues(t, 2, len(report.Result.Results), "expected a sub-report for each year")
+	require.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected a sub-report for each year")
 
-	firstYear := report.Result.Results[0]
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange.Start)
-	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.DateRange.End)
+	firstYear := report.Result.ChildBuckets[0]
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange().Start)
+	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.DateRange().End)
 	assert.EqualValues(t, 1, firstYear.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.Get())
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.GetExact())
 
-	secondYear := report.Result.Results[1]
-	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.DateRange.Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.DateRange.End)
+	secondYear := report.Result.ChildBuckets[1]
+	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.DateRange().Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.DateRange().End)
 	assert.EqualValues(t, 1, secondYear.FrameCount)
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.Get())
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.GetExact())
@@ -106,7 +106,7 @@ func Test_ReportSplitDifferentZones(t *testing.T) {
 	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
 	assert.EqualValues(t, 2, report.Result.FrameCount)
 
-	assert.EqualValues(t, 1, len(report.Result.Results), "expected a single day bucket, even if different time zones were used")
+	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
 // tests that frame dates in different time zones are not ending up in different split intervals
@@ -137,7 +137,7 @@ func Test_ReportSplitDifferentZonesYear(t *testing.T) {
 	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
 	assert.EqualValues(t, 2, report.Result.FrameCount)
 
-	assert.EqualValues(t, 1, len(report.Result.Results), "expected a single day bucket, even if different time zones were used")
+	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

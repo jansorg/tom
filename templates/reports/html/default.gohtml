@@ -3,7 +3,7 @@
 {{define "Bucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
-    {{$leafs := .LeafChildren}}
+    {{$leafs := .EmptyChildren}}
     {{$showExact := and .HasRoundedChildren (hasFlag "showExact") }}
 
     <div class="bucket">
@@ -47,7 +47,7 @@
             {{else}}
                 <div class="buckets">
                     <span class="title">{{.Title}}</span>
-                    {{range .Results}}
+                    {{range .ChildBuckets}}
                         {{if not .Empty}}
                             {{template "Bucket" .}}
                         {{end}}

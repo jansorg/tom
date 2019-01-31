@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
@@ -11,21 +12,72 @@ import (
 )
 
 type ResultBucket struct {
-	ctx *context.TomContext
+	ctx              *context.TomContext
+	dateRange        dateUtil.DateRange
+	trackedDateRange dateUtil.DateRange
 
-	DateRange        dateUtil.DateRange `json:"dateRange,omitempty"`
-	TrackedDateRange dateUtil.DateRange `json:"trackedTime,omitempty"`
+	Frames       *model.FrameList      `json:"frames,omitempty"`
+	FrameCount   int                   `json:"frameCount"`
+	Duration     *dateUtil.DurationSum `json:"duration"`
+	SplitByType  SplitOperation        `json:"split_type,omitempty"`
+	SplitBy      interface{}           `json:"split_by,omitempty"`
+	ChildBuckets []*ResultBucket       `json:"results,omitempty"`
+}
 
-	FrameCount int                   `json:"frameCount"`
-	Duration   *dateUtil.DurationSum `json:"duration"`
+func (b *ResultBucket) Update() {
+	b.FrameCount = b.Frames.Size()
 
-	SplitBy interface{}      `json:"splitBy,omitempty"`
-	Frames  *model.FrameList `json:"frames,omitempty"`
-	Results []*ResultBucket  `json:"results,omitempty"`
+	if !b.Empty() {
+		first := b.ChildBuckets[0]
+		last := b.ChildBuckets[len(b.ChildBuckets)-1]
+		start := first.DateRange().Start
+		b.dateRange = dateUtil.NewDateRange(start, last.DateRange().End, b.ctx.Locale)
+	} else if !b.EmptySource() {
+		start := b.Frames.First().Start
+		switch b.SplitByType {
+		case SplitByYear:
+			// fixme
+			b.dateRange = dateUtil.NewYearRange(*start, b.ctx.Locale, time.Local)
+		case SplitByMonth:
+			// fixme
+			b.dateRange = dateUtil.NewMonthRange(*start, b.ctx.Locale, time.Local)
+		case SplitByWeek:
+			// fixme
+			b.dateRange = dateUtil.NewWeekRange(*start, b.ctx.Locale, time.Local)
+		case SplitByDay:
+			// fixme
+			b.dateRange = dateUtil.NewDayRange(*start, b.ctx.Locale, time.Local)
+		default:
+			b.dateRange = dateUtil.NewDateRange(nil, nil, b.ctx.Locale)
+		}
+	} else {
+		b.dateRange = dateUtil.NewDateRange(nil, nil, b.ctx.Locale)
+	}
+
+	// tracked range
+	if !b.EmptySource() {
+		first := b.Frames.First()
+		last := b.Frames.Last()
+		b.trackedDateRange = dateUtil.NewDateRange(first.Start, last.End, b.ctx.Locale)
+	} else if !b.Empty() {
+		first := b.ChildBuckets[0]
+		last := b.ChildBuckets[len(b.ChildBuckets)-1]
+		b.trackedDateRange = dateUtil.NewDateRange(first.TrackedDateRange().Start, last.TrackedDateRange().End, b.ctx.Locale)
+	} else {
+		b.trackedDateRange = dateUtil.DateRange{}
+	}
+}
+
+func (b *ResultBucket) TrackedDateRange() dateUtil.DateRange {
+	return b.trackedDateRange
+}
+
+func (b *ResultBucket) DateRange() dateUtil.DateRange {
+	return b.dateRange
 }
 
 func (b *ResultBucket) Empty() bool {
-	return len(b.Results) == 0
+	return len(b.ChildBuckets) == 0
 }
 
 func (b *ResultBucket) EmptySource() bool {
@@ -37,8 +89,7 @@ func (b *ResultBucket) IsRounded() bool {
 }
 
 func (b *ResultBucket) IsDateBucket() bool {
-	_, ok := b.SplitBy.(dateUtil.DateRange)
-	return ok
+	return b.SplitByType >= SplitByProject
 }
 
 func (b *ResultBucket) IsProjectBucket() bool {
@@ -57,17 +108,17 @@ func (b *ResultBucket) FindProjectBucket() (*model.Project, error) {
 
 func (b *ResultBucket) FilterResults(accepted func(bucket *ResultBucket) bool) {
 	var result []*ResultBucket
-	for _, r := range b.Results {
+	for _, r := range b.ChildBuckets {
 		if accepted(r) {
 			result = append(result, r)
 		}
 	}
-	b.Results = result
+	b.ChildBuckets = result
 }
 
 func (b *ResultBucket) ProjectResults() []*ResultBucket {
 	var result []*ResultBucket
-	for _, r := range b.Results {
+	for _, r := range b.ChildBuckets {
 		if r.IsProjectBucket() {
 			result = append(result, r)
 		}
@@ -76,7 +127,7 @@ func (b *ResultBucket) ProjectResults() []*ResultBucket {
 }
 
 func (b *ResultBucket) HasRoundedChildren() bool {
-	for _, r := range b.Results {
+	for _, r := range b.ChildBuckets {
 		if r.IsRounded() {
 			return true
 		}
@@ -84,9 +135,9 @@ func (b *ResultBucket) HasRoundedChildren() bool {
 	return false
 }
 
-func (b *ResultBucket) LeafChildren() []*ResultBucket {
+func (b *ResultBucket) EmptyChildren() []*ResultBucket {
 	var result []*ResultBucket
-	for _, r := range b.Results {
+	for _, r := range b.ChildBuckets {
 		if r.Empty() {
 			result = append(result, r)
 		}
@@ -117,39 +168,41 @@ func (b *ResultBucket) Title() string {
 	return ""
 }
 
-func (b *ResultBucket) Sort() {
-	sort.Slice(b.Results, func(i, j int) bool {
-		b1 := b.Results[i]
-		b2 := b.Results[j]
+func (b *ResultBucket) SortChildBuckets() {
+	sort.Slice(b.ChildBuckets, func(i, j int) bool {
+		b1 := b.ChildBuckets[i]
+		b2 := b.ChildBuckets[j]
 
 		if b1.IsDateBucket() && b2.IsDateBucket() {
-			return b1.DateRange.Start.Before(*b2.DateRange.Start)
+			return b1.DateRange().Start.Before(*b2.DateRange().Start)
 		}
 
 		return strings.Compare(b1.Title(), b2.Title()) < 0
 	});
 }
 
-func (b *ResultBucket) Split(splitter func(list *model.FrameList) []*model.FrameList) {
-	parts := splitter(b.Frames)
+func (b *ResultBucket) Split(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}) {
+	parts := b.Frames.Split(splitValue)
 
-	b.Results = []*ResultBucket{}
-	for _, p := range parts {
-		b.Results = append(b.Results, &ResultBucket{
-			ctx:      b.ctx,
-			Frames:   p,
-			Duration: dateUtil.NewDurationLike(b.Duration),
+	b.ChildBuckets = []*ResultBucket{}
+	for _, segment := range parts {
+		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
+			ctx:         b.ctx,
+			Frames:      segment,
+			Duration:    dateUtil.NewDurationLike(b.Duration),
+			SplitByType: splitType,
+			SplitBy:     splitValue(segment.First()),
 		})
 	}
 }
 
 func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
-	if len(b.Results) == 0 {
+	if len(b.ChildBuckets) == 0 {
 		handler(b)
 		return
 	}
 
-	for _, sub := range b.Results {
+	for _, sub := range b.ChildBuckets {
 		sub.WithLeafBuckets(handler)
 	}
 }
