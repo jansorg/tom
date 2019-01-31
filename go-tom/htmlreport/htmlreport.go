@@ -73,6 +73,12 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 			}
 			return r.ctx.DurationPrinter.Long(duration)
 		},
+		"hasFlag": func(name string) bool {
+			if name == "showSummary" {
+				return true
+			}
+			return false
+		},
 	}
 
 	if r.options.TemplateFilePath != "" {

@@ -19,16 +19,16 @@
             <td>{{i18n "Tracked time:"}}</td>
             <td class="time-left">{{minDuration .Duration}}</td>
         </tr>
-        {{if.IsRounded}}
+        {{if and .IsRounded (hasFlag "showExact") }}
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
                 <td class="time-left">{{minDuration .ExactDuration}}</td>
             </tr>
         {{end}}
-        <tr>
-            <td>{{i18n "Frames:"}}</td>
-            <td>{{formatNumber .FrameCount}}</td>
-        </tr>
+        {{/*<tr>*/}}
+            {{/*<td>{{i18n "Frames:"}}</td>*/}}
+            {{/*<td>{{formatNumber .FrameCount}}</td>*/}}
+        {{/*</tr>*/}}
         </tbody>
     </table>
 {{end}}

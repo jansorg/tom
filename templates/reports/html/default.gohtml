@@ -4,7 +4,7 @@
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$leafs := .LeafChildren}}
-    {{$showExact := .HasRoundedChildren}}
+    {{$showExact := and .HasRoundedChildren (hasFlag "showExact") }}
 
     <div class="bucket">
         {{if $leafs}}
@@ -72,7 +72,9 @@
     {{template "customCSS"}}
 </head>
 <body>
-{{template "Summary" .Result}}
+{{if hasFlag "showSummary"}}
+    {{template "Summary" .Result}}
+{{end}}
 {{template "Bucket" .Result}}
 </body>
 </html>
