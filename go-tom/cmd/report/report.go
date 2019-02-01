@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
 	"github.com/jansorg/tom/go-tom/htmlreport"
@@ -53,7 +54,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			if fromDateString != "" {
 				start, err := parseDate(&fromDateString)
 				if err != nil {
-					log.Fatal(err)
+					util.Fatal(err)
 				}
 				filterRange.Start = start
 			}
@@ -109,7 +110,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 				if project, err := ctx.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
 					id = project.ID
 				} else if _, err := ctx.Query.ProjectByID(nameOrID); err != nil {
-					log.Fatal(fmt.Errorf("project %s not found", projectFilter))
+					util.Fatal(fmt.Errorf("project %s not found", projectFilter))
 				}
 				projectIDs = append(projectIDs, id)
 			}
@@ -140,7 +141,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 					TemplateFilePath: templateFilePath,
 				}
 				if err := printTemplate(ctx, frameReport, options); err != nil {
-					log.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
+					util.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
 				}
 			}
 		},

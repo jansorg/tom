@@ -10,9 +10,9 @@
         <thead>
         <tr>
             <th class="th-wide"><span class="title">{{.Title}}</span></th>
-            <th class="time">{{i18n "Duration"}}</th>
+            <th class="time-header">{{i18n "Duration"}}</th>
             {{if $showExact}}
-                <th class="time">{{i18n "Exact duration"}}</th>
+                <th class="time-header">{{i18n "Exact duration"}}</th>
             {{end}}
         </tr>
         </thead>
@@ -30,9 +30,9 @@
         <tfoot>
         <tr class="row-subtotal">
             <th>{{i18n "Total"}}</th>
-            <th class="time">{{minDuration $bucket.Duration.Get}}</th>
+            <th class="time time-header">{{minDuration $bucket.Duration.Get}}</th>
             {{if $showExact}}
-                <th class="time">{{minDuration $bucket.Duration.GetExact}}</th>
+                <th class="time time-header">{{minDuration $bucket.Duration.GetExact}}</th>
             {{end}}
         </tr>
         </tfoot>
@@ -50,15 +50,15 @@
             {{with index $bucket.ChildBuckets 0}}
                 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
                 {{range .ChildBuckets}}
-                    <th class="time">{{.Title}}</th>{{end}}
+                    <th class="time-header">{{.Title}}</th>{{end}}
             {{end}}
-            <th class="time">{{i18n "Total"}}</th>
+            <th class="time-header">{{i18n "Total"}}</th>
         </tr>
         </thead>
         <tbody>
         {{range $bucket.ChildBuckets}}
             <tr>
-                <th class="title-row" title="{{.Title}}">{{.Title}}</th>
+                <th class="matrix-title" title="{{.Title}}">{{.Title}}</th>
 
                 {{range .ChildBuckets}}
                     <td class="time">
@@ -76,13 +76,13 @@
         </tbody>
         <tfoot>
         <tr class="row-subtotal">
-            <th>{{i18n "Total"}}</th>
+            <th class="matrix-title">{{i18n "Total"}}</th>
             {{range $i,$child := (index .ChildBuckets 0).ChildBuckets}}
                 <th class="time time-subtotal">
                     <span>{{(minDuration (sumChildValues $bucket $i).Get)}}</span>
                 </th>
             {{end}}
-            <th class="col-subtotal time time-total">{{minDuration $bucket.Duration.Get}}</th>
+            <th class="time-header col-subtotal time time-total">{{minDuration $bucket.Duration.Get}}</th>
         </tr>
         </tfoot>
     </table>

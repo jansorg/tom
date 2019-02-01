@@ -3,10 +3,10 @@ package report
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"sort"
 	"time"
 
+	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateUtil"
 	"github.com/jansorg/tom/go-tom/model"
@@ -146,7 +146,7 @@ func (b *BucketReport) Update() {
 				leaf.SplitByProjectID(op, b.ShowEmptyBuckets, parentProjectOf(b.ctx), projectIDs)
 			})
 		} else {
-			log.Fatal(fmt.Errorf("unknown split operation %d", op))
+			util.Fatal(fmt.Errorf("unknown split operation %d", op))
 		}
 	}
 
