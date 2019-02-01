@@ -21,7 +21,24 @@ const (
 	SplitByParentProject
 )
 
-func (s SplitOperation) IsDateSplit() bool  {
+func SplitOperationByName(name string) (SplitOperation, error) {
+	switch name {
+	case "year":
+		return SplitByYear, nil
+	case "month":
+		return SplitByMonth, nil
+	case "week":
+		return SplitByWeek, nil
+	case "day":
+		return SplitByDay, nil
+	case "project":
+		return SplitByProject, nil
+	default:
+		return 0, fmt.Errorf("unknown split operation %s", name)
+	}
+}
+
+func (s SplitOperation) IsDateSplit() bool {
 	return s >= SplitByYear && s <= SplitByDay
 }
 
@@ -47,6 +64,21 @@ func (s SplitOperation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String())
 }
 
+func (r *SplitOperation) UnmarshalJSON(data []byte) error {
+	name := ""
+	err := json.Unmarshal(data, &name)
+	if err != nil {
+		return err
+	}
+
+	v, err := SplitOperationByName(name)
+	if err != nil {
+		return err
+	}
+	*r = v
+	return nil
+}
+
 type BucketReport struct {
 	ctx    *context.TomContext
 	source *model.FrameList
@@ -61,6 +93,10 @@ func NewBucketReport(frameList *model.FrameList, config Config, context *context
 		source: frameList,
 	}
 	return report
+}
+
+func (b *BucketReport) Result() *ResultBucket {
+	return b.result
 }
 
 func (b *BucketReport) Update() *ResultBucket {

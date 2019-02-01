@@ -7,12 +7,12 @@ import (
 )
 
 type Config struct {
-	Splitting          []SplitOperation    `json:"splitting"`
-	Timezone           *time.Location      `json:"timezone,omitempty"`
+	Splitting          []SplitOperation    `json:"split"`
+	Timezone           *time.Location      `json:"timezone"`
 	ProjectIDs         []string            `json:"projects"`
 	IncludeSubprojects bool                `json:"show_subprojects"`
 	DateFilterRange    util.DateRange      `json:"date_range"`
 	ShowEmpty          bool                `json:"show_empty"`
-	EntryRounding      util.RoundingConfig `json:"entry_rounding,omitempty"`
-	SumRounding        util.RoundingConfig `json:"sum_rounding,omitempty"`
+	EntryRounding      util.RoundingConfig `json:"rounding_entry"`
+	SumRounding        util.RoundingConfig `json:"rounding_total"`
 }

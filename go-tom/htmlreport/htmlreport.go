@@ -11,8 +11,8 @@ import (
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/util"
 	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type Report struct {
@@ -22,9 +22,12 @@ type Report struct {
 }
 
 type Options struct {
-	DecimalDuration  bool
-	TemplateName     string
-	TemplateFilePath string
+	Report            report.Config `json:"report"`
+	CustomTitle       *string       `json:"title,omitempty"`
+	CustomDescription *string       `json:"description,omitempty"`
+	DecimalDuration   bool          `json:"decimal_duration"`
+	TemplateName      string        `json:"template_name"`
+	TemplateFilePath  string        `json:"template_path"`
 }
 
 func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report {

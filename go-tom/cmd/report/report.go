@@ -3,6 +3,7 @@ package report
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -17,115 +18,66 @@ import (
 	"github.com/jansorg/tom/go-tom/util"
 )
 
-func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
-	var showEmpty bool
+type flags struct {
+	showEmpty        bool
+	fromDateString   string
+	toDateString     string
+	projectFilter    []string
+	day              int
+	month            int
+	year             int
+	splitModes       string
+	roundFrames      time.Duration
+	roundTotals      time.Duration
+	roundModeFrames  string
+	roundModeTotal   string
+	decimalDurations bool
+	templateName     string
+	templateFilePath string
+}
 
+var defaultFlags flags = flags{
+	templateName: "default",
+}
+
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+	var configFile string
+	var saveConfigFile string
 	var jsonOutput bool
 
-	var fromDateString string
-	var toDateString string
-	var projectFilter []string
-
-	var day int
-	var month int
-	var year int
-
-	var splitModes string
-
-	var roundFrames time.Duration
-	var roundTotals time.Duration
-
-	var roundModeFrames string
-	var roundModeTotal string
-
-	var decimalDurations bool
-
-	var templateName string
-	var templateFilePath string
+	opts := defaultFlags
 
 	var cmd = &cobra.Command{
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			filterRange := util.NewDateRange(nil, nil, ctx.Locale)
+			var config htmlreport.Options
+			var err error
 
-			if fromDateString != "" {
-				start, err := parseDate(&fromDateString)
+			if configFile != "" {
+				if data, err := ioutil.ReadFile(configFile); err != nil {
+					util.Fatal(err)
+				} else if err := json.Unmarshal(data, &config); err != nil {
+					util.Fatal(err)
+				}
+			} else {
+				config, err = configByFlags(opts, cmd, ctx)
 				if err != nil {
 					util.Fatal(err)
 				}
-				filterRange.Start = start
 			}
 
-			if toDateString != "" {
-				end, err := parseDate(&toDateString)
+			if saveConfigFile != "" {
+				data, err := json.MarshalIndent(config, "", "  ")
 				if err != nil {
-					log.Fatal(err)
+					util.Fatal(err)
 				}
-				filterRange.End = end
-			}
-
-			// day, month, year params override the filter values
-			if cmd.Flag("day").Changed {
-				filterRange = util.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, day)
-			} else if cmd.Flag("month").Changed {
-				filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
-			} else if cmd.Flag("year").Changed {
-				filterRange = util.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(year, 0, 0)
-			}
-
-			var splitOperations []report.SplitOperation
-			if splitModes != "" {
-				for _, mode := range strings.Split(splitModes, ",") {
-					switch mode {
-					case "year":
-						splitOperations = append(splitOperations, report.SplitByYear)
-					case "month":
-						splitOperations = append(splitOperations, report.SplitByMonth)
-					case "week":
-						splitOperations = append(splitOperations, report.SplitByWeek)
-					case "day":
-						splitOperations = append(splitOperations, report.SplitByDay)
-					case "project":
-						splitOperations = append(splitOperations, report.SplitByProject)
-					// case "parentProject":
-					// 	splitOperations = append(splitOperations, report.SplitByParentProject)
-					default:
-						log.Fatal(fmt.Errorf("unknown split value %s. Supported: year, month, day, project", mode))
-					}
+				if err = ioutil.WriteFile(saveConfigFile, data, 0600); err != nil {
+					util.Fatal(err)
 				}
 			}
 
-			// project filter
-			var projectIDs []string
-			// resolve names or IDs to IDs only
-			for _, nameOrID := range projectFilter {
-				id := ""
-				// if it's a name resolve it to the ID
-				if project, err := ctx.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
-					id = project.ID
-				} else if _, err := ctx.Query.ProjectByID(nameOrID); err != nil {
-					util.Fatal(fmt.Errorf("project %s not found", projectFilter))
-				}
-				projectIDs = append(projectIDs, id)
-			}
-
-			config := report.Config{
-				ProjectIDs:         projectIDs,
-				IncludeSubprojects: true,
-				DateFilterRange:    filterRange,
-				Splitting:          splitOperations,
-				ShowEmpty:          showEmpty,
-				EntryRounding: util.RoundingConfig{
-					Mode: util.RoundingByName(roundModeFrames),
-					Size: roundFrames,
-				},
-				SumRounding: util.RoundingConfig{
-					Mode: util.RoundingByName(roundModeTotal),
-					Size: roundTotals,
-				},
-			}
-			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config, ctx)
+			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config.Report, ctx)
 			result := frameReport.Update()
 
 			if jsonOutput {
@@ -135,58 +87,124 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 				}
 				fmt.Println(string(data))
 			} else {
-				options := htmlreport.Options{
-					DecimalDuration:  decimalDurations,
-					TemplateName:     templateName,
-					TemplateFilePath: templateFilePath,
-				}
-				if err := printTemplate(ctx, frameReport, options); err != nil {
+				if err := printTemplate(ctx, frameReport, config); err != nil {
 					util.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
 				}
 			}
 		},
 	}
 
-	cmd.Flags().StringVarP(&templateName, "template", "", "default", "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
+	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
+	cmd.Flags().StringVarP(&configFile, "config", "", "", "Path to a json configuration")
+	cmd.Flags().StringVarP(&saveConfigFile, "save-config", "", "", "Path where the options are saved as a template")
+
+	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
 
 	templateAnnotations := make(map[string][]string)
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
-	cmd.Flags().StringVarP(&templateFilePath, "template-file", "", "", "Custom gohtml template file to use for rendering. See the website for more details.")
+	cmd.Flags().StringVarP(&opts.templateFilePath, "template-file", "", "", "Custom gohtml template file to use for rendering. See the website for more details.")
 	cmd.Flag("template-file").Annotations = templateAnnotations
 
 	// fixme add defaults?
 	// cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
-	cmd.Flags().StringVarP(&fromDateString, "from", "f", "", "The date when the report should start.")
-	cmd.Flags().StringVarP(&toDateString, "to", "t", "", "Optional end date")
+	cmd.Flags().StringVarP(&opts.fromDateString, "from", "f", "", "The date when the report should start.")
+	cmd.Flags().StringVarP(&opts.toDateString, "to", "t", "", "Optional end date")
 
-	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "", false, "Show empty groups")
-	cmd.Flags().IntVarP(&year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
-	// cmd.Flag("year").NoOptDefVal = "0"
-	cmd.Flags().IntVarP(&month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
+	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
+	cmd.Flags().IntVarP(&opts.year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
+	cmd.Flags().IntVarP(&opts.month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.Flag("month").NoOptDefVal = "0"
-	cmd.Flags().IntVarP(&day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
-	// cmd.Flag("day").NoOptDefVal = "0"
+	cmd.Flags().IntVarP(&opts.day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 
-	cmd.Flags().StringSliceVarP(&projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
+	cmd.Flags().StringSliceVarP(&opts.projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 
-	cmd.Flags().StringVarP(&splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
+	cmd.Flags().StringVarP(&opts.splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
 
-	cmd.Flags().DurationVarP(&roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().StringVarP(&roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest")
+	cmd.Flags().DurationVarP(&opts.roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().StringVarP(&opts.roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest")
 
-	cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
+	cmd.Flags().DurationVarP(&opts.roundTotals, "round-totals-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
+	cmd.Flags().StringVarP(&opts.roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
 
-	cmd.Flags().BoolVarP(&decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
-
-	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
-
-	// fixme
-	// cmd.Flags().DurationVarP(&roundTotals, "round-totals-to", "", time.Duration(0), "Round the overall duration of each project to the next matching multiple of this duration")
-	// cmd.Flags().StringVarP(&roundModeTotal, "round-totals", "", "up", "Rounding mode for sums of durations. Default: up. Possible values: up|nearest")
+	cmd.Flags().BoolVarP(&opts.decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
 
 	parent.AddCommand(cmd)
 	return cmd
+}
+
+func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htmlreport.Options, error) {
+	filterRange := util.NewDateRange(nil, nil, ctx.Locale)
+
+	if opts.fromDateString != "" {
+		start, err := parseDate(&opts.fromDateString)
+		if err != nil {
+			util.Fatal(err)
+		}
+		filterRange.Start = start
+	}
+
+	if opts.toDateString != "" {
+		end, err := parseDate(&opts.toDateString)
+		if err != nil {
+			log.Fatal(err)
+		}
+		filterRange.End = end
+	}
+
+	// day, month, year params override the filter values
+	if cmd.Flag("day").Changed {
+		filterRange = util.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, opts.day)
+	} else if cmd.Flag("month").Changed {
+		filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, opts.month, 0)
+	} else if cmd.Flag("year").Changed {
+		filterRange = util.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(opts.year, 0, 0)
+	}
+
+	var splitOperations []report.SplitOperation
+	if opts.splitModes != "" {
+		for _, mode := range strings.Split(opts.splitModes, ",") {
+			if op, err := report.SplitOperationByName(mode); err != nil {
+				util.Fatal(err)
+			} else {
+				splitOperations = append(splitOperations, op)
+			}
+		}
+	}
+
+	// project filter
+	var projectIDs []string
+	// resolve names or IDs to IDs only
+	for _, nameOrID := range opts.projectFilter {
+		id := ""
+		// if it's a name resolve it to the ID
+		if project, err := ctx.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
+			id = project.ID
+		} else if _, err := ctx.Query.ProjectByID(nameOrID); err != nil {
+			util.Fatal(fmt.Errorf("project %s not found", opts.projectFilter))
+		}
+		projectIDs = append(projectIDs, id)
+	}
+
+	return htmlreport.Options{
+		TemplateFilePath: opts.templateFilePath,
+		TemplateName:     opts.templateName,
+		DecimalDuration:  opts.decimalDurations,
+		Report: report.Config{
+			ProjectIDs:         projectIDs,
+			IncludeSubprojects: true,
+			DateFilterRange:    filterRange,
+			Splitting:          splitOperations,
+			ShowEmpty:          opts.showEmpty,
+			EntryRounding: util.RoundingConfig{
+				Mode: util.RoundingByName(opts.roundModeFrames),
+				Size: opts.roundFrames,
+			},
+			SumRounding: util.RoundingConfig{
+				Mode: util.RoundingByName(opts.roundModeTotal),
+				Size: opts.roundTotals,
+			},
+		},
+	}, nil
 }
 
 func printTemplate(ctx *context.TomContext, report *report.BucketReport, opts htmlreport.Options) error {

@@ -29,7 +29,7 @@ func (r RoundingMode) String() string {
 	}
 }
 
-func (r *RoundingMode) MarshalJSON() ([]byte, error) {
+func (r RoundingMode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.String())
 }
 
@@ -78,4 +78,35 @@ func RoundingNearest(size time.Duration) RoundingConfig {
 type RoundingConfig struct {
 	Mode RoundingMode  `json:"mode"`
 	Size time.Duration `json:"size"`
+}
+
+func (r RoundingConfig) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Mode string `json:"mode"`
+		Size string `json:"size"`
+	}{
+		Mode: r.Mode.String(),
+		Size: r.Size.String(),
+	})
+}
+
+func (r *RoundingConfig) UnmarshalJSON(data []byte) error {
+	d := &struct {
+		Mode string `json:"mode"`
+		Size string `json:"size"`
+	}{}
+
+	err := json.Unmarshal(data, &d)
+	if err != nil {
+		return err
+	}
+
+	size, err := time.ParseDuration(d.Size)
+	if err != nil {
+		return err
+	}
+
+	r.Mode = RoundingByName(d.Mode)
+	r.Size = size
+	return nil
 }
