@@ -138,6 +138,10 @@ func (r DateRange) IsClosed() bool {
 	return r.Start != nil && r.End != nil
 }
 
+func (r DateRange) IsMonthRange() bool {
+	return r.End != nil && r.Start.AddDate(0,1,0) == *r.End
+}
+
 func (r DateRange) IsOpen() bool {
 	return !r.IsClosed()
 }

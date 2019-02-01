@@ -17,18 +17,14 @@
         {{end}}
         <tr>
             <td>{{i18n "Tracked time:"}}</td>
-            <td class="time-left">{{minDuration .Duration.Get}}</td>
+            <td class="time">{{minDuration .Duration.Get}}</td>
         </tr>
-        {{if and .IsRounded (reportOptions.ShowExactDurations) }}
+        {{if reportOptions.ShowExactDurations }}
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
-                <td class="time-left">{{minDuration .Duration.GetExact}}</td>
+                <td class="time">{{minDuration .Duration.GetExact}}</td>
             </tr>
         {{end}}
-        {{/*<tr>*/}}
-        {{/*<td>{{i18n "Frames:"}}</td>*/}}
-        {{/*<td>{{formatNumber .FrameCount}}</td>*/}}
-        {{/*</tr>*/}}
         </tbody>
     </table>
 {{end}}
@@ -113,6 +109,7 @@
 
         .matrix-title {
             width: 20rem;
+            min-width: 20rem;
             max-width: 20rem;
             text-overflow: ellipsis;
             overflow-x: hidden;
@@ -122,6 +119,10 @@
         .th-wide {
             white-space: normal;
             width: 99%;
+        }
+
+        .align-left {
+            text-align: left;
         }
 
         .align-right {

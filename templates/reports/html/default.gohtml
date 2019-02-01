@@ -45,7 +45,7 @@
     <table class="table-data table-odd table-matrix">
         <thead>
         <tr>
-            <th><span class="title">{{.Title}}</span></th>
+            <th class="matrix-title"><span class="title">{{.Title}}</span></th>
             {{with index $bucket.ChildBuckets 0}}
                 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
                 {{range .ChildBuckets}}

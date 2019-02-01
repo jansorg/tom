@@ -107,8 +107,14 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 				}
 
 				for i, col := range b.ChildBuckets {
-					if col.Title() != refCol[i].Title() {
-						// fmt.Printf("title: %s <> %s", col.Title(), refCol[i].Title())
+					other := refCol[i]
+
+					// if both are the same month names, then accepot
+					if col.SplitByType == report.SplitByMonth && other.SplitByType == report.SplitByMonth && col.DateRange().IsMonthRange() && other.DateRange().IsMonthRange() && col.DateRange().Start.Month() == other.DateRange().Start.Month() {
+						continue
+					}
+
+					if col.Title() != other.Title() {
 						return false
 					}
 				}
