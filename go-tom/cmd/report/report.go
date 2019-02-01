@@ -36,7 +36,7 @@ type flags struct {
 	templateFilePath string
 }
 
-var defaultFlags flags = flags{
+var defaultFlags = flags{
 	templateName: "default",
 }
 
@@ -186,8 +186,8 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	}
 
 	return htmlreport.Options{
-		TemplateFilePath: opts.templateFilePath,
-		TemplateName:     opts.templateName,
+		TemplateFilePath: &opts.templateFilePath,
+		TemplateName:     &opts.templateName,
 		DecimalDuration:  opts.decimalDurations,
 		Report: report.Config{
 			ProjectIDs:         projectIDs,

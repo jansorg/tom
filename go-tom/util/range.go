@@ -119,8 +119,8 @@ func (r DateRange) MinimalString() string {
 		return r.locale.FmtDateShort(*r.Start)
 	}
 
-	// fallback: print the range
-	return fmt.Sprintf("%s - %s", r.locale.FmtDateShort(*r.Start), r.locale.FmtDateShort(*r.End))
+	// fallback: print the range, subtract one millisecond from end to be at the end of the day before (day a to day b does not include b)
+	return fmt.Sprintf("%s - %s", r.locale.FmtDateShort(*r.Start), r.locale.FmtDateShort(r.End.Add(-1*time.Millisecond)))
 }
 
 func (r DateRange) Shift(years, months, days int) DateRange {

@@ -275,7 +275,7 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation) {
 		case SplitByMonth:
 			value = value.Shift(0, 1, 0)
 		case SplitByWeek:
-			value = value.Shift(0, 7, 0)
+			value = value.Shift(0, 0, 7)
 		case SplitByDay:
 			value = value.Shift(0, 0, 1)
 		}

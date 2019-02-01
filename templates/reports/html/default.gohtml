@@ -3,9 +3,7 @@
 {{define "TableBucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
-    {{$leafs := .EmptyChildren}}
-    {{$showExact := and .HasRoundedChildren (hasFlag "showExact") }}
-
+    {{$showExact := reportOptions.ShowExactDurations }}
     <table class="table-odd">
         <thead>
         <tr>
@@ -17,7 +15,7 @@
         </tr>
         </thead>
         <tbody>
-        {{range $leafs}}
+        {{range $bucket.EmptyChildren}}
             <tr>
                 <td>{{.Title}}</td>
                 <td class="time">{{minDuration .Duration.Get}}</td>
@@ -42,6 +40,7 @@
 {{define "MatrixBucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
+    {{$showExact := reportOptions.ShowExactDurations }}
 
     <table class="table-data table-odd table-matrix">
         <thead>
@@ -64,13 +63,26 @@
                     <td class="time">
                         {{if .Duration.IsRoundedZero}}
                             <span class="duration-zero">{{minDuration .Duration.Get}}</span>
+                            {{- if $showExact -}}
+                                <br>
+                                <span class="duration-zero">{{minDuration .Duration.Get}}</span>
+                            {{end}}
                         {{else}}
                             <span>{{minDuration .Duration.Get}}</span>
+                            {{- if $showExact -}}
+                                <br><span
+                                        class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
+                            {{end}}
                         {{end}}
                     </td>
                 {{end}}
 
-                <th class="col-subtotal time time-subtotal" title="{{.Title}}">{{minDuration .Duration.Get}}</th>
+                <th class="col-subtotal time time-subtotal" title="{{.Title}}">
+                    {{minDuration .Duration.Get}}
+                    {{- if $showExact -}}
+                        <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration .Duration.GetExact}}</span>
+                    {{end}}
+                </th>
             </tr>
         {{end}}
         </tbody>
@@ -78,11 +90,20 @@
         <tr class="row-subtotal">
             <th class="matrix-title">{{i18n "Total"}}</th>
             {{range $i,$child := (index .ChildBuckets 0).ChildBuckets}}
+                {{$duration := sumChildValues $bucket $i}}
                 <th class="time time-subtotal">
-                    <span>{{(minDuration (sumChildValues $bucket $i).Get)}}</span>
+                    <span>{{(minDuration $duration.Get)}}</span>
+                    {{- if $showExact -}}
+                        <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration $duration.GetExact}}</span>
+                    {{end}}
                 </th>
             {{end}}
-            <th class="time-header col-subtotal time time-total">{{minDuration $bucket.Duration.Get}}</th>
+            <th class="time-header col-subtotal time time-total">
+                {{minDuration $bucket.Duration.Get}}
+                {{- if $showExact -}}
+                    <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration $bucket.Duration.GetExact}}</span>
+                {{end}}
+            </th>
         </tr>
         </tfoot>
     </table>
@@ -121,7 +142,7 @@
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$leafs := .EmptyChildren}}
-    {{$showExact := and .HasRoundedChildren (hasFlag "showExact") }}
+    {{$showExact := reportOptions.ShowExactDurations }}
 
     <div class="bucket">
         {{if $leafs}}
@@ -183,13 +204,25 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <title></title>
+    <title>{{ reportOptions.CustomTitle }}</title>
 
     {{template "commonCSS"}}
     {{template "customCSS"}}
 </head>
 <body>
-{{if hasFlag "showSummary"}}
+
+{{- /*gotype: github.com/jansorg/tom/go-tom/htmlreport/Options*/ -}}
+{{$opts := reportOptions }}
+
+{{with $opts.CustomTitle }}
+    <h1>{{.}}</h1>
+{{end}}
+
+{{with $opts.CustomDescription }}
+    <p class="description">{{.}}</p>
+{{end}}
+
+{{if $opts.ShowSummary }}
     {{template "Summary" .Result}}
 {{end}}
 {{template "Bucket" .Result}}

@@ -19,7 +19,7 @@
             <td>{{i18n "Tracked time:"}}</td>
             <td class="time-left">{{minDuration .Duration.Get}}</td>
         </tr>
-        {{if and .IsRounded (hasFlag "showExact") }}
+        {{if and .IsRounded (reportOptions.ShowExactDurations) }}
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
                 <td class="time-left">{{minDuration .Duration.GetExact}}</td>
@@ -116,6 +116,7 @@
             max-width: 20rem;
             text-overflow: ellipsis;
             overflow-x: hidden;
+            vertical-align: middle;
         }
 
         .th-wide {
@@ -240,4 +241,16 @@
     </style>
 {{end}}
 
-{{define "customCSS"}}{{end}}
+{{define "customCSS"}}
+    {{with reportOptions.CustomCSS}}
+        <style type="text/css">
+            {{.}}
+        </style>
+    {{end}}
+
+    {{with reportOptions.CustomCSSFile}}
+        <style type="text/css">
+            {{inlineCSS .}}
+        </style>
+    {{end}}
+{{end}}

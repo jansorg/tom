@@ -2,7 +2,9 @@ package htmlreport
 
 import (
 	"bytes"
+	"fmt"
 	htmlTemplate "html/template"
+	"io/ioutil"
 	"path"
 	"path/filepath"
 	"time"
@@ -22,12 +24,16 @@ type Report struct {
 }
 
 type Options struct {
-	Report            report.Config `json:"report"`
-	CustomTitle       *string       `json:"title,omitempty"`
-	CustomDescription *string       `json:"description,omitempty"`
-	DecimalDuration   bool          `json:"decimal_duration"`
-	TemplateName      string        `json:"template_name"`
-	TemplateFilePath  string        `json:"template_path"`
+	CustomTitle        *string          `json:"title"`
+	CustomDescription  *string          `json:"description"`
+	ShowSummary        bool             `json:"show_summary"`
+	ShowExactDurations bool             `json:"show_exact"`
+	DecimalDuration    bool             `json:"decimal_duration"`
+	TemplateName       *string          `json:"template_name"`
+	TemplateFilePath   *string          `json:"template_path"`
+	CustomCSS          htmlTemplate.CSS `json:"css"`
+	CustomCSSFile      string           `json:"css_file"`
+	Report             report.Config    `json:"report"`
 }
 
 func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report {
@@ -40,8 +46,19 @@ func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report
 
 func (r *Report) Render(results *report.BucketReport) (string, error) {
 	functionMap := map[string]interface{}{
+		"reportOptions": func() *Options {
+			return &r.options
+		},
 		"i18n": func(key string) string {
 			return r.ctx.LocalePrinter.Sprintf(key)
+		},
+		"inlineCSS": func(filename string) htmlTemplate.CSS {
+			file, err := ioutil.ReadFile(filename)
+			if err != nil {
+				util.Fatal(fmt.Errorf("error reading CSS file %s", filename))
+				return ""
+			}
+			return htmlTemplate.CSS(file)
 		},
 		"langBase": func() string {
 			base, _ := r.ctx.Language.Base()
@@ -76,12 +93,6 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 				return r.ctx.DecimalDurationPrinter.Long(duration)
 			}
 			return r.ctx.DurationPrinter.Long(duration)
-		},
-		"hasFlag": func(name string) bool {
-			if name == "showSummary" {
-				return true
-			}
-			return false
 		},
 		"isMatrix": func(bucket report.ResultBucket) bool {
 			if bucket.Depth() != 2 {
@@ -118,8 +129,8 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		},
 	}
 
-	if r.options.TemplateFilePath != "" {
-		templatePath := r.options.TemplateFilePath
+	if r.options.TemplateFilePath != nil && *r.options.TemplateFilePath != "" {
+		templatePath := *r.options.TemplateFilePath
 		if !filepath.IsAbs(templatePath) {
 			templatePath = filepath.Join(r.workingDir, templatePath)
 		}
@@ -136,8 +147,8 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		}
 
 		return out.String(), nil
-	} else {
-		templatePath := r.options.TemplateName
+	} else if r.options.TemplateName != nil && *r.options.TemplateName != "" {
+		templatePath := *r.options.TemplateName
 
 		baseDir := path.Join("reports", "html")
 		templateFiles := []string{
@@ -155,5 +166,7 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		}
 
 		return out.String(), nil
+	} else {
+		return "", fmt.Errorf("template undefined")
 	}
 }
