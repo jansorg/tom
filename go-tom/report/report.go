@@ -119,17 +119,18 @@ func (b *BucketReport) Update() {
 		})
 	}
 
-	var dateRange dateUtil.DateRange
+	var filterRange dateUtil.DateRange
 	if b.source.Empty() {
-		dateRange = b.FilterRange
+		filterRange = b.FilterRange
 	} else {
-		dateRange = dateUtil.NewDateRange(b.source.First().Start, b.source.Last().End, b.ctx.Locale)
+		filterRange = dateUtil.NewDateRange(b.source.First().Start, b.source.Last().End, b.ctx.Locale)
 	}
+
 	b.Result = &ResultBucket{
-		ctx:       b.ctx,
-		Frames:    b.source,
-		Duration:  dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
-		dateRange: dateRange,
+		ctx:         b.ctx,
+		Frames:      b.source,
+		Duration:    dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
+		filterRange: filterRange,
 	}
 
 	for _, op := range b.SplitOperations {

@@ -12,7 +12,41 @@ import (
 	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
-func Test_Report(t *testing.T) {
+func TestSplitEmptyReport(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top", "child")
+	require.NoError(t, err)
+
+	start := newDate(2018, time.March, 10, 10, 0)
+	end := newDate(2018, time.March, 10, 12, 0)
+
+	frameList := []*model.Frame{{
+		Start: start, End: end, ProjectId: p2.ID,
+	}}
+	report := NewBucketReport(model.NewFrameList(frameList), ctx)
+	report.ProjectIDs = []string{p1.ID}
+	report.IncludeSubprojects = true
+	report.SplitOperations = []SplitOperation{SplitByProject, SplitByMonth}
+	report.Update()
+
+	assert.NotNil(t, report.Result.DateRange().Start, "empty start value in top-level date range")
+	assert.NotNil(t, report.Result.DateRange().End, "empty end value in top-level date range")
+
+	assert.NotNil(t, report.Result.TrackedDateRange().Start, "empty start value in top-level date range")
+	assert.NotNil(t, report.Result.TrackedDateRange().End, "empty end value in top-level date range")
+
+	for i, b := range report.Result.ChildBuckets {
+		assert.NotNil(t, b.DateRange().Start, "empty date range at index %d", i)
+		assert.NotNil(t, b.DateRange().End, "empty date range at index %d", i)
+	}
+}
+
+func TestReport(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
@@ -31,7 +65,7 @@ func Test_Report(t *testing.T) {
 	assert.EqualValues(t, frameList, report.source.Frames())
 }
 
-func Test_ReportSplitYear(t *testing.T) {
+func TestReportSplitYear(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
@@ -80,7 +114,7 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.GetExact())
 }
 
-func Test_ReportDateRanges(t *testing.T) {
+func TestReportDateRanges(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
@@ -109,14 +143,14 @@ func Test_ReportDateRanges(t *testing.T) {
 		assert.EqualValues(t, 2, report.Result.FrameCount)
 		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
 		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
-		assert.EqualValues(t, start, report.Result.TrackedDateRange().Start, "unexpected tracked time for " + op.String())
-		assert.EqualValues(t, end2, report.Result.TrackedDateRange().End, "unexpected tracked time for " + op.String())
+		assert.EqualValues(t, start, report.Result.TrackedDateRange().Start, "unexpected tracked time for "+op.String())
+		assert.EqualValues(t, end2, report.Result.TrackedDateRange().End, "unexpected tracked time for "+op.String())
 		assert.EqualValues(t, frameList, report.source.Frames())
 	}
 }
 
 // tests that frame dates in different time zones are not ending up in different split intervals
-func Test_ReportSplitDifferentZones(t *testing.T) {
+func TestReportSplitDifferentZones(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
@@ -147,7 +181,7 @@ func Test_ReportSplitDifferentZones(t *testing.T) {
 }
 
 // tests that frame dates in different time zones are not ending up in different split intervals
-func Test_ReportSplitDifferentZonesYear(t *testing.T) {
+func TestReportSplitDifferentZonesYear(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
@@ -177,7 +211,7 @@ func Test_ReportSplitDifferentZonesYear(t *testing.T) {
 	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
-func Test_ReportEmptyRanges(t *testing.T) {
+func TestReportEmptyRanges(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.German)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)

@@ -14,6 +14,7 @@ import (
 type ResultBucket struct {
 	ctx              *context.TomContext
 	parent           *ResultBucket
+	filterRange      dateUtil.DateRange
 	dateRange        dateUtil.DateRange
 	trackedDateRange dateUtil.DateRange
 
@@ -31,8 +32,16 @@ func (b *ResultBucket) Update() {
 		b.Duration.AddStartEndP(f.Start, f.End)
 	}
 
-	if !b.Empty() && !b.IsDateBucket() {
-		b.dateRange = dateUtil.NewDateRange(b.ChildBuckets[0].DateRange().Start, b.ChildBuckets[len(b.ChildBuckets)-1].DateRange().End, b.ctx.Locale)
+	if b.dateRange.Empty() {
+		if !b.Empty() && !b.IsDateBucket() {
+			childBuckets := b.ChildBuckets
+			b.dateRange = dateUtil.NewDateRange(childBuckets[0].DateRange().Start, childBuckets[len(b.ChildBuckets)-1].DateRange().End, b.ctx.Locale)
+		} else if b.Empty() && b.parent != nil {
+			b.dateRange = b.parent.DateRange()
+			if b.dateRange.Empty() {
+				b.dateRange = b.parent.filterRange
+			}
+		}
 	}
 
 	// tracked range
@@ -195,6 +204,7 @@ func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool
 		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 			ctx:         b.ctx,
 			parent:      b,
+			filterRange: b.filterRange,
 			Frames:      segment,
 			Duration:    dateUtil.NewEmptyCopy(b.Duration),
 			SplitByType: splitType,
@@ -207,6 +217,7 @@ func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool
 			b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 				ctx:         b.ctx,
 				parent:      b,
+				filterRange: b.filterRange,
 				Frames:      model.NewFrameList([]*model.Frame{}),
 				Duration:    dateUtil.NewDurationSum(),
 				SplitByType: splitType,
@@ -225,10 +236,9 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation, showEmpty bool
 		end = b.Frames.Last().End
 	}
 
-	parentRange := b.ParentDateRange()
-	if parentRange.IsClosed() {
-		start = parentRange.Start
-		end = parentRange.End
+	if b.filterRange.IsClosed() {
+		start = b.filterRange.Start
+		end = b.filterRange.End
 	}
 
 	if start == nil || end == nil {
@@ -255,6 +265,7 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation, showEmpty bool
 			b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 				ctx:         b.ctx,
 				parent:      b,
+				filterRange: value,
 				dateRange:   value,
 				Frames:      matchingFrames,
 				Duration:    dateUtil.NewEmptyCopy(b.Duration),
