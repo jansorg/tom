@@ -23,6 +23,24 @@ const (
 	SplitByParentProject
 )
 
+func (s SplitOperation) String() string {
+	name := ""
+	switch (s) {
+	case SplitByYear:
+		name = "year"
+	case SplitByMonth:
+		name = "month"
+	case SplitByWeek:
+		name = "week"
+	case SplitByDay:
+		name = "day"
+	case SplitByProject:
+		name = "project"
+	case SplitByParentProject:
+		name = "parentProject"
+	}
+	return name
+}
 func (s SplitOperation) MarshalJSON() ([]byte, error) {
 	name := ""
 	switch (s) {
@@ -79,9 +97,6 @@ func (b *BucketReport) IsRounding() bool {
 
 func (b *BucketReport) Update() {
 	b.source.FilterByDatePtr(b.FilterRange.Start, b.FilterRange.End, false)
-	if b.source.Empty() {
-		return
-	}
 
 	projectIDs := b.ProjectIDs
 	if b.IncludeSubprojects {
@@ -104,11 +119,17 @@ func (b *BucketReport) Update() {
 		})
 	}
 
+	var dateRange dateUtil.DateRange
+	if b.source.Empty() {
+		dateRange = b.FilterRange
+	} else {
+		dateRange = dateUtil.NewDateRange(b.source.First().Start, b.source.Last().End, b.ctx.Locale)
+	}
 	b.Result = &ResultBucket{
 		ctx:       b.ctx,
 		Frames:    b.source,
 		Duration:  dateUtil.NewDurationSumAll(b.RoundingModeFrames, b.RoundFramesTo, nil, nil),
-		dateRange: dateUtil.NewDateRange(b.source.First().Start, b.source.Last().End, b.ctx.Locale),
+		dateRange: dateRange,
 	}
 
 	for _, op := range b.SplitOperations {

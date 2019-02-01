@@ -68,6 +68,13 @@ func (b *ResultBucket) DateRange() dateUtil.DateRange {
 	return b.dateRange
 }
 
+func (b *ResultBucket) Depth() int {
+	if b.Empty() {
+		return 0
+	}
+	return 1 + b.ChildBuckets[0].Depth()
+}
+
 func (b *ResultBucket) Empty() bool {
 	return len(b.ChildBuckets) == 0
 }
@@ -177,10 +184,13 @@ func (b *ResultBucket) SortChildBuckets() {
 	});
 }
 
-func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool, splitValue func(frame *model.Frame) interface{}, minValues []string) {
+func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool, splitValue func(frame *model.Frame) interface{}, minProjectIDs []string) {
+	mapping := make(map[string]bool)
+
 	b.ChildBuckets = []*ResultBucket{}
 	for _, segment := range b.Frames.Split(splitValue) {
 		value := splitValue(segment.First())
+		mapping[value.(string)] = true
 
 		b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
 			ctx:         b.ctx,
@@ -190,6 +200,19 @@ func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, showEmpty bool
 			SplitByType: splitType,
 			SplitBy:     value,
 		})
+	}
+
+	for _, id := range minProjectIDs {
+		if !mapping[id] {
+			b.ChildBuckets = append(b.ChildBuckets, &ResultBucket{
+				ctx:         b.ctx,
+				parent:      b,
+				Frames:      model.NewFrameList([]*model.Frame{}),
+				Duration:    dateUtil.NewDurationSum(),
+				SplitByType: splitType,
+				SplitBy:     id,
+			})
+		}
 	}
 }
 

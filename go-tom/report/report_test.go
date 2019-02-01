@@ -61,6 +61,8 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
 	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange().Start)
 	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange().End)
+	assert.EqualValues(t, start, report.Result.TrackedDateRange().Start)
+	assert.EqualValues(t, end2, report.Result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 
 	firstYear := report.Result.ChildBuckets[0]
@@ -76,6 +78,41 @@ func Test_ReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 1, secondYear.FrameCount)
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.Get())
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.GetExact())
+}
+
+func Test_ReportDateRanges(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	// two hours
+	start := newDate(2018, time.March, 10, 10, 0)
+	end := newDate(2018, time.March, 10, 12, 0)
+
+	// one hour
+	start2 := newDate(2019, time.March, 10, 9, 0)
+	end2 := newDate(2019, time.March, 10, 10, 0)
+
+	frameList := []*model.Frame{
+		{Start: start2, End: end2},
+		{Start: start, End: end},
+	}
+
+	var op SplitOperation = 0
+	for ; op < SplitByParentProject; op += 1 {
+		report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
+		report.SplitOperations = []SplitOperation{op}
+		report.Update()
+
+		require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
+
+		assert.EqualValues(t, 2, report.Result.FrameCount)
+		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
+		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
+		assert.EqualValues(t, start, report.Result.TrackedDateRange().Start, "unexpected tracked time for " + op.String())
+		assert.EqualValues(t, end2, report.Result.TrackedDateRange().End, "unexpected tracked time for " + op.String())
+		assert.EqualValues(t, frameList, report.source.Frames())
+	}
 }
 
 // tests that frame dates in different time zones are not ending up in different split intervals

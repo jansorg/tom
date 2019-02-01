@@ -26,8 +26,8 @@
             </tr>
         {{end}}
         {{/*<tr>*/}}
-            {{/*<td>{{i18n "Frames:"}}</td>*/}}
-            {{/*<td>{{formatNumber .FrameCount}}</td>*/}}
+        {{/*<td>{{i18n "Frames:"}}</td>*/}}
+        {{/*<td>{{formatNumber .FrameCount}}</td>*/}}
         {{/*</tr>*/}}
         </tbody>
     </table>
@@ -45,9 +45,11 @@
             --bg-color: white;
             --title-color: #3165b4;
             --row-odd-color: #eeeeee;
+            --color-unused: #898989;
+            --border-color-light: var(--color-unused);
 
             --table-width: 100%;
-            --table-data-width: 95%;
+            --table-data-width: 100%;
             --table-th-color: var(--color);
             --table-th-bgcolor: var(--bg-color);
             --table-th-weight: bold;
@@ -73,6 +75,7 @@
             line-height: 1.25rem;
             padding: 0.25rem 1rem;
         }
+
         th.title, td.title {
             padding: 0.25rem 0;
         }
@@ -98,8 +101,12 @@
             width: var(--table-data-width);
         }
 
-        .table-odd tr:nth-child(2n-1) td {
+        .table-odd tr:nth-child(2n-1) td, .table-odd tbody tr:nth-child(2n-1) th {
             background-color: var(--row-odd-color);
+        }
+
+        .table-matrix td:not(:last-child), .table-matrix th:not(:last-child) {
+            padding-right: 1rem;
         }
 
         .th-wide {
@@ -114,10 +121,15 @@
         .title {
             color: var(--title-color);
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.3rem;
         }
+
         .buckets > .title {
             font-size: 1.6rem;
+        }
+
+        .time-sum {
+            color: var(--title-color);
         }
 
         .summary {
@@ -134,9 +146,12 @@
             margin-top: 1rem;
         }
 
-        .subtotal td, .subtotal th {
-            font-weight: bold;
-            border-top: 2px solid black;
+        .row-subtotal th, .row-subtotal td {
+            border-top: 1px solid var(--border-color-light);
+        }
+
+        th.col-subtotal, td.col-subtotal {
+            border-left: 1px solid var(--border-color-light);
         }
 
         th.time {
@@ -144,11 +159,27 @@
             white-space: nowrap;
         }
 
+        th.title-row {
+            width: 25rem;
+            max-width: 20rem;
+            text-overflow: ellipsis;
+            overflow-x: hidden;
+        }
+
         td.time {
             font-family: var(--time-font-family);
             font-weight: var(--time-font-weight);
             text-align: right;
             white-space: nowrap;
+        }
+
+        .time-subtotal {
+            color: var(--title-color);
+        }
+
+        .time-total {
+            color: var(--title-color);
+            font-weight: bold;
         }
 
         tfoot .time {
@@ -173,6 +204,10 @@
             -ms-hyphens: auto;
             -webkit-hyphens: auto;
             hyphens: auto;
+        }
+
+        .duration-zero {
+            color: var(--color-unused);
         }
     </style>
 

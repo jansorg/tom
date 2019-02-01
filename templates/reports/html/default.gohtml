@@ -1,6 +1,123 @@
 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
 
+{{define "TableBucket"}}
+    {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
+    {{$bucket := .}}
+    {{$leafs := .EmptyChildren}}
+    {{$showExact := and .HasRoundedChildren (hasFlag "showExact") }}
+
+    <table class="table-odd">
+        <thead>
+        <tr>
+            <th class="th-wide"><span class="title">{{.Title}}</span></th>
+            <th class="time">{{i18n "Duration"}}</th>
+            {{if $showExact}}
+                <th class="time">{{i18n "Exact duration"}}</th>
+            {{end}}
+        </tr>
+        </thead>
+        <tbody>
+        {{range $leafs}}
+            <tr>
+                <td>{{.Title}}</td>
+                <td class="time">{{minDuration .Duration.Get}}</td>
+                {{if $showExact}}
+                    <td class="time">{{minDuration .Duration.GetExact}}</td>
+                {{end}}
+            </tr>
+        {{end}}
+        </tbody>
+        <tfoot>
+        <tr class="row-subtotal">
+            <th>{{i18n "Total"}}</th>
+            <th class="time">{{minDuration $bucket.Duration.Get}}</th>
+            {{if $showExact}}
+                <th class="time">{{minDuration $bucket.Duration.GetExact}}</th>
+            {{end}}
+        </tr>
+        </tfoot>
+    </table>
+{{end}}
+
+{{define "MatrixBucket"}}
+    {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
+    {{$bucket := .}}
+
+    <table class="table-data table-odd table-matrix">
+        <thead>
+        <tr>
+            <th><span class="title">{{.Title}}</span></th>
+            {{with index $bucket.ChildBuckets 0}}
+                {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
+                {{range .ChildBuckets}}
+                    <th class="time">{{.Title}}</th>{{end}}
+            {{end}}
+            <th class="time">{{i18n "Total"}}</th>
+        </tr>
+        </thead>
+        <tbody>
+        {{range $bucket.ChildBuckets}}
+            <tr>
+                <th class="title-row" title="{{.Title}}">{{.Title}}</th>
+
+                {{range .ChildBuckets}}
+                    <td class="time">
+                        {{if .Duration.IsRoundedZero}}
+                            <span class="duration-zero">{{minDuration .Duration.Get}}</span>
+                        {{else}}
+                            <span>{{minDuration .Duration.Get}}</span>
+                        {{end}}
+                    </td>
+                {{end}}
+
+                <th class="col-subtotal time time-subtotal" title="{{.Title}}">{{minDuration .Duration.Get}}</th>
+            </tr>
+        {{end}}
+        </tbody>
+        <tfoot>
+        <tr class="row-subtotal">
+            <th>{{i18n "Total"}}</th>
+            {{range $i,$child := (index .ChildBuckets 0).ChildBuckets}}
+                <th class="time time-subtotal">
+                    <span>{{(minDuration (sumChildValues $bucket $i).Get)}}</span>
+                </th>
+            {{end}}
+            <th class="col-subtotal time time-total">{{minDuration $bucket.Duration.Get}}</th>
+        </tr>
+        </tfoot>
+    </table>
+{{end}}
+
 {{define "Bucket"}}
+    {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
+    {{$bucket := .}}
+    {{$leafs := .EmptyChildren}}
+
+    <div class="bucket">
+        {{if isMatrix $bucket}}
+            {{template "MatrixBucket" $bucket }}
+        {{else if $leafs}}
+            {{template "TableBucket" $bucket}}
+        {{else}}
+            {{if .Empty}}
+                {{if not .DateRange.Empty}}
+                    <div class="title range">{{.DateRange}}</div>
+                {{end}}
+            {{else}}
+                <div class="buckets">
+                    <span class="title">{{.Title}}</span>
+                    {{range .ChildBuckets}}
+                        {{if not .Empty}}
+                            {{template "Bucket" .}}
+                        {{end}}
+                    {{end}}
+                </div>
+            {{end}}
+        {{end}}
+    </div>
+{{end}}
+
+{{define "BucketMatrix"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$leafs := .EmptyChildren}}
@@ -29,8 +146,8 @@
                     </tr>
                 {{end}}
                 </tbody>
-                <tfoot class="subtotal">
-                <tr>
+                <tfoot>
+                <tr class="row-subtotal">
                     <th>{{i18n "Total"}}</th>
                     <th class="time">{{minDuration $bucket.Duration.Get}}</th>
                     {{if $showExact}}

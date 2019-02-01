@@ -37,6 +37,14 @@ type DurationSum struct {
 	acceptedRange *DateRange
 }
 
+func (d *DurationSum) IsZero() bool {
+	return d.GetExact() == 0
+}
+
+func (d *DurationSum) IsRoundedZero() bool {
+	return d.Get() == 0
+}
+
 func (d *DurationSum) IsRounded() bool {
 	return d.SumExact != d.SumRounded
 }

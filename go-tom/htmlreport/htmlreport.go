@@ -11,6 +11,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateUtil"
 	"github.com/jansorg/tom/go-tom/report"
 )
 
@@ -78,6 +79,39 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 				return true
 			}
 			return false
+		},
+		"isMatrix": func(bucket report.ResultBucket) bool {
+			if bucket.Depth() != 2 {
+				return false
+			}
+
+			// all buckets must have the same number of children
+			refCol := bucket.ChildBuckets[0].ChildBuckets
+			for _, b := range bucket.ChildBuckets {
+				if len(b.ChildBuckets) != len(refCol) {
+					return false
+				}
+
+				for i, col := range b.ChildBuckets {
+					if col.Title() != refCol[i].Title() {
+						// fmt.Printf("title: %s <> %s", col.Title(), refCol[i].Title())
+						return false
+					}
+				}
+			}
+
+			return true
+		},
+		"sumChildValues": func(parent report.ResultBucket, childIndex int) *dateUtil.DurationSum {
+			sum := dateUtil.NewDurationSum()
+
+			for _, b := range parent.ChildBuckets {
+				if len(b.ChildBuckets) >= childIndex {
+					sum.AddSum(b.ChildBuckets[childIndex].Duration)
+				}
+			}
+
+			return sum
 		},
 	}
 
