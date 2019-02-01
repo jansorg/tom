@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newCancelCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {

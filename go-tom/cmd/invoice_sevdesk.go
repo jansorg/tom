@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/invoice/sevdesk"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -48,17 +48,16 @@ func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Co
 					util.Fatal(err)
 				}
 
-
 				var contactID string
 				for _, contact := range contacts {
-					found := strings.Contains(contact.Description, fmt.Sprintf("[gotime: %s]", invoiceData.projectID ))
+					found := strings.Contains(contact.Description, fmt.Sprintf("[gotime: %s]", invoiceData.projectID))
 					if found {
 						contactID = contact.ID
 						break
 					}
 				}
 
-				if contactID == ""{
+				if contactID == "" {
 					// create a new company contact where invoices to this project will attach
 					contact, err := client.CreateCompanyContact(client.NewCompanyContact(fmt.Sprintf("[gotime] Project: %s", invoiceData.projectName), fmt.Sprintf("[gotime: %s]", invoiceData.projectID)))
 					if err != nil {

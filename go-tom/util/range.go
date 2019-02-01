@@ -1,4 +1,4 @@
-package dateUtil
+package util
 
 import (
 	"fmt"

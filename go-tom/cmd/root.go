@@ -15,12 +15,12 @@ import (
 	"github.com/jansorg/tom/go-tom/cmd/remove"
 	"github.com/jansorg/tom/go-tom/cmd/report"
 	"github.com/jansorg/tom/go-tom/cmd/status"
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/i18n"
 	"github.com/jansorg/tom/go-tom/query"
 	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 var ctx context.TomContext

@@ -28,19 +28,20 @@ func TestSplitEmptyReport(t *testing.T) {
 	frameList := []*model.Frame{{
 		Start: start, End: end, ProjectId: p2.ID,
 	}}
-	report := NewBucketReport(model.NewFrameList(frameList), ctx)
-	report.ProjectIDs = []string{p1.ID}
-	report.IncludeSubprojects = true
-	report.SplitOperations = []SplitOperation{SplitByProject, SplitByMonth}
+	report := NewBucketReport(model.NewFrameList(frameList), Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
+	}, ctx)
 	report.Update()
 
-	assert.NotNil(t, report.Result.DateRange().Start, "empty start value in top-level date range")
-	assert.NotNil(t, report.Result.DateRange().End, "empty end value in top-level date range")
+	assert.NotNil(t, report.result.DateRange().Start, "empty start value in top-level date range")
+	assert.NotNil(t, report.result.DateRange().End, "empty end value in top-level date range")
 
-	assert.NotNil(t, report.Result.TrackedDateRange().Start, "empty start value in top-level date range")
-	assert.NotNil(t, report.Result.TrackedDateRange().End, "empty end value in top-level date range")
+	assert.NotNil(t, report.result.TrackedDateRange().Start, "empty start value in top-level date range")
+	assert.NotNil(t, report.result.TrackedDateRange().End, "empty end value in top-level date range")
 
-	for i, b := range report.Result.ChildBuckets {
+	for i, b := range report.result.ChildBuckets {
 		assert.NotNil(t, b.DateRange().Start, "empty date range at index %d", i)
 		assert.NotNil(t, b.DateRange().End, "empty date range at index %d", i)
 	}
@@ -55,13 +56,13 @@ func TestReport(t *testing.T) {
 	end := newDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*model.Frame{{Start: start, End: end}}
-	report := NewBucketReport(model.NewFrameList(frameList), ctx)
+	report := NewBucketReport(model.NewFrameList(frameList), Config{}, ctx)
 	report.Update()
-	assert.EqualValues(t, 1, report.Result.FrameCount)
-	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.Get())
-	assert.EqualValues(t, 2*time.Hour, report.Result.Duration.GetExact())
-	assert.EqualValues(t, start, report.Result.TrackedDateRange().Start)
-	assert.EqualValues(t, end, report.Result.TrackedDateRange().End)
+	assert.EqualValues(t, 1, report.result.FrameCount)
+	assert.EqualValues(t, 2*time.Hour, report.result.Duration.Get())
+	assert.EqualValues(t, 2*time.Hour, report.result.Duration.GetExact())
+	assert.EqualValues(t, start, report.result.TrackedDateRange().Start)
+	assert.EqualValues(t, end, report.result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 }
 
@@ -83,30 +84,29 @@ func TestReportSplitYear(t *testing.T) {
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
-	report.SplitOperations = []SplitOperation{SplitByYear}
+	report := NewBucketReport(model.NewSortedFrameList(frameList), Config{Splitting: []SplitOperation{SplitByYear}}, ctx)
 	report.Update()
 
-	require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
-	require.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected a sub-report for each year")
+	require.NotNil(t, report.result, "expected one top-level group (containing two years)")
+	require.EqualValues(t, 2, len(report.result.ChildBuckets), "expected a sub-report for each year")
 
-	assert.EqualValues(t, 2, report.Result.FrameCount)
-	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
-	assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.Result.DateRange().Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.Result.DateRange().End)
-	assert.EqualValues(t, start, report.Result.TrackedDateRange().Start)
-	assert.EqualValues(t, end2, report.Result.TrackedDateRange().End)
+	assert.EqualValues(t, 2, report.result.FrameCount)
+	assert.EqualValues(t, 3*time.Hour, report.result.Duration.Get())
+	assert.EqualValues(t, 3*time.Hour, report.result.Duration.GetExact())
+	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.result.DateRange().Start)
+	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.result.DateRange().End)
+	assert.EqualValues(t, start, report.result.TrackedDateRange().Start)
+	assert.EqualValues(t, end2, report.result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 
-	firstYear := report.Result.ChildBuckets[0]
+	firstYear := report.result.ChildBuckets[0]
 	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange().Start)
 	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.DateRange().End)
 	assert.EqualValues(t, 1, firstYear.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.Get())
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.GetExact())
 
-	secondYear := report.Result.ChildBuckets[1]
+	secondYear := report.result.ChildBuckets[1]
 	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.DateRange().Start)
 	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.DateRange().End)
 	assert.EqualValues(t, 1, secondYear.FrameCount)
@@ -132,19 +132,17 @@ func TestReportDateRanges(t *testing.T) {
 		{Start: start, End: end},
 	}
 
-	var op SplitOperation = 0
-	for ; op < SplitByParentProject; op += 1 {
-		report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
-		report.SplitOperations = []SplitOperation{op}
+	for op := SplitByYear; op < SplitByParentProject; op += 1 {
+		report := NewBucketReport(model.NewSortedFrameList(frameList), Config{Splitting: []SplitOperation{op}}, ctx)
 		report.Update()
 
-		require.NotNil(t, report.Result, "expected one top-level group (containing two years)")
+		require.NotNil(t, report.result, "expected one top-level group (containing two years)")
 
-		assert.EqualValues(t, 2, report.Result.FrameCount)
-		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.Get())
-		assert.EqualValues(t, 3*time.Hour, report.Result.Duration.GetExact())
-		assert.EqualValues(t, start, report.Result.TrackedDateRange().Start, "unexpected tracked time for "+op.String())
-		assert.EqualValues(t, end2, report.Result.TrackedDateRange().End, "unexpected tracked time for "+op.String())
+		assert.EqualValues(t, 2, report.result.FrameCount)
+		assert.EqualValues(t, 3*time.Hour, report.result.Duration.Get())
+		assert.EqualValues(t, 3*time.Hour, report.result.Duration.GetExact())
+		assert.EqualValues(t, start, report.result.TrackedDateRange().Start, "unexpected tracked time for "+op.String())
+		assert.EqualValues(t, end2, report.result.TrackedDateRange().End, "unexpected tracked time for "+op.String())
 		assert.EqualValues(t, frameList, report.source.Frames())
 	}
 }
@@ -170,14 +168,13 @@ func TestReportSplitDifferentZones(t *testing.T) {
 		{Start: &start2, End: &end2},
 	}
 
-	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
-	report.SplitOperations = []SplitOperation{SplitByDay}
+	report := NewBucketReport(model.NewSortedFrameList(frameList), Config{Splitting: []SplitOperation{SplitByDay}}, ctx)
 	report.Update()
 
-	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
-	assert.EqualValues(t, 2, report.Result.FrameCount)
+	require.NotNil(t, report.result, "expected one top-level group (containing two days)")
+	assert.EqualValues(t, 2, report.result.FrameCount)
 
-	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
+	assert.EqualValues(t, 1, len(report.result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
 // tests that frame dates in different time zones are not ending up in different split intervals
@@ -201,14 +198,13 @@ func TestReportSplitDifferentZonesYear(t *testing.T) {
 		{Start: &start2, End: &end2},
 	}
 
-	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
-	report.SplitOperations = []SplitOperation{SplitByYear}
+	report := NewBucketReport(model.NewSortedFrameList(frameList), Config{Splitting: []SplitOperation{SplitByYear}}, ctx)
 	report.Update()
 
-	require.NotNil(t, report.Result, "expected one top-level group (containing two days)")
-	assert.EqualValues(t, 2, report.Result.FrameCount)
+	require.NotNil(t, report.result, "expected one top-level group (containing two days)")
+	assert.EqualValues(t, 2, report.result.FrameCount)
 
-	assert.EqualValues(t, 1, len(report.Result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
+	assert.EqualValues(t, 1, len(report.result.ChildBuckets), "expected a single day bucket, even if different time zones were used")
 }
 
 func TestReportEmptyRanges(t *testing.T) {
@@ -233,17 +229,18 @@ func TestReportEmptyRanges(t *testing.T) {
 		{Start: &start2, End: &end2, ProjectId: p2.ID},
 	}
 
-	report := NewBucketReport(model.NewSortedFrameList(frameList), ctx)
-	report.SplitOperations = []SplitOperation{SplitByProject, SplitByYear, SplitByMonth}
-	report.ShowEmptyBuckets = true
+	report := NewBucketReport(model.NewSortedFrameList(frameList), Config{
+		ShowEmpty: true,
+		Splitting: []SplitOperation{SplitByProject, SplitByYear, SplitByMonth,
+		}}, ctx)
 	report.Update()
 
-	require.NotNil(t, report.Result, "expected one top-level group (containing two frames)")
-	assert.EqualValues(t, 2, report.Result.FrameCount)
+	require.NotNil(t, report.result, "expected one top-level group (containing two frames)")
+	assert.EqualValues(t, 2, report.result.FrameCount)
 
-	assert.EqualValues(t, 2, len(report.Result.ChildBuckets), "expected two project buckets")
+	assert.EqualValues(t, 2, len(report.result.ChildBuckets), "expected two project buckets")
 
-	for i, projectBucket := range report.Result.ChildBuckets {
+	for i, projectBucket := range report.result.ChildBuckets {
 		require.EqualValues(t, 3, len(projectBucket.ChildBuckets), "expected three year bucket, 2017 .. 2019")
 		assert.True(t, projectBucket.IsProjectBucket())
 

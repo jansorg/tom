@@ -1,4 +1,4 @@
-package util
+package cmdUtil
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/dateUtil"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type PropList interface {
@@ -47,7 +47,7 @@ func parseListOutputFlags(cmd *cobra.Command) (props []string, output string, de
 func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error {
 	formatFlags, output, delimiter, err := parseListOutputFlags(cmd)
 	if err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	}
 
 	type row map[string]interface{}
@@ -76,14 +76,14 @@ func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error
 	case "json":
 		PrintJSON(rows)
 	default:
-		Fatal(fmt.Errorf("unsupported output type %s", output))
+		util.Fatal(fmt.Errorf("unsupported output type %s", output))
 	}
 	return nil
 }
 
 func PrintJSON(value interface{}) {
 	if bytes, err := json.MarshalIndent(value, "", "  "); err != nil {
-		Fatal(err)
+		util.Fatal(err)
 	} else {
 		fmt.Println(string(bytes))
 	}
@@ -102,7 +102,7 @@ func stringValue(v interface{}, ctx *context.TomContext) string {
 		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10)
 	}
 
-	if date, ok := v.(dateUtil.DateRange); ok {
+	if date, ok := v.(util.DateRange); ok {
 		return date.ShortString()
 	}
 

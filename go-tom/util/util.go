@@ -1,4 +1,4 @@
-package dateUtil
+package util
 
 import (
 	"fmt"
@@ -6,13 +6,7 @@ import (
 	"time"
 )
 
-type RoundingMode int8
 
-const (
-	RoundNone RoundingMode = iota + 1
-	RoundNearest
-	RoundUp
-)
 
 func ParseRoundingMode(mode string) RoundingMode {
 	if mode == "" {
@@ -30,19 +24,19 @@ func ParseRoundingMode(mode string) RoundingMode {
 	}
 }
 
-func RoundDuration(value time.Duration, mode RoundingMode, roundTo time.Duration) time.Duration {
-	if mode == RoundNone {
+func RoundDuration(value time.Duration, config RoundingConfig) time.Duration {
+	if config.Mode == RoundNone {
 		return value
 	}
 
-	result := value.Round(roundTo)
-	if mode == RoundNearest {
+	result := value.Round(config.Size)
+	if config.Mode == RoundNearest {
 		return result
 	}
 
 	if result < value {
 		// round up if Go rounded down
-		result = result + roundTo
+		result = result + config.Size
 	}
 	return result
 }

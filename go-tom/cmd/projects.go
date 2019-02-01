@@ -6,9 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
+	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type projectList struct {
@@ -58,7 +59,7 @@ func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 			}
 
 			list := projectList{projects: projects, nameDelimiter: nameDelimiter}
-			err := util.PrintList(cmd, list, ctx)
+			err := cmdUtil.PrintList(cmd, list, ctx)
 			if err != nil {
 				util.Fatal(err)
 			}
@@ -68,7 +69,7 @@ func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 
-	util.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
+	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
 	parent.AddCommand(cmd)
 	return cmd
 }

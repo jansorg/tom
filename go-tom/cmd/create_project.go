@@ -5,9 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
+	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newCreateProjectCommand(context *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -40,7 +41,7 @@ func newCreateProjectCommand(context *context.TomContext, parent *cobra.Command)
 					util.Fatal(fmt.Printf("the project %s does already exist\n", project.FullName))
 
 				} else if output == "json" {
-					util.PrintJSON((*model.DetailedProject)(project))
+					cmdUtil.PrintJSON((*model.DetailedProject)(project))
 				} else {
 					fmt.Printf("created project %s\n", project.FullName)
 				}

@@ -7,9 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
+	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type tagList []*model.Tag
@@ -39,13 +40,13 @@ func newTagsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comma
 				return strings.Compare(tags[i].Name, tags[j].Name) < 0
 			})
 
-			if err := util.PrintList(cmd, tags, ctx); err != nil {
+			if err := cmdUtil.PrintList(cmd, tags, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
 	}
 
-	util.AddListOutputFlags(cmd, "name", []string{"id", "name"})
+	cmdUtil.AddListOutputFlags(cmd, "name", []string{"id", "name"})
 	parent.AddCommand(cmd)
 	return cmd
 }

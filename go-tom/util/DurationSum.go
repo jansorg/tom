@@ -1,4 +1,4 @@
-package dateUtil
+package util
 
 import (
 	"time"
@@ -9,7 +9,7 @@ func NewDurationSum() *DurationSum {
 }
 
 func NewEmptyCopy(proto *DurationSum) *DurationSum {
-	return NewDurationSumAll(proto.roundingMode, proto.roundingSize, proto.acceptedRange, proto.referenceTime)
+	return NewDurationSumAll(proto.rounding, proto.acceptedRange, proto.referenceTime)
 }
 
 func NewDurationSumFiltered(acceptedRange *DateRange, referenceTime *time.Time) *DurationSum {
@@ -19,10 +19,9 @@ func NewDurationSumFiltered(acceptedRange *DateRange, referenceTime *time.Time) 
 	}
 }
 
-func NewDurationSumAll(roundingMode RoundingMode, roundingSize time.Duration, acceptedRange *DateRange, referenceTime *time.Time) *DurationSum {
+func NewDurationSumAll(rounding RoundingConfig, acceptedRange *DateRange, referenceTime *time.Time) *DurationSum {
 	return &DurationSum{
-		roundingMode:  roundingMode,
-		roundingSize:  roundingSize,
+		rounding:      rounding,
 		acceptedRange: acceptedRange,
 		referenceTime: referenceTime,
 	}
@@ -32,7 +31,7 @@ type DurationSum struct {
 	referenceTime *time.Time
 	SumRounded    time.Duration `json:"sum_rounded"`
 	SumExact      time.Duration `json:"sum_exact"`
-	roundingMode  RoundingMode
+	rounding      RoundingConfig
 	roundingSize  time.Duration
 	acceptedRange *DateRange
 }
@@ -69,7 +68,7 @@ func (d *DurationSum) AddStartEndP(start *time.Time, end *time.Time) {
 
 func (d *DurationSum) Add(duration time.Duration) {
 	d.SumExact += duration
-	d.SumRounded += RoundDuration(duration, d.roundingMode, d.roundingSize)
+	d.SumRounded += RoundDuration(duration, d.rounding)
 }
 
 func (d *DurationSum) Get() time.Duration {

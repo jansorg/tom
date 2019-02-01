@@ -8,9 +8,9 @@ import (
 
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/dateUtil"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newInvoiceCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -40,9 +40,9 @@ type invoiceCmdConfig struct {
 	ctx             *context.TomContext
 	dryRun          bool
 	project         *model.Project
-	filterRange     dateUtil.DateRange
+	filterRange     util.DateRange
 	roundFramesTo   time.Duration
-	roundFramesMode dateUtil.RoundingMode
+	roundFramesMode util.RoundingMode
 }
 
 type invoiceConfig struct {
@@ -57,16 +57,18 @@ type invoiceConfig struct {
 func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	storeFrames := c.ctx.Store.Frames()
 
-	frameReport := report.NewBucketReport(model.NewSortedFrameList(storeFrames), c.ctx)
-	frameReport.IncludeActiveFrames = false
-	frameReport.ProjectIDs = []string{c.project.ID}
-	frameReport.IncludeSubprojects = true
-	frameReport.FilterRange = c.filterRange
-	frameReport.RoundFramesTo = c.roundFramesTo
-	frameReport.RoundingModeFrames = c.roundFramesMode
-	frameReport.Update()
+	reportConfig := report.Config{
+		ProjectIDs:         []string{c.project.ID},
+		IncludeSubprojects: true,
+		DateFilterRange:    c.filterRange,
+		EntryRounding: util.RoundingConfig{
+			Mode: c.roundFramesMode,
+			Size: c.roundFramesTo,
+		},
+	}
 
-	result := frameReport.Result
+	frameReport := report.NewBucketReport(model.NewSortedFrameList(storeFrames), reportConfig, c.ctx)
+	result := frameReport.Update()
 
 	desc, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceDescriptionProperty)
 	address, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceAddressProperty)
@@ -101,7 +103,7 @@ type ProjectInvoiceLine struct {
 }
 
 func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdConfig, error) {
-	var filterRange dateUtil.DateRange
+	var filterRange util.DateRange
 
 	// fixme add start and end date
 
@@ -109,7 +111,7 @@ func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdCon
 		if month, err := cmd.Flags().GetInt("month"); err != nil {
 			return invoiceCmdConfig{}, err
 		} else {
-			filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
+			filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
 		}
 	}
 
@@ -127,7 +129,7 @@ func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdCon
 	if err != nil {
 		return invoiceCmdConfig{}, err
 	}
-	frameRoundingMode := dateUtil.ParseRoundingMode(roundModeFrames)
+	frameRoundingMode := util.ParseRoundingMode(roundModeFrames)
 
 	roundFramesTo, err := cmd.Flags().GetDuration("round-frames-to")
 	if err != nil {

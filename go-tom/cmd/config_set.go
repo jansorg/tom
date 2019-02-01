@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newConfigSetCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {

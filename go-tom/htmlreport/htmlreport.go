@@ -11,7 +11,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/dateUtil"
+	"github.com/jansorg/tom/go-tom/util"
 	"github.com/jansorg/tom/go-tom/report"
 )
 
@@ -102,8 +102,8 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 
 			return true
 		},
-		"sumChildValues": func(parent report.ResultBucket, childIndex int) *dateUtil.DurationSum {
-			sum := dateUtil.NewDurationSum()
+		"sumChildValues": func(parent report.ResultBucket, childIndex int) *util.DurationSum {
+			sum := util.NewDurationSum()
 
 			for _, b := range parent.ChildBuckets {
 				if len(b.ChildBuckets) >= childIndex {

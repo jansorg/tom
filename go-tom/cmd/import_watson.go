@@ -5,9 +5,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dataImport/watson"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newImportWatsonCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {

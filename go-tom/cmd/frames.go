@@ -7,9 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
+	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type frameList []*model.Frame
@@ -86,7 +87,7 @@ func newFramesCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 				frames = ctx.Query.FramesByProject(project.ID, includeSubprojects)
 			}
 
-			if err := util.PrintList(cmd, frames, ctx); err != nil {
+			if err := cmdUtil.PrintList(cmd, frames, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
@@ -94,7 +95,7 @@ func newFramesCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 
 	cmd.Flags().StringVarP(&projectIDOrName, "project", "p", "", "Only frames of this project will be printed. Project IDs or full project names are accepted. Default: no project")
 	cmd.Flags().BoolVarP(&includeSubprojects, "subprojects", "s", false, "Include frames of subprojects")
-	util.AddListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs"})
+	cmdUtil.AddListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs"})
 
 	parent.AddCommand(cmd)
 	return cmd

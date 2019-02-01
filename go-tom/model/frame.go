@@ -5,7 +5,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/jansorg/tom/go-tom/dateUtil"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func NewStartedFrame(project *Project) Frame {
@@ -105,7 +105,7 @@ func (f *Frame) ActiveDuration(end *time.Time) time.Duration {
 	return f.Duration()
 }
 
-func (f *Frame) Intersection(activeEnd *time.Time, timeRange *dateUtil.DateRange) time.Duration {
+func (f *Frame) Intersection(activeEnd *time.Time, timeRange *util.DateRange) time.Duration {
 	var frameEnd *time.Time
 	if f.IsActive() {
 		if activeEnd == nil {

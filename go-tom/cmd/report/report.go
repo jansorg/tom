@@ -10,16 +10,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/dateUtil"
 	"github.com/jansorg/tom/go-tom/htmlreport"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
-	var includeActiveFrames bool
 	var showEmpty bool
 
 	var jsonOutput bool
@@ -49,7 +47,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			filterRange := dateUtil.NewDateRange(nil, nil, ctx.Locale)
+			filterRange := util.NewDateRange(nil, nil, ctx.Locale)
 
 			if fromDateString != "" {
 				start, err := parseDate(&fromDateString)
@@ -69,15 +67,12 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 			// day, month, year params override the filter values
 			if cmd.Flag("day").Changed {
-				filterRange = dateUtil.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, day)
+				filterRange = util.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, day)
 			} else if cmd.Flag("month").Changed {
-				filterRange = dateUtil.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
+				filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
 			} else if cmd.Flag("year").Changed {
-				filterRange = dateUtil.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(year, 0, 0)
+				filterRange = util.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(year, 0, 0)
 			}
-
-			var frameRoundingMode = dateUtil.ParseRoundingMode(roundModeFrames)
-			var totalsRoundingNode = dateUtil.ParseRoundingMode(roundModeTotal)
 
 			var splitOperations []report.SplitOperation
 			if splitModes != "" {
@@ -115,21 +110,26 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 				projectIDs = append(projectIDs, id)
 			}
 
-			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), ctx)
-			frameReport.IncludeActiveFrames = includeActiveFrames
-			frameReport.ProjectIDs = projectIDs
-			frameReport.IncludeSubprojects = true
-			frameReport.FilterRange = filterRange
-			frameReport.RoundFramesTo = roundFrames
-			frameReport.RoundingModeFrames = frameRoundingMode
-			frameReport.RoundingModeTotals = totalsRoundingNode
-			frameReport.RoundTotalsTo = roundTotals
-			frameReport.SplitOperations = splitOperations
-			frameReport.ShowEmptyBuckets = showEmpty
-			frameReport.Update()
+			config := report.Config{
+				ProjectIDs:         projectIDs,
+				IncludeSubprojects: true,
+				DateFilterRange:    filterRange,
+				Splitting:          splitOperations,
+				ShowEmpty:          showEmpty,
+				EntryRounding: util.RoundingConfig{
+					Mode: util.RoundingByName(roundModeFrames),
+					Size: roundFrames,
+				},
+				SumRounding: util.RoundingConfig{
+					Mode: util.RoundingByName(roundModeTotal),
+					Size: roundTotals,
+				},
+			}
+			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config, ctx)
+			result := frameReport.Update()
 
 			if jsonOutput {
-				data, err := json.MarshalIndent(frameReport.Result, "", "  ")
+				data, err := json.MarshalIndent(result, "", "  ")
 				if err != nil {
 					log.Fatal(err)
 				}

@@ -1,4 +1,4 @@
-package dateUtil
+package util
 
 import (
 	"testing"
@@ -28,7 +28,7 @@ func TestAddRounding(t *testing.T) {
 	end := time.Date(2018, time.January, 10, 13, 0, 0, 0, time.UTC)
 	dateRange := NewDateRange(&start, &end, i18n.FindLocale(language.English))
 
-	a := NewDurationSumAll(RoundUp, 6*time.Minute, &dateRange, &end)
+	a := NewDurationSumAll(RoundingUp(6*time.Minute), &dateRange, &end)
 	a.Add(10 * time.Minute)
 	a.Add(15 * time.Minute)
 	a.Add(1 * time.Minute)

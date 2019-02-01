@@ -8,9 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/cmd/util"
+	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type projectStatusList struct {
@@ -86,7 +87,7 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 				return strings.Compare(reportList[i].Project.GetFullName("/"), reportList[j].Project.GetFullName("/")) < 0
 			})
 
-			if err := util.PrintList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
+			if err := cmdUtil.PrintList(cmd, projectStatusList{reports: reportList, nameDelimiter: nameDelimiter}, ctx); err != nil {
 				util.Fatal(err)
 			}
 		},
@@ -97,7 +98,7 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
 	cmd.Flags().BoolVarP(&includeActiveFrames, "include-active", "", includeActiveFrames, "Include active frames in the status. The current time will be used as end time of these frames.")
 
-	util.AddListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
+	cmdUtil.AddListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
 		"id", "fullName", "name", "parentID",
 		"trackedDay", "trackedWeek", "trackedMonth", "trackedYear", "trackedAll",
 		"totalTrackedDay", "totalTrackedWeek", "totalTrackedMonth", "totalTrackedYear", "totalTrackedAll"})
