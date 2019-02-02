@@ -50,7 +50,7 @@
             {{with $bucket.FirstNonEmptyChild}}
                 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
                 {{range .ChildBuckets}}
-                    <th class="time-header">{{.MatrixTitle}}</th>
+                    <th class="time-header">{{.Title}}</th>
                 {{end}}
             {{end}}
             <th class="time-header">{{i18n "Total"}}</th>
@@ -73,8 +73,7 @@
                             {{else}}
                                 <span>{{minDuration .Duration.Get}}</span>
                                 {{- if $showExact -}}
-                                    <br><span
-                                            class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
+                                    <br><span class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
                                 {{end}}
                             {{end}}
                         </td>

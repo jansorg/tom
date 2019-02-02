@@ -3,75 +3,90 @@
 {{define "Bucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
-    {{$leafs := .EmptyChildren}}
-    {{$showExact := .HasRoundedChildren}}
+    {{$showEmpty := reportOptions.Report.ShowEmpty}}
 
     <div class="bucket">
-        {{if .Empty}}
-            <table class="table-data table-odd">
-                <thead>
-                <tr>
-                    {{/*embedded title to keep title and tables together in printed PDFs*/}}
-                    <th colspan="5" class="title">{{.Title}}</th>
-                </tr>
-                <tr>
-                    <th class="date">{{i18n "Date"}}</th>
-                    <th class="date">{{i18n "Start"}}</th>
-                    <th class="date">{{i18n "End"}}</th>
-                    <th class="time">{{i18n "Duration"}}</th>
-                    <th class="th-wide">{{i18n "Notes"}}</th>
-                </tr>
-                </thead>
-                <tbody>
-                {{range .Frames.Frames}}
+        {{if $bucket.Empty}}
+            {{if or (not $bucket.EmptySource) $showEmpty}}
+                <table class="table-data table-odd">
+                    <thead>
                     <tr>
-                        <td class="start-day">{{formatDate .Start}}</td>
-                        <td class="start-time">{{formatTime .Start}}</td>
-                        <td class="stop-time">
-                            {{if .IsStopped}}
-                                {{if .IsSingleDay}}
-                                    {{formatTime .End}}
-                                {{else}}
-                                    {{formatDateTime .End}}
-                                {{end}}
-                            {{end}}
-                        </td>
-                        <td class="time">{{minDuration .Duration}}</td>
-                        <td class="notes">{{.Notes}}</td>
+                        {{/*embedded title to keep title and tables together in printed PDFs*/}}
+                        <th colspan="5" class="title">{{$bucket.Title}} {{$bucket.SplitByType}}</th>
                     </tr>
-                {{end}}
-                </tbody>
-                <tfoot class="subtotal">
-                <tr>
-                    <th colspan="3">{{i18n "Total"}}</th>
-                    <th class="time">{{minDuration .Duration}}</th>
-                    <th></th>
-                </tr>
-                </tfoot>
-            </table>
+                    <tr>
+                        <th class="date-header">{{i18n "Date"}}</th>
+                        <th class="date-header">{{i18n "Start"}}</th>
+                        <th class="date-header">{{i18n "End"}}</th>
+                        <th class="time-header">{{i18n "Duration"}}</th>
+                        <th class="th-wide">{{i18n "Notes"}}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {{range $bucket.Frames.Frames}}
+                        <tr>
+                            <td class="start-day">{{formatDate .Start}}</td>
+                            <td class="start-time">{{formatTime .Start}}</td>
+                            <td class="stop-time">
+                                {{if .IsStopped}}
+                                    {{if .IsSingleDay}}
+                                        {{formatTime .End}}
+                                    {{else}}
+                                        {{formatDateTime .End}}
+                                    {{end}}
+                                {{end}}
+                            </td>
+                            <td class="time">{{minDuration .Duration}}</td>
+                            <td class="notes">{{.Notes}}</td>
+                        </tr>
+                    {{end}}
+                    </tbody>
+                    <tfoot class="subtotal">
+                    <tr class="row-subtotal">
+                        <th colspan="3">{{i18n "Total"}}</th>
+                        <th class="col-subtotal time time-subtotal">{{minDuration .Duration.GetExact}}</th>
+                        <th></th>
+                    </tr>
+                    </tfoot>
+                </table>
+            {{end}}
         {{else}}
-            <div class="title">{{.Title}}</div>
-            {{range .ChildBuckets}}
+            <div class="title">{{$bucket.Title}}</div>
+            {{range $bucket.ChildBuckets}}
                 {{template "Bucket" .}}
             {{end}}
         {{end}}
     </div>
 {{end}}
 
+{{- /*gotype: github.com/jansorg/tom/go-tom/htmlreport/Options*/ -}}
+{{$opts := reportOptions }}
+
 <!doctype html>
-<html lang="en">
+<html lang="{{ langBase }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title></title>
+    {{with $opts.CustomTitle}}
+        <title>{{.}}</title>
+    {{end}}
 
     {{template "commonCSS"}}
     {{template "customCSS"}}
 </head>
 <body>
-{{template "Summary" .Result}}
+
+{{with $opts.CustomTitle }}
+    <h1>{{.}}</h1>
+{{end}}
+
+{{with $opts.CustomDescription }}
+    <p class="description">{{.}}</p>
+{{end}}
+
+{{if $opts.ShowSummary }}
+    {{template "Summary" .Result}}
+{{end}}
+
 {{template "Bucket" .Result}}
 </body>
 </html>

@@ -202,7 +202,7 @@ func (b *ResultBucket) Title() string {
 }
 
 func (b *ResultBucket) MatrixTitle() string {
-	if b.SplitByType == SplitByMonth && b.parent == nil || b.parent.dateRange.IsYearRange() {
+	if b.SplitByType == SplitByMonth && b.IsDateBucket() && b.parent == nil || b.parent.dateRange.IsYearRange() {
 		return b.ctx.Locale.MonthWide(b.dateRange.Start.Month())
 	}
 	return b.Title()
