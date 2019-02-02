@@ -19,21 +19,22 @@ import (
 )
 
 type flags struct {
-	showEmpty        bool
-	fromDateString   string
-	toDateString     string
-	projectFilter    []string
-	day              int
-	month            int
-	year             int
-	splitModes       string
-	roundFrames      time.Duration
-	roundTotals      time.Duration
-	roundModeFrames  string
-	roundModeTotal   string
-	decimalDurations bool
-	templateName     string
-	templateFilePath string
+	showEmpty         bool
+	fromDateString    string
+	toDateString      string
+	projectFilter     []string
+	includeSubproject bool
+	day               int
+	month             int
+	year              int
+	splitModes        string
+	roundFrames       time.Duration
+	roundTotals       time.Duration
+	roundModeFrames   string
+	roundModeTotal    string
+	decimalDurations  bool
+	templateName      string
+	templateFilePath  string
 }
 
 var defaultFlags = flags{
@@ -116,6 +117,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().IntVarP(&opts.day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 
 	cmd.Flags().StringSliceVarP(&opts.projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
+	cmd.Flags().BoolVarP(&opts.includeSubproject, "subprojects", "", true, "Automatically add the subprojects of the selected projects.")
 
 	cmd.Flags().StringVarP(&opts.splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
 
@@ -211,7 +213,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		DecimalDuration:  opts.decimalDurations,
 		Report: report.Config{
 			ProjectIDs:         projectIDs,
-			IncludeSubprojects: true,
+			IncludeSubprojects: opts.includeSubproject,
 			DateFilterRange:    filterRange,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,

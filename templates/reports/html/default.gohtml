@@ -41,55 +41,59 @@
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$showExact := reportOptions.ShowExactDurations }}
+    {{$showEmpty := reportOptions.Report.ShowEmpty}}
 
     <table class="table-data table-odd table-matrix">
         <thead>
         <tr>
             <th class="matrix-title"><span class="title">{{.Title}}</span></th>
-            {{with index $bucket.ChildBuckets 0}}
+            {{with $bucket.FirstNonEmptyChild}}
                 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
                 {{range .ChildBuckets}}
-                    <th class="time-header">{{.MatrixTitle}}</th>{{end}}
+                    <th class="time-header">{{.MatrixTitle}}</th>
+                {{end}}
             {{end}}
             <th class="time-header">{{i18n "Total"}}</th>
         </tr>
         </thead>
         <tbody>
         {{range $bucket.ChildBuckets}}
-            <tr>
-                <th class="matrix-title" title="{{.Title}}">{{.Title}}</th>
+            {{if or (and $showEmpty .Empty) (not .Empty)}}
+                <tr>
+                    <th class="matrix-title" title="{{.Title}}">{{.Title}}</th>
 
-                {{range .ChildBuckets}}
-                    <td class="time">
-                        {{if .Duration.IsRoundedZero}}
-                            <span class="duration-zero">{{minDuration .Duration.Get}}</span>
-                            {{- if $showExact -}}
-                                <br>
+                    {{range .ChildBuckets}}
+                        <td class="time">
+                            {{if .Duration.IsRoundedZero}}
                                 <span class="duration-zero">{{minDuration .Duration.Get}}</span>
+                                {{- if $showExact -}}
+                                    <br>
+                                    <span class="duration-zero">{{minDuration .Duration.Get}}</span>
+                                {{end}}
+                            {{else}}
+                                <span>{{minDuration .Duration.Get}}</span>
+                                {{- if $showExact -}}
+                                    <br><span
+                                            class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
+                                {{end}}
                             {{end}}
-                        {{else}}
-                            <span>{{minDuration .Duration.Get}}</span>
-                            {{- if $showExact -}}
-                                <br><span
-                                        class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
-                            {{end}}
-                        {{end}}
-                    </td>
-                {{end}}
-
-                <th class="col-subtotal time time-subtotal" title="{{.Title}}">
-                    {{minDuration .Duration.Get}}
-                    {{- if $showExact -}}
-                        <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration .Duration.GetExact}}</span>
+                        </td>
                     {{end}}
-                </th>
-            </tr>
+
+                    <th class="col-subtotal time time-subtotal" title="{{.Title}}">
+                        {{minDuration .Duration.Get}}
+                        {{- if $showExact -}}
+                            <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration .Duration.GetExact}}</span>
+                        {{end}}
+                    </th>
+                </tr>
+            {{end}}
         {{end}}
         </tbody>
         <tfoot>
         <tr class="row-subtotal">
             <th class="matrix-title">{{i18n "Total"}}</th>
-            {{range $i,$child := (index .ChildBuckets 0).ChildBuckets}}
+            {{range $i,$child := $bucket.FirstNonEmptyChild.ChildBuckets}}
                 {{$duration := sumChildValues $bucket $i}}
                 <th class="time time-subtotal">
                     <span>{{(minDuration $duration.Get)}}</span>
@@ -112,9 +116,10 @@
 {{define "Bucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
+    {{$showEmpty := reportOptions.Report.ShowEmpty}}
 
     <div class="bucket">
-        {{if and reportOptions.ShowMatrixTables (isMatrix $bucket)}}
+        {{if and reportOptions.ShowMatrixTables (isMatrix $bucket (not $showEmpty))}}
             {{template "MatrixBucket" $bucket }}
         {{else if eq $bucket.Depth 1 }}
             {{template "TableBucket" $bucket}}
@@ -128,64 +133,6 @@
                     <span class="title">{{.Title}}</span>
                     {{range .ChildBuckets}}
                         {{template "Bucket" .}}
-                    {{end}}
-                </div>
-            {{end}}
-        {{end}}
-    </div>
-{{end}}
-
-{{define "BucketMatrix"}}
-    {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
-    {{$bucket := .}}
-    {{$leafs := .EmptyChildren}}
-    {{$showExact := reportOptions.ShowExactDurations }}
-
-    <div class="bucket">
-        {{if $leafs}}
-            <table class="table-odd">
-                <thead>
-                <tr>
-                    <th class="th-wide"><span class="title">{{.Title}}</span></th>
-                    <th class="time">{{i18n "Duration"}}</th>
-                    {{if $showExact}}
-                        <th class="time">{{i18n "Exact duration"}}</th>
-                    {{end}}
-                </tr>
-                </thead>
-                <tbody>
-                {{range $leafs}}
-                    <tr>
-                        <td>{{.Title}}</td>
-                        <td class="time">{{minDuration .Duration.Get}}</td>
-                        {{if $showExact}}
-                            <td class="time">{{minDuration .Duration.GetExact}}</td>
-                        {{end}}
-                    </tr>
-                {{end}}
-                </tbody>
-                <tfoot>
-                <tr class="row-subtotal">
-                    <th>{{i18n "Total"}}</th>
-                    <th class="time">{{minDuration $bucket.Duration.Get}}</th>
-                    {{if $showExact}}
-                        <th class="time">{{minDuration $bucket.Duration.GetExact}}</th>
-                    {{end}}
-                </tr>
-                </tfoot>
-            </table>
-        {{else}}
-            {{if .Empty}}
-                {{if not .DateRange.Empty}}
-                    <div class="title range">{{.DateRange}}</div>
-                {{end}}
-            {{else}}
-                <div class="buckets">
-                    <span class="title">{{.Title}}</span>
-                    {{range .ChildBuckets}}
-                        {{if not .Empty}}
-                            {{template "Bucket" .}}
-                        {{end}}
                     {{end}}
                 </div>
             {{end}}

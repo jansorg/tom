@@ -102,46 +102,16 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 			}
 			return r.ctx.DurationPrinter.Long(duration)
 		},
-		"isMatrix": func(bucket report.ResultBucket) bool {
-			if bucket.Depth() != 2 {
-				return false
-			}
-
-			// make sure that all child buckets are of the same depth
-			for _, c := range bucket.ChildBuckets {
-				if c.Depth() != 1 {
-					return false
-				}
-			}
-
-			// all buckets must have the same number of children
-			refCol := bucket.ChildBuckets[0].ChildBuckets
-			for _, b := range bucket.ChildBuckets {
-				if len(b.ChildBuckets) != len(refCol) {
-					return false
-				}
-
-				for i, col := range b.ChildBuckets {
-					other := refCol[i]
-
-					// if both are the same month names, then accepot
-					if col.SplitByType == report.SplitByMonth && other.SplitByType == report.SplitByMonth && col.DateRange().IsMonthRange() && other.DateRange().IsMonthRange() && col.DateRange().Start.Month() == other.DateRange().Start.Month() {
-						continue
-					}
-
-					if col.Title() != other.Title() {
-						return false
-					}
-				}
-			}
-
-			return true
-		},
-		"sumChildValues": func(parent report.ResultBucket, childIndex int) *util.DurationSum {
+		"isMatrix": report.IsMatrix,
+		"sumChildValues": func(parent *report.ResultBucket, childIndex int) *util.DurationSum {
 			sum := util.NewDurationSum()
+			if parent == nil {
+				return sum
+			}
 
 			for _, b := range parent.ChildBuckets {
-				if len(b.ChildBuckets) >= childIndex {
+				childCount := len(b.ChildBuckets)
+				if childCount >= childIndex  && childIndex < childCount {
 					sum.AddSum(b.ChildBuckets[childIndex].Duration)
 				}
 			}

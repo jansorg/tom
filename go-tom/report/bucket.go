@@ -169,6 +169,15 @@ func (b *ResultBucket) EmptyChildren() []*ResultBucket {
 	return result
 }
 
+func (b *ResultBucket) FirstNonEmptyChild() *ResultBucket {
+	for _, r := range b.ChildBuckets {
+		if !r.Empty() {
+			return r
+		}
+	}
+	return nil
+}
+
 func (b *ResultBucket) Title() string {
 	if id, ok := b.SplitBy.(string); ok {
 		if value, err := b.ctx.Query.AnyByID(id); err == nil {

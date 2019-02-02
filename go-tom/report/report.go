@@ -108,3 +108,46 @@ func updateBucket(report *BucketReport, bucket *ResultBucket) {
 	bucket.Update()
 	bucket.SortChildBuckets()
 }
+
+func IsMatrix(bucket *ResultBucket, ignoreEmpty bool) bool {
+	if bucket.Depth() != 2 {
+		return false
+	}
+
+	// make sure that all child buckets are of the same depth
+	for _, c := range bucket.ChildBuckets {
+		depth := c.Depth()
+		if depth == 0 && ignoreEmpty {
+			continue
+		} else if depth != 1 {
+			return false
+		}
+	}
+
+	// all buckets must have the same number of children
+	refCol := bucket.FirstNonEmptyChild().ChildBuckets
+
+	for _, b := range bucket.ChildBuckets {
+		if b.Empty() && ignoreEmpty {
+			continue
+		}
+		if len(b.ChildBuckets) != len(refCol) {
+			return false
+		}
+
+		for i, col := range b.ChildBuckets {
+			other := refCol[i]
+
+			// if both are the same month names, then accepot
+			if col.SplitByType == SplitByMonth && other.SplitByType == SplitByMonth && col.DateRange().IsMonthRange() && other.DateRange().IsMonthRange() && col.DateRange().Start.Month() == other.DateRange().Start.Month() {
+				continue
+			}
+
+			if col.Title() != other.Title() {
+				return false
+			}
+		}
+	}
+
+	return true
+}

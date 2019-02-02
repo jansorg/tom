@@ -374,6 +374,50 @@ func TestReportSplitYearProjectMonth(t *testing.T) {
 	}
 }
 
+// test fix for a where splitting into project and month wasn't rendering a matrix
+func TestReportSplitProjectMonthMatrix(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	pTop, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1")
+	require.NoError(t, err)
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
+	require.NoError(t, err)
+
+	// adding 10*2 hours = 20 hours on project p1
+	frames := model.NewEmptyFrameList()
+	start := newDate(2017, time.May, 10, 10, 0).UTC()
+	end := newDate(2017, time.May, 10, 12, 0).UTC()
+	for i := 0; i < 10; i++ {
+		newStart := start.AddDate(0, 0, 1)
+		newEnd := end.AddDate(0, 0, 1)
+
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p1.ID})
+	}
+	frames.Sort()
+
+	report := NewBucketReport(frames.Copy(), Config{
+		ProjectIDs:         []string{pTop.ID},
+		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
+		IncludeSubprojects: true,
+		ShowEmpty:          false,
+	}, ctx)
+	report.Update()
+	assert.EqualValues(t, 10, report.result.FrameCount, "expected 3*16 frames in total")
+	assert.EqualValues(t, 20*time.Hour, report.result.Duration.SumExact)
+
+	require.EqualValues(t, 2, report.result.Depth(), "expected bucket hierarchy project > month")
+	assert.EqualValues(t, 2, len(report.result.ChildBuckets), "expected 2 project bucket (1 empty, 1 full)")
+	for _, year := range report.result.ChildBuckets {
+		if !year.Empty(){
+			require.EqualValues(t, 1, len(year.ChildBuckets), "expected 1 month bucket for the project")
+		}
+	}
+	assert.True(t, IsMatrix(report.result, true))
+	assert.False(t, IsMatrix(report.result, false))
+}
+
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
 	date := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &date
