@@ -42,11 +42,11 @@ var defaultFlags = flags{
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+	opts := defaultFlags
+
 	var configFile string
 	var saveConfigFile string
 	var jsonOutput bool
-
-	opts := defaultFlags
 
 	var cmd = &cobra.Command{
 		Use:   "report",
@@ -59,6 +59,10 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 				config, err = loadJsonConfig(ctx, configFile)
 				if err != nil {
 					util.Fatal(err)
+				}
+
+				if flagConfig, err := configByFlags(opts, cmd, ctx); err == nil {
+					applyFlags(cmd, flagConfig, &config)
 				}
 			} else {
 				config, err = configByFlags(opts, cmd, ctx)
@@ -131,6 +135,42 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	parent.AddCommand(cmd)
 	return cmd
+}
+
+func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlreport.Options) {
+	if cmd.Flag("template").Changed {
+		target.TemplateName = source.TemplateName
+	}
+	if cmd.Flag("template-file").Changed {
+		target.TemplateFilePath = source.TemplateFilePath
+	}
+	if cmd.Flag("from").Changed || cmd.Flag("to").Changed || cmd.Flag("year").Changed || cmd.Flag("month").Changed || cmd.Flag("day").Changed {
+		target.Report.DateFilterRange = source.Report.DateFilterRange
+	}
+	if cmd.Flag("project").Changed {
+		target.Report.ProjectIDs = source.Report.ProjectIDs
+	}
+	if cmd.Flag("subprojects").Changed {
+		target.Report.IncludeSubprojects = source.Report.IncludeSubprojects
+	}
+	if cmd.Flag("split").Changed {
+		target.Report.Splitting = source.Report.Splitting
+	}
+	if cmd.Flag("round-frames-to").Changed {
+		target.Report.EntryRounding.Size = source.Report.EntryRounding.Size
+	}
+	if cmd.Flag("round-frames").Changed {
+		target.Report.EntryRounding.Mode = source.Report.EntryRounding.Mode
+	}
+	if cmd.Flag("round-totals-to").Changed {
+		target.Report.EntryRounding.Size = source.Report.EntryRounding.Size
+	}
+	if cmd.Flag("round-totals").Changed {
+		target.Report.EntryRounding.Mode = source.Report.EntryRounding.Mode
+	}
+	if cmd.Flag("decimal").Changed {
+		target.DecimalDuration = source.DecimalDuration
+	}
 }
 
 func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Options, error) {
