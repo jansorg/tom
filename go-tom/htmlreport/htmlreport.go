@@ -49,7 +49,7 @@ func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report
 	}
 }
 
-func (r *Report) Render(results *report.BucketReport) (string, error) {
+func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 	functionMap := map[string]interface{}{
 		"reportOptions": func() *Options {
 			return &r.options
@@ -130,14 +130,14 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 
 		tmpl, err := htmlTemplate.New(filepath.Base(templatePath)).Funcs(functionMap).ParseFiles(append(files, templatePath)...)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		out := bytes.NewBuffer([]byte{})
+		out := bytes.NewBuffer(nil)
 		if err = tmpl.Execute(out, results); err != nil {
-			return "", err
+			return nil, err
 		}
 
-		return out.String(), nil
+		return out.Bytes(), nil
 	} else if r.options.TemplateName != nil && *r.options.TemplateName != "" {
 		templatePath := *r.options.TemplateName
 
@@ -149,15 +149,15 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 
 		tmpl, err := assetTemplate.New(templatePath, tom.Asset).Funcs(functionMap).ParseFiles(templateFiles...)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		out := bytes.NewBuffer([]byte{})
+		out := bytes.NewBuffer(nil)
 		if err = tmpl.Execute(out, results); err != nil {
-			return "", err
+			return nil, err
 		}
 
-		return out.String(), nil
+		return out.Bytes(), nil
 	} else {
-		return "", fmt.Errorf("template undefined")
+		return nil, fmt.Errorf("template undefined")
 	}
 }

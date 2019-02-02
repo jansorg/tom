@@ -19,7 +19,10 @@ import (
 )
 
 type flags struct {
+	title             string
+	description       string
 	showEmpty         bool
+	showMatrixTables  bool
 	fromDateString    string
 	toDateString      string
 	projectFilter     []string
@@ -33,12 +36,14 @@ type flags struct {
 	roundModeFrames   string
 	roundModeTotal    string
 	decimalDurations  bool
+	showSummary       bool
 	templateName      string
 	templateFilePath  string
 }
 
 var defaultFlags = flags{
-	templateName: "default",
+	templateName:     "default",
+	showMatrixTables: true,
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -47,6 +52,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var configFile string
 	var saveConfigFile string
 	var jsonOutput bool
+	var htmlOutputFile string
 
 	var cmd = &cobra.Command{
 		Use:   "report",
@@ -91,8 +97,17 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 				}
 				fmt.Println(string(data))
 			} else {
-				if err := printTemplate(ctx, frameReport, config); err != nil {
+				if html, err := renderReport(ctx, frameReport, config); err != nil {
 					util.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
+				} else {
+					if htmlOutputFile != "" {
+						err = ioutil.WriteFile(htmlOutputFile, html, 0600)
+						if err != nil {
+							util.Fatal(err)
+						}
+					} else {
+						fmt.Println(string(html))
+					}
 				}
 			}
 		},
@@ -101,6 +116,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().BoolVarP(&jsonOutput, "json", "", false, "Prints JSON instead of plain text")
 	cmd.Flags().StringVarP(&configFile, "config", "", "", "Path to a json configuration")
 	cmd.Flags().StringVarP(&saveConfigFile, "save-config", "", "", "Path where the options are saved as a template")
+	cmd.Flags().StringVarP(&htmlOutputFile, "output-file", "o", "", "Path where the rendered data will be written")
 
 	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
 
@@ -114,7 +130,6 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.fromDateString, "from", "f", "", "The date when the report should start.")
 	cmd.Flags().StringVarP(&opts.toDateString, "to", "t", "", "Optional end date")
 
-	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
 	cmd.Flags().IntVarP(&opts.year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 	cmd.Flags().IntVarP(&opts.month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.Flag("month").NoOptDefVal = "0"
@@ -131,7 +146,12 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().DurationVarP(&opts.roundTotals, "round-totals-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&opts.roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
 
+	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
 	cmd.Flags().BoolVarP(&opts.decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
+	cmd.Flags().BoolVarP(&opts.showSummary, "show-summary", "", defaultFlags.showSummary, "Show a report summary at the top of the report")
+	cmd.Flags().BoolVarP(&opts.showMatrixTables, "matrix-tables", "", defaultFlags.showMatrixTables, "Show matrix tables when applicable instead of a list of tables")
+	cmd.Flags().StringVarP(&opts.title, "title", "", "", "This will be displayed as the reports title when you're using the default templates")
+	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -170,6 +190,18 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("decimal").Changed {
 		target.DecimalDuration = source.DecimalDuration
+	}
+	if cmd.Flag("show-summary").Changed {
+		target.ShowSummary = source.ShowSummary
+	}
+	if cmd.Flag("matrix-tables").Changed {
+		target.ShowMatrixTables = source.ShowMatrixTables
+	}
+	if cmd.Flag("title").Changed {
+		target.CustomTitle = source.CustomTitle
+	}
+	if cmd.Flag("description").Changed {
+		target.CustomDescription = source.CustomDescription
 	}
 }
 
@@ -248,9 +280,13 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	}
 
 	return htmlreport.Options{
-		TemplateFilePath: &opts.templateFilePath,
-		TemplateName:     &opts.templateName,
-		DecimalDuration:  opts.decimalDurations,
+		TemplateFilePath:  &opts.templateFilePath,
+		TemplateName:      &opts.templateName,
+		DecimalDuration:   opts.decimalDurations,
+		ShowMatrixTables:  opts.showMatrixTables,
+		ShowSummary:       opts.showSummary,
+		CustomTitle:       &opts.title,
+		CustomDescription: &opts.description,
 		Report: report.Config{
 			ProjectIDs:         projectIDs,
 			IncludeSubprojects: opts.includeSubproject,
@@ -269,17 +305,10 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	}, nil
 }
 
-func printTemplate(ctx *context.TomContext, report *report.BucketReport, opts htmlreport.Options) error {
+func renderReport(ctx *context.TomContext, report *report.BucketReport, opts htmlreport.Options) ([]byte, error) {
 	dir, _ := os.Getwd()
-
 	t := htmlreport.NewReport(dir, opts, ctx)
-	out, err := t.Render(report)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(out)
-	return nil
+	return t.Render(report)
 }
 
 func parseDate(dateString *string) (*time.Time, error) {

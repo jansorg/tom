@@ -30,7 +30,7 @@
 {{end}}
 
 {{define "commonCSS"}}
-    <style type="text/css">
+    <style>
         :root {
             --font-size: 12pt;
             --font-family: "system-ui", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
@@ -200,9 +200,8 @@
         }
     </style>
 
-    <style type="text/css" media="print">
+    <style media="print">
         @page {
-            size: auto;
             margin: 20mm;
         }
 
@@ -250,13 +249,13 @@
 
 {{define "customCSS"}}
     {{with reportOptions.CustomCSS}}
-        <style type="text/css">
+        <style>
             {{.}}
         </style>
     {{end}}
 
     {{with reportOptions.CustomCSSFile}}
-        <style type="text/css">
+        <style>
             {{inlineCSS .}}
         </style>
     {{end}}
