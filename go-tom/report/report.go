@@ -1,83 +1,12 @@
 package report
 
 import (
-	"encoding/json"
 	"fmt"
-	"sort"
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/util"
 )
-
-type SplitOperation int8
-
-const (
-	SplitByYear SplitOperation = iota + 1
-	SplitByMonth
-	SplitByWeek
-	SplitByDay
-	SplitByProject
-	SplitByParentProject
-)
-
-func SplitOperationByName(name string) (SplitOperation, error) {
-	switch name {
-	case "year":
-		return SplitByYear, nil
-	case "month":
-		return SplitByMonth, nil
-	case "week":
-		return SplitByWeek, nil
-	case "day":
-		return SplitByDay, nil
-	case "project":
-		return SplitByProject, nil
-	default:
-		return 0, fmt.Errorf("unknown split operation %s", name)
-	}
-}
-
-func (s SplitOperation) IsDateSplit() bool {
-	return s >= SplitByYear && s <= SplitByDay
-}
-
-func (s SplitOperation) String() string {
-	name := ""
-	switch (s) {
-	case SplitByYear:
-		name = "year"
-	case SplitByMonth:
-		name = "month"
-	case SplitByWeek:
-		name = "week"
-	case SplitByDay:
-		name = "day"
-	case SplitByProject:
-		name = "project"
-	case SplitByParentProject:
-		name = "parentProject"
-	}
-	return name
-}
-func (s SplitOperation) MarshalJSON() ([]byte, error) {
-	return json.Marshal(s.String())
-}
-
-func (r *SplitOperation) UnmarshalJSON(data []byte) error {
-	name := ""
-	err := json.Unmarshal(data, &name)
-	if err != nil {
-		return err
-	}
-
-	v, err := SplitOperationByName(name)
-	if err != nil {
-		return err
-	}
-	*r = v
-	return nil
-}
 
 type BucketReport struct {
 	ctx    *context.TomContext
@@ -107,21 +36,23 @@ func (b *BucketReport) Update() *ResultBucket {
 	projectIDs := b.config.ProjectIDs
 	if b.config.IncludeSubprojects {
 		projectIDs = []string{}
-		for _, p := range b.ctx.Store.Projects() {
+		if len(b.config.ProjectIDs) == 0 {
+			for _, p := range b.ctx.Store.Projects().Projects() {
+				projectIDs = append(projectIDs, p.ID)
+			}
+		} else {
 			for _, parentID := range b.config.ProjectIDs {
-				if b.ctx.Store.ProjectIsSameOrChild(parentID, p.ID) {
-					projectIDs = append(projectIDs, p.ID)
-				}
+				projectIDs = append(projectIDs, parentID)
+				projectIDs = append(projectIDs, b.ctx.Query.CollectSubprojectIDs(parentID)...)
 			}
 		}
 	}
 
+	// we need to filter our source by project ID
 	if len(projectIDs) > 0 {
-		// sort IDs to use binary search
-		sort.Strings(projectIDs)
 		b.source.Filter(func(frame *model.Frame) bool {
-			i := sort.SearchStrings(projectIDs, frame.ProjectId)
-			return i < len(projectIDs) && projectIDs[i] == frame.ProjectId
+			_, err := b.ctx.Query.FindSuitableProject(frame.ProjectId, projectIDs)
+			return err == nil
 		})
 	}
 
@@ -144,11 +75,19 @@ func (b *BucketReport) Update() *ResultBucket {
 			})
 		} else if op == SplitByProject {
 			b.result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByProjectID(op, frameProject, projectIDs)
-			})
-		} else if op == SplitByParentProject {
-			b.result.WithLeafBuckets(func(leaf *ResultBucket) {
-				leaf.SplitByProjectID(op, frameProjectParent(b.ctx), projectIDs)
+				leaf.SplitByProjectID(op, func(frame *model.Frame) interface{} {
+					if len(projectIDs) == 0 {
+						return frame.ProjectId
+					}
+
+					if id, err := b.ctx.Query.FindSuitableProject(frame.ProjectId, projectIDs); err == nil {
+						return id
+					} else {
+						// fixme shouldn't happen as source is already filtered
+						util.Fatalf("unexpected error, unable to find project bucket for %s in %v", frame.ProjectId, projectIDs, err.Error())
+						return ""
+					}
+				}, projectIDs)
 			})
 		} else {
 			util.Fatal(fmt.Errorf("unknown split operation %d", op))
@@ -158,20 +97,6 @@ func (b *BucketReport) Update() *ResultBucket {
 	updateBucket(b, b.result)
 
 	return b.result
-}
-
-func frameProject(frame *model.Frame) interface{} {
-	return frame.ProjectId
-}
-
-func frameProjectParent(ctx *context.TomContext) func(*model.Frame) interface{} {
-	return func(frame *model.Frame) interface{} {
-		project, err := ctx.Store.ProjectByID(frame.ProjectId)
-		if err != nil {
-			return ""
-		}
-		return project.ParentID
-	}
 }
 
 // depth first update of the buckets to aggregate stats from sub-buckets

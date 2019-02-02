@@ -51,13 +51,12 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			var config htmlreport.Options
+			config := htmlreport.DefaultOptions
 			var err error
 
 			if configFile != "" {
-				if data, err := ioutil.ReadFile(configFile); err != nil {
-					util.Fatal(err)
-				} else if err := json.Unmarshal(data, &config); err != nil {
+				config, err = loadJsonConfig(ctx, configFile)
+				if err != nil {
 					util.Fatal(err)
 				}
 			} else {
@@ -130,6 +129,27 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	parent.AddCommand(cmd)
 	return cmd
+}
+
+func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Options, error) {
+	var config htmlreport.Options
+	if data, err := ioutil.ReadFile(filePath); err != nil {
+		util.Fatal(err)
+	} else if err := json.Unmarshal(data, &config); err != nil {
+		util.Fatal(err)
+	}
+
+	// validate project IDs
+	ids := []string{}
+	for _, idOrName := range config.Report.ProjectIDs {
+		project, err := ctx.Query.ProjectByFullNameOrID(idOrName, "/")
+		if err != nil {
+			return htmlreport.Options{}, fmt.Errorf("validating project %s: %s", idOrName, err.Error())
+		}
+		ids = append(ids, project.ID)
+	}
+	config.Report.ProjectIDs = ids
+	return config, nil
 }
 
 func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htmlreport.Options, error) {
@@ -226,37 +246,4 @@ func parseDate(dateString *string) (*time.Time, error) {
 		return nil, err
 	}
 	return &result, nil
-}
-
-func printReport(report *report.ResultBucket, ctx *context.TomContext, level int) {
-	title := report.Title()
-	if title != "" {
-		printlnIndenting(level-1, title)
-	} else if level == 1 {
-		printlnIndenting(level-1, "Overall")
-	}
-
-	if !report.DateRange().Empty() {
-		printfIndenting(level, "Date range: %s\n", report.DateRange().MinimalString())
-	}
-	if !report.TrackedDateRange().Empty() {
-		printfIndenting(level, "Tracked dates: %s\n", report.TrackedDateRange().ShortString())
-	}
-	printfIndenting(level, "Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.Get()))
-	printfIndenting(level, "Exact Duration: %s\n", ctx.DurationPrinter.Short(report.Duration.GetExact()))
-	fmt.Println()
-
-	for _, r := range report.ChildBuckets {
-		printReport(r, ctx, level+1)
-	}
-}
-
-func printlnIndenting(level int, value string) {
-	fmt.Print(strings.Repeat("    ", level))
-	fmt.Println(value)
-}
-
-func printfIndenting(level int, format string, a ...interface{}) {
-	fmt.Print(strings.Repeat("    ", level))
-	fmt.Printf(format, a...)
 }

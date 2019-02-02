@@ -8,6 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/slices"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 type StoreQuery interface {
@@ -20,7 +21,9 @@ type StoreQuery interface {
 	ProjectsByShortNameOrID(nameOrID string) []*model.Project
 	WithProjectAndParents(id string, f func(*model.Project) bool) bool
 	CollectProjectAndSubprojects(id string) ([]*model.Project, error)
+	CollectSubprojectIDs(id string) []string
 	FindRecentlyTrackedProjects(max int) (model.ProjectList, error)
+	FindSuitableProject(id string, choices []string) (string, error)
 
 	GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool)
 	GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool)
@@ -101,7 +104,7 @@ func (q *defaultStoreQuery) ProjectsByShortNameOrID(nameOrID string) []*model.Pr
 	return q.ProjectsByShortName(nameOrID)
 }
 
-// Iterates the project and its parent hierarchy until there's not parent or the function returns false
+// Iterates the project and its parent hierarchy until there's no parent or the function returns false
 func (q *defaultStoreQuery) WithProjectAndParents(id string, f func(project *model.Project) bool) bool {
 	for id != "" {
 		current, err := q.ProjectByID(id)
@@ -134,6 +137,20 @@ func (q *defaultStoreQuery) CollectProjectAndSubprojects(id string) ([]*model.Pr
 	return result, nil
 }
 
+func (q *defaultStoreQuery) CollectSubprojectIDs(id string) []string {
+	if _, err := q.store.ProjectByID(id); err != nil {
+		return []string{}
+	}
+
+	var result []string
+	for _, p := range q.store.Projects() {
+		if p.ID != id && q.store.ProjectIsSameOrChild(id, p.ID) {
+			result = append(result, p.ID)
+		}
+	}
+	return result
+}
+
 func (q *defaultStoreQuery) FindRecentlyTrackedProjects(max int) (model.ProjectList, error) {
 	// frames are always sorted, collect the max distict projects
 	result := model.ProjectList{}
@@ -153,6 +170,28 @@ func (q *defaultStoreQuery) FindRecentlyTrackedProjects(max int) (model.ProjectL
 				}
 			}
 		}
+	}
+	return result, nil
+}
+
+func (q *defaultStoreQuery) FindSuitableProject(id string, choices []string) (string, error) {
+	acceptedIDs := util.MapStrings(choices)
+	if acceptedIDs[id] {
+		return id, nil
+	}
+
+	result := ""
+	q.WithProjectAndParents(id, func(project *model.Project) bool {
+		currentID := project.ID
+		if acceptedIDs[currentID] {
+			result = currentID
+			return false
+		}
+		return true
+	})
+
+	if result == "" {
+		return "", fmt.Errorf("no suitable project found")
 	}
 	return result, nil
 }

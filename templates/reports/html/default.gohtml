@@ -15,7 +15,7 @@
         </tr>
         </thead>
         <tbody>
-        {{range $bucket.EmptyChildren}}
+        {{range $bucket.ChildBuckets}}
             <tr>
                 <td>{{.Title}}</td>
                 <td class="time">{{minDuration .Duration.Get}}</td>
@@ -49,7 +49,7 @@
             {{with index $bucket.ChildBuckets 0}}
                 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
                 {{range .ChildBuckets}}
-                    <th class="time-header">{{.Title}}</th>{{end}}
+                    <th class="time-header">{{.MatrixTitle}}</th>{{end}}
             {{end}}
             <th class="time-header">{{i18n "Total"}}</th>
         </tr>
@@ -112,25 +112,22 @@
 {{define "Bucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
-    {{$leafs := .EmptyChildren}}
 
     <div class="bucket">
-        {{if isMatrix $bucket}}
+        {{if and reportOptions.ShowMatrixTables (isMatrix $bucket)}}
             {{template "MatrixBucket" $bucket }}
-        {{else if $leafs}}
+        {{else if eq $bucket.Depth 1 }}
             {{template "TableBucket" $bucket}}
         {{else}}
             {{if .Empty}}
-                {{if not .DateRange.Empty}}
+                {{if and (reportOptions.Report.ShowEmpty) (not .DateRange.Empty)}}
                     <div class="title range">{{.DateRange}}</div>
                 {{end}}
             {{else}}
                 <div class="buckets">
                     <span class="title">{{.Title}}</span>
                     {{range .ChildBuckets}}
-                        {{if not .Empty}}
-                            {{template "Bucket" .}}
-                        {{end}}
+                        {{template "Bucket" .}}
                     {{end}}
                 </div>
             {{end}}

@@ -139,7 +139,11 @@ func (r DateRange) IsClosed() bool {
 }
 
 func (r DateRange) IsMonthRange() bool {
-	return r.End != nil && r.Start.AddDate(0,1,0) == *r.End
+	return r.End != nil && r.Start.AddDate(0, 1, 0) == *r.End
+}
+
+func (r DateRange) IsYearRange() bool {
+	return r.End != nil && r.Start.AddDate(1, 0, 0) == *r.End
 }
 
 func (r DateRange) IsOpen() bool {

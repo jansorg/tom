@@ -28,12 +28,17 @@ type Options struct {
 	CustomDescription  *string          `json:"description"`
 	ShowSummary        bool             `json:"show_summary"`
 	ShowExactDurations bool             `json:"show_exact"`
+	ShowMatrixTables   bool             `json:"matrix_tables"`
 	DecimalDuration    bool             `json:"decimal_duration"`
 	TemplateName       *string          `json:"template_name"`
 	TemplateFilePath   *string          `json:"template_path"`
 	CustomCSS          htmlTemplate.CSS `json:"css"`
 	CustomCSSFile      string           `json:"css_file"`
 	Report             report.Config    `json:"report"`
+}
+
+var DefaultOptions = Options{
+	ShowMatrixTables: true,
 }
 
 func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report {
@@ -48,6 +53,9 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 	functionMap := map[string]interface{}{
 		"reportOptions": func() *Options {
 			return &r.options
+		},
+		"add": func(a, b int) int {
+			return a + b
 		},
 		"i18n": func(key string) string {
 			return r.ctx.LocalePrinter.Sprintf(key)
@@ -97,6 +105,13 @@ func (r *Report) Render(results *report.BucketReport) (string, error) {
 		"isMatrix": func(bucket report.ResultBucket) bool {
 			if bucket.Depth() != 2 {
 				return false
+			}
+
+			// make sure that all child buckets are of the same depth
+			for _, c := range bucket.ChildBuckets {
+				if c.Depth() != 1 {
+					return false
+				}
 			}
 
 			// all buckets must have the same number of children

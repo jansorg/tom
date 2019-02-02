@@ -89,7 +89,15 @@ func (b *ResultBucket) Depth() int {
 	if b.Empty() {
 		return 0
 	}
-	return 1 + b.ChildBuckets[0].Depth()
+
+	max := 0
+	for _, c := range b.ChildBuckets {
+		d := c.Depth()
+		if d > max {
+			max = d
+		}
+	}
+	return 1 + max
 }
 
 func (b *ResultBucket) Empty() bool {
@@ -184,6 +192,13 @@ func (b *ResultBucket) Title() string {
 	return ""
 }
 
+func (b *ResultBucket) MatrixTitle() string {
+	if b.SplitByType == SplitByMonth && b.parent == nil || b.parent.dateRange.IsYearRange() {
+		return b.ctx.Locale.MonthWide(b.dateRange.Start.Month())
+	}
+	return b.Title()
+}
+
 func (b *ResultBucket) SortChildBuckets() {
 	if b.Empty() {
 		return
@@ -197,19 +212,19 @@ func (b *ResultBucket) SortChildBuckets() {
 			return b1.DateRange().Start.Before(*b2.DateRange().Start)
 		}
 
-		return strings.Compare(b1.Title(), b2.Title()) < 0
+		return strings.Compare(strings.ToLower(b1.Title()), strings.ToLower(b2.Title())) < 0
 	});
 }
 
 func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}, minProjectIDs []string) {
 	mapping := make(map[string]bool)
 
-	for _, segment := range b.Frames.Split(splitValue) {
-		value := splitValue(segment.First())
+	for _, frameSubset := range b.Frames.Split(splitValue) {
+		value := splitValue(frameSubset.First())
 		mapping[value.(string)] = true
 
 		b.AddChild(&ResultBucket{
-			Frames:      segment,
+			Frames:      frameSubset,
 			Duration:    util.NewEmptyCopy(b.Duration),
 			SplitByType: splitType,
 			SplitBy:     value,

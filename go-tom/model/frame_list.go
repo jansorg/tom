@@ -61,7 +61,7 @@ func (f *FrameList) Last() *Frame {
 }
 
 func (f *FrameList) Sort() {
-	sort.SliceStable(*f, func(i, j int) bool {
+	sort.Slice(*f, func(i, j int) bool {
 		a := (*f)[i]
 		b := (*f)[j]
 		return a.IsBefore(b)
