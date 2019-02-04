@@ -269,7 +269,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	var projectIDs []string
 	// resolve names or IDs to IDs only
 	for _, nameOrID := range opts.projectFilter {
-		id := ""
+		id := nameOrID
 		// if it's a name resolve it to the ID
 		if project, err := ctx.Query.ProjectByFullName(strings.Split(nameOrID, "/")); err == nil {
 			id = project.ID
