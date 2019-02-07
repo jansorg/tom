@@ -10,6 +10,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/test_setup"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func TestEditFrame(t *testing.T) {
@@ -36,7 +37,7 @@ func TestEditFrame(t *testing.T) {
 	newEnd := end.Add(6 * time.Hour)
 	newEndString := newEnd.Format(time.RFC3339)
 	newNotes := "my new notes"
-	err = doEditFrameCommand(ctx, []string{f1.ID, f2.ID}, nil, &newEndString, &newNotes, &(p2.ID), "/")
+	err = doEditFrameCommand(ctx, []string{f1.ID, f2.ID}, nil, &newEndString, &newNotes, &(p2.ID), "/", nil)
 	require.NoError(t, err)
 
 	newF1, err := ctx.Query.FrameByID(f1.ID)
@@ -55,12 +56,16 @@ func TestEditFrame(t *testing.T) {
 
 	// update f2 to use p1
 	projectName1 := p1.GetFullName("/")
-	err = doEditFrameCommand(ctx, []string{f2.ID}, nil, nil, nil, &projectName1, "/")
+	err = doEditFrameCommand(ctx, []string{f2.ID}, nil, nil, nil, &projectName1, "/", nil)
 	require.NoError(t, err)
 	newF2, err = ctx.Query.FrameByID(f2.ID)
 	require.NoError(t, err)
 	assert.EqualValues(t, p1.ID, newF2.ProjectId)
-	assert.EqualValues(t, newNotes, newF2.Notes)
+
+	// update f2 to be archived
+	err = doEditFrameCommand(ctx, []string{f2.ID}, nil, nil, nil, nil, "/", util.TrueP())
+	require.NoError(t, err)
+	assert.EqualValues(t, true, newF2.Archived)
 }
 
 func TestEditFrameErrors(t *testing.T) {
@@ -76,13 +81,13 @@ func TestEditFrameErrors(t *testing.T) {
 	require.NoError(t, err)
 
 	empty := ""
-	err = doEditFrameCommand(ctx, []string{f.ID}, nil, nil, nil, &empty, "/")
+	err = doEditFrameCommand(ctx, []string{f.ID}, nil, nil, nil, &empty, "/", nil)
 	require.Error(t, err, "empty project must not be accepted")
 
 	name := "Invalid/project/name"
-	err = doEditFrameCommand(ctx, []string{f.ID}, nil, nil, nil, &name, "/")
+	err = doEditFrameCommand(ctx, []string{f.ID}, nil, nil, nil, &name, "/", nil)
 	require.Error(t, err, "not existing project must not be accepted")
 
-	err = doEditFrameCommand(ctx, []string{"does not exist"}, nil, nil, nil, &empty, "/")
+	err = doEditFrameCommand(ctx, []string{"does not exist"}, nil, nil, nil, &empty, "/", nil)
 	require.Error(t, err, "invalid frame id must not be accepted")
 }

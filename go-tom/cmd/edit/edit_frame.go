@@ -16,6 +16,7 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 	var projectIDOrName string
 	var nameDelimiter string
 	var notes string
+	var archive bool
 
 	var cmd = &cobra.Command{
 		Use:   "frame ID",
@@ -23,6 +24,7 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			var usedStart, usedEnd, usedProjectID, usedNotes *string
+			var archiveFrames *bool
 
 			if !cmd.Flag("start").Changed {
 				usedStart = nil
@@ -48,7 +50,13 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 				usedProjectID = &projectIDOrName
 			}
 
-			if err := doEditFrameCommand(ctx, args, usedStart, usedEnd, usedNotes, usedProjectID, nameDelimiter); err != nil {
+			if !cmd.Flag("archived").Changed {
+				archiveFrames = nil
+			} else {
+				archiveFrames = &archive
+			}
+
+			if err := doEditFrameCommand(ctx, args, usedStart, usedEnd, usedNotes, usedProjectID, nameDelimiter, archiveFrames); err != nil {
 				util.Fatal(err)
 			} else {
 				fmt.Println("successfully updated")
@@ -61,12 +69,13 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 	cmd.Flags().StringVarP(&notes, "notes", "n", "", "updates the notes for the given frame. Pass an empty string to remove the notes from the frame.")
 	cmd.Flags().StringVarP(&projectIDOrName, "project", "p", "", "Project ID or full name to use as new project for all passed frame IDs")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in full project names")
+	cmd.Flags().BoolVarP(&archive, "archived", "", archive, "Sets the archived flag")
 
 	parent.AddCommand(cmd)
 	return cmd
 }
 
-func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string) error {
+func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string, archived * bool) error {
 	// make sure that all frames exist before applying updates
 	frames, err := ctx.Query.FramesByID(frameIDs...)
 	if err != nil {
@@ -113,6 +122,10 @@ func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, e
 
 		if notes != nil {
 			frame.Notes = *notes
+		}
+
+		if archived != nil {
+			frame.Archived = *archived
 		}
 
 		if frame, err = ctx.Store.UpdateFrame(*frame); err != nil {
