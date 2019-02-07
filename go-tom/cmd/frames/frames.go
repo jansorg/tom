@@ -89,6 +89,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().BoolVarP(&showArchived, "archived", "", showArchived, "Show/Hide archived frames")
 	cmdUtil.AddListOutputFlags(cmd, "id", []string{"id", "projectID", "projectName", "projectFullName", "startTime", "stopTime", "duration", "lastUpdated", "notes", "tagIDs", "archived"})
 
+	newArchiveCommand(ctx, cmd)
 	parent.AddCommand(cmd)
 	return cmd
 }

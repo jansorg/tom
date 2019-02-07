@@ -97,6 +97,7 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 	cmd.Flags().BoolVarP(&showEmpty, "show-empty", "e", showEmpty, "Include projects without tracked time in the output")
 	cmd.Flags().BoolVarP(&showOverall, "show-overall", "", showOverall, "Show a summary of all projects, e.g. overall today. The used project ID is 'ALL'.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
+	cmd.Flags().BoolVarP(&includeActiveFrames, "include-active", "", includeActiveFrames, "Include active frames in the status. The current time will be used as end time of these frames.")
 	cmd.Flags().BoolVarP(&includeArchivedFrames, "archived", "", includeArchivedFrames, "Include archived frames in the status.")
 
 	cmdUtil.AddListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{

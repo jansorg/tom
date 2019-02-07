@@ -35,7 +35,7 @@ type StoreQuery interface {
 
 	FrameByID(id string) (*model.Frame, error)
 	FramesByID(id ...string) ([]*model.Frame, error)
-	FramesByProject(id string, includeSubprojects bool) []*model.Frame
+	FramesByProject(id string, includeSubprojects bool) model.FrameList
 	FramesByTag(id string) []*model.Frame
 	ActiveFrames() []*model.Frame
 
@@ -289,7 +289,7 @@ func (q *defaultStoreQuery) FramesByID(ids ...string) ([]*model.Frame, error) {
 	return frames, nil
 }
 
-func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) []*model.Frame {
+func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) model.FrameList {
 	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
 		return f.ProjectId == id || includeSubprojects && q.store.ProjectIsSameOrChild(id, f.ProjectId), nil
 	})
