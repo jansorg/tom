@@ -72,8 +72,11 @@ func (p *ProjectSummary) Add(v *ProjectSummary) {
 	p.TrackedTotalDay.AddSum(v.TrackedTotalDay)
 }
 
-func CreateProjectReports(referenceDay time.Time, showEmpty bool, activeEndRef *time.Time, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
-	frames := model.NewFrameList(ctx.Store.Frames())
+func CreateProjectReports(referenceDay time.Time, showEmpty bool, includeArchived bool, activeEndRef *time.Time, overallSummaryID string, ctx *context.TomContext) map[string]*ProjectSummary {
+	frames := ctx.Store.Frames()
+	if !includeArchived {
+		frames.ExcludeArchived()
+	}
 
 	year := util.NewYearRange(referenceDay, ctx.Locale, time.Local)
 	month := util.NewMonthRange(referenceDay, ctx.Locale, time.Local)

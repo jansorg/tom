@@ -19,7 +19,7 @@ func (o tagList) Size() int {
 	return len(o)
 }
 
-func (t tagList) Get(index int, prop string, format string) (interface{}, error) {
+func (t tagList) Get(index int, prop string, format string, ctx *context.TomContext) (interface{}, error) {
 	switch prop {
 	case "id":
 		return t[index].ID, nil

@@ -121,6 +121,12 @@ func (f *FrameList) Filter(accepted func(frame *Frame) bool) {
 	f.Sort()
 }
 
+func (f *FrameList) ExcludeArchived() {
+	f.Filter(func(frame *Frame) bool {
+		return !frame.Archived
+	})
+}
+
 // Split splits all frames into one ore more parts
 // The part a frame belongs to is coputed by the key function
 // because the distribution of keys is not always in order a map has to be used here

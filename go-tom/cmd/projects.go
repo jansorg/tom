@@ -21,7 +21,7 @@ func (o projectList) Size() int {
 	return len(o.projects)
 }
 
-func (o projectList) Get(index int, prop string, format string) (interface{}, error) {
+func (o projectList) Get(index int, prop string, format string, ctx *context.TomContext) (interface{}, error) {
 	switch prop {
 	case "id":
 		return o.projects[index].ID, nil

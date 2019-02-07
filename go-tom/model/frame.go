@@ -26,6 +26,7 @@ type Frame struct {
 	Updated   *time.Time `json:"updated,omitempty"`
 	Notes     string     `json:"notes,omitempty"`
 	TagIDs    []string   `json:"tags,omitempty"`
+	Archived  bool       `json:"archived,omitempty"`
 }
 
 func (f *Frame) sortTagIDs() {

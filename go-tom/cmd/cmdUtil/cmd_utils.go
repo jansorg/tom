@@ -15,7 +15,7 @@ import (
 
 type PropList interface {
 	Size() int
-	Get(index int, prop string, format string) (interface{}, error)
+	Get(index int, prop string, format string, ctx* context.TomContext) (interface{}, error)
 }
 
 func AddListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
@@ -56,7 +56,7 @@ func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error
 	for i := 0; i < data.Size(); i++ {
 		r := row{}
 		for _, prop := range formatFlags {
-			r[prop], err = data.Get(i, prop, output)
+			r[prop], err = data.Get(i, prop, output, ctx)
 			if err != nil {
 				return err
 			}

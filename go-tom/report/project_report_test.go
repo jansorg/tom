@@ -57,7 +57,7 @@ func Test_ProjectReportTest(t *testing.T) {
 	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday})
 	require.NoError(t, err)
 
-	reports := CreateProjectReports(refDate, false, nil, "", ctx)
+	reports := CreateProjectReports(refDate, false, true, nil, "", ctx)
 	require.EqualValues(t, 1, len(reports))
 	require.EqualValues(t, 50*time.Minute, reports[p.ID].TrackedYear.Get())
 	require.EqualValues(t, 40*time.Minute, reports[p.ID].TrackedMonth.Get())
@@ -76,7 +76,7 @@ func Test_ProjectReportTest(t *testing.T) {
 	// adds 15 minutes for our active frame
 	activeEnd := startToday.Add(15 * time.Minute)
 
-	reports = CreateProjectReports(refDate, false, &activeEnd, "", ctx)
+	reports = CreateProjectReports(refDate, false, true, &activeEnd, "", ctx)
 	require.EqualValues(t, 1, len(reports))
 	require.EqualValues(t, 15*time.Minute+50*time.Minute, reports[p.ID].TrackedYear.Get())
 	require.EqualValues(t, 15*time.Minute+40*time.Minute, reports[p.ID].TrackedMonth.Get())
@@ -107,7 +107,42 @@ func Test_MultipleDays(t *testing.T) {
 	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday})
 	require.NoError(t, err)
 
-	reports := CreateProjectReports(refDate, false, nil, "", ctx)
+	reports := CreateProjectReports(refDate, false, true, nil, "", ctx)
+	require.EqualValues(t, 1, len(reports))
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedYear.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedMonth.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedWeek.Get())
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedDay.Get())
+
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalYear.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalMonth.Get())
+	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedTotalWeek.Get())
+	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedTotalDay.Get())
+}
+
+func Test_MultipleDaysNoArchived(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p, err := ctx.Store.AddProject(model.Project{Name: "Project1"});
+	require.NoError(t, err)
+
+	// a wednesday, 12 am
+	refDate := time.Date(2018, time.July, 18, 12, 0, 0, 0, time.Local)
+
+	// 12 hours in the day, 11 in the next
+	startToday := refDate
+	endToday := startToday.Add(23 * time.Hour)
+
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday, Archived: true})
+	require.NoError(t, err)
+
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startToday, End: &endToday, Archived: false})
+	require.NoError(t, err)
+
+	// exclude archived
+	reports := CreateProjectReports(refDate, false, false, nil, "", ctx)
 	require.EqualValues(t, 1, len(reports))
 	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedYear.Get())
 	require.EqualValues(t, 23*time.Hour, reports[p.ID].TrackedMonth.Get())

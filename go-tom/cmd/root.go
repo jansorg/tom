@@ -12,6 +12,7 @@ import (
 	"golang.org/x/text/message"
 
 	"github.com/jansorg/tom/go-tom/cmd/edit"
+	"github.com/jansorg/tom/go-tom/cmd/frames"
 	"github.com/jansorg/tom/go-tom/cmd/remove"
 	"github.com/jansorg/tom/go-tom/cmd/report"
 	"github.com/jansorg/tom/go-tom/cmd/status"
@@ -40,7 +41,7 @@ func init() {
 
 	newProjectsCommand(&ctx, RootCmd)
 	newTagsCommand(&ctx, RootCmd)
-	newFramesCommand(&ctx, RootCmd)
+	frames.NewCommand(&ctx, RootCmd)
 	newCreateCommand(&ctx, RootCmd)
 	remove.NewCommand(&ctx, RootCmd)
 	newRenameCommand(&ctx, RootCmd)
