@@ -29,22 +29,27 @@ func (b *BucketReport) Result() *ResultBucket {
 }
 
 func (b *BucketReport) Update() *ResultBucket {
+	if !b.config.IncludeArchived {
+		b.source.ExcludeArchived()
+	}
 	if !b.config.DateFilterRange.Empty() {
 		b.source.FilterByDateRange(b.config.DateFilterRange, false)
 	}
 
 	projectIDs := b.config.ProjectIDs
-	if b.config.IncludeSubprojects {
-		projectIDs = []string{}
-		if len(b.config.ProjectIDs) == 0 {
-			for _, p := range b.ctx.Store.Projects().Projects() {
+	if len(projectIDs) == 0 {
+		// we started with all top-level project if no project was selected
+		// we add all projects if IncludeSubprojects is true
+		for _, p := range b.ctx.Store.Projects() {
+			if b.config.IncludeSubprojects || p.ParentID == "" {
 				projectIDs = append(projectIDs, p.ID)
 			}
-		} else {
-			for _, parentID := range b.config.ProjectIDs {
-				projectIDs = append(projectIDs, parentID)
-				projectIDs = append(projectIDs, b.ctx.Query.CollectSubprojectIDs(parentID)...)
-			}
+		}
+	} else if b.config.IncludeSubprojects {
+		projectIDs = []string{}
+		for _, parentID := range b.config.ProjectIDs {
+			projectIDs = append(projectIDs, parentID)
+			projectIDs = append(projectIDs, b.ctx.Query.CollectSubprojectIDs(parentID)...)
 		}
 	}
 

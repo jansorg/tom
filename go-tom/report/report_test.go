@@ -404,18 +404,61 @@ func TestReportSplitProjectMonthMatrix(t *testing.T) {
 		ShowEmpty:          false,
 	}, ctx)
 	report.Update()
-	assert.EqualValues(t, 10, report.result.FrameCount, "expected 3*16 frames in total")
+	assert.EqualValues(t, 10, report.result.FrameCount, "expected 10 frames in total")
 	assert.EqualValues(t, 20*time.Hour, report.result.Duration.SumExact)
 
 	require.EqualValues(t, 2, report.result.Depth(), "expected bucket hierarchy project > month")
 	assert.EqualValues(t, 2, len(report.result.ChildBuckets), "expected 2 project bucket (1 empty, 1 full)")
 	for _, year := range report.result.ChildBuckets {
-		if !year.Empty(){
+		if !year.Empty() {
 			require.EqualValues(t, 1, len(year.ChildBuckets), "expected 1 month bucket for the project")
 		}
 	}
 	assert.True(t, IsMatrix(report.result, true))
 	assert.False(t, IsMatrix(report.result, false))
+}
+
+func TestReportWithoutArchived(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	pTop, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1")
+	require.NoError(t, err)
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
+	require.NoError(t, err)
+
+	start := newDate(2017, time.May, 10, 10, 0).UTC()
+	end := newDate(2017, time.May, 10, 12, 0).UTC()
+
+	// adding 5*2 hours = 10 hours on project p1, UNARCHIVED
+	frames := model.NewEmptyFrameList()
+	for i := 0; i < 5; i++ {
+		newStart := start.AddDate(0, 0, 1)
+		newEnd := end.AddDate(0, 0, 1)
+
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p1.ID})
+	}
+
+	// adding 5*2 hours = 10 hours on project p1, ARCHIVED
+	for i := 0; i < 5; i++ {
+		newStart := start.AddDate(0, 0, 1)
+		newEnd := end.AddDate(0, 0, 1)
+
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p1.ID, Archived: true})
+	}
+
+	frames.Sort()
+
+	report := NewBucketReport(frames.Copy(), Config{
+		ProjectIDs:      []string{pTop.ID},
+		Splitting:       []SplitOperation{SplitByProject, SplitByMonth},
+		ShowEmpty:       false,
+		IncludeArchived: false,
+	}, ctx)
+	report.Update()
+	assert.EqualValues(t, 5, report.result.FrameCount, "expected 5 frames in total")
+	assert.EqualValues(t, 10*time.Hour, report.result.Duration.SumExact)
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

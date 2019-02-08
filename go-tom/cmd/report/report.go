@@ -39,11 +39,13 @@ type flags struct {
 	showSummary       bool
 	templateName      string
 	templateFilePath  string
+	archivedFrames    bool
 }
 
 var defaultFlags = flags{
 	templateName:     "default",
 	showMatrixTables: true,
+	archivedFrames:   true,
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -152,6 +154,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.showMatrixTables, "matrix-tables", "", defaultFlags.showMatrixTables, "Show matrix tables when applicable instead of a list of tables")
 	cmd.Flags().StringVarP(&opts.title, "title", "", "", "This will be displayed as the reports title when you're using the default templates")
 	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
+	cmd.Flags().BoolVarP(&opts.archivedFrames, "include-archived", "", defaultFlags.archivedFrames, "Include archived frames in the reported times")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -202,6 +205,9 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("description").Changed {
 		target.CustomDescription = source.CustomDescription
+	}
+	if cmd.Flag("include-archived").Changed {
+		target.Report.IncludeArchived = source.Report.IncludeArchived
 	}
 }
 
@@ -288,8 +294,10 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		CustomTitle:       &opts.title,
 		CustomDescription: &opts.description,
 		Report: report.Config{
+			// fixme missing timezone
 			ProjectIDs:         projectIDs,
 			IncludeSubprojects: opts.includeSubproject,
+			IncludeArchived:    opts.archivedFrames,
 			DateFilterRange:    filterRange,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
