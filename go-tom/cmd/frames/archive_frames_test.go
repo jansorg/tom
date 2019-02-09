@@ -72,7 +72,7 @@ func TestArchiveCommandSubprojects(t *testing.T) {
 
 	now := time.Now()
 	end := now.Add(10 * time.Minute)
-	f1, err := ctx.Store.AddFrame(model.Frame{
+	_, err = ctx.Store.AddFrame(model.Frame{
 		Start:     &now,
 		End:       &end,
 		ProjectId: p1.ID,

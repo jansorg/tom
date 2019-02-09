@@ -33,4 +33,9 @@ type Store interface {
 	RemoveFrame(id string) error
 	FindFirstFrame(func(*Frame) bool) (*Frame, error)
 	FindFrames(func(*Frame) (bool, error)) ([]*Frame, error)
+
+	Properties() []*Property
+	AddProperty(p *Property) (*Property, error)
+	RemoveProperty(id string) error
+	GetProperty(id string) (*Property, error)
 }

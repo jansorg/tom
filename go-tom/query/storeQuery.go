@@ -5,9 +5,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/slices"
+	"github.com/jansorg/tom/go-tom/store"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -25,10 +25,6 @@ type StoreQuery interface {
 	FindRecentlyTrackedProjects(max int) (model.ProjectList, error)
 	FindSuitableProject(id string, choices []string) (string, error)
 
-	GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool)
-	GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool)
-	GetInheritedIntProp(projectID string, prop config.IntProperty) (int64, bool)
-
 	TagByID(id string) (*model.Tag, error)
 	TagByName(name string) (*model.Tag, error)
 	TagsByName(names ...string) ([]*model.Tag, error)
@@ -40,6 +36,10 @@ type StoreQuery interface {
 	ActiveFrames() []*model.Frame
 
 	IsToplevelProject(id string) bool
+
+	FindPropertyValue(propertyID string, projectId string) (interface{}, error)
+	FindPropertyValues(projectId string) map[*model.Property]interface{}
+	FindPropertyByNameOrID(nameOrID string) (*model.Property, error)
 }
 
 func NewStoreQuery(store model.Store) StoreQuery {
@@ -196,42 +196,6 @@ func (q *defaultStoreQuery) FindSuitableProject(id string, choices []string) (st
 	return result, nil
 }
 
-func (q *defaultStoreQuery) GetInheritedStringProp(projectID string, prop config.StringProperty) (string, bool) {
-	value := ""
-	ok := false
-
-	q.WithProjectAndParents(projectID, func(project *model.Project) bool {
-		value, ok = prop.Get(project)
-		return !ok
-	})
-
-	return value, ok
-}
-
-func (q *defaultStoreQuery) GetInheritedIntProp(projectID string, prop config.IntProperty) (int64, bool) {
-	var value int64
-	ok := false
-
-	q.WithProjectAndParents(projectID, func(project *model.Project) bool {
-		value, ok = prop.Get(project)
-		return ok
-	})
-
-	return value, ok
-}
-
-func (q *defaultStoreQuery) GetInheritedFloatProp(projectID string, prop config.FloatProperty) (float64, bool) {
-	var value float64
-	ok := false
-
-	q.WithProjectAndParents(projectID, func(project *model.Project) bool {
-		value, ok = prop.Get(project)
-		return ok
-	})
-
-	return value, ok
-}
-
 func (q *defaultStoreQuery) TagByID(id string) (*model.Tag, error) {
 	tag, err := q.store.FindFirstTag(func(t *model.Tag) bool {
 		return t.ID == id
@@ -308,4 +272,70 @@ func (q *defaultStoreQuery) ActiveFrames() []*model.Frame {
 		return f.IsActive(), nil
 	})
 	return frames
+}
+
+func (q *defaultStoreQuery) FindPropertyValue(propertyID string, projectID string) (interface{}, error) {
+	var value interface{}
+	found := false
+
+	prop, err := q.store.GetProperty(propertyID)
+	if err != nil {
+		return nil, err
+	}
+
+	q.WithProjectAndParents(projectID, func(p *model.Project) bool {
+		// break early for properties not applying to subprojects
+		if p.ID != projectID && !prop.ApplyToSubprojects {
+			found = false
+			return false
+		}
+
+		if v, err := p.GetPropertyValue(propertyID); err == nil {
+			found = true
+			value = v
+		}
+		return !found
+	})
+
+	if !found {
+		return nil, store.ErrPropertyNotFound
+	}
+	return value, nil
+}
+
+func (q *defaultStoreQuery) FindPropertyValues(projectID string) map[*model.Property]interface{} {
+	result := make(map[*model.Property]interface{})
+
+	for _, prop := range q.store.Properties() {
+		q.WithProjectAndParents(projectID, func(p *model.Project) bool {
+			// break early for properties not applying to sub projects
+			if p.ID != projectID && !prop.ApplyToSubprojects {
+				return false
+			}
+
+			if value, err := p.GetPropertyValue(prop.ID); err == nil {
+				if _, exists := result[prop]; !exists {
+					result[prop] = value
+				}
+			}
+			return true
+		})
+	}
+
+	return result
+}
+
+func (q *defaultStoreQuery) FindPropertyByNameOrID(nameOrID string) (*model.Property, error) {
+	property, err := q.store.GetProperty(nameOrID)
+	if err == nil {
+		return property, nil
+	}
+
+	for _, prop := range q.store.Properties() {
+		if prop.Name == nameOrID {
+			return prop, nil
+		}
+	}
+
+	return nil, store.ErrPropertyNotFound
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/jansorg/tom/go-tom/config"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
@@ -70,25 +69,25 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 	frameReport := report.NewBucketReport(model.NewSortedFrameList(storeFrames), reportConfig, c.ctx)
 	result := frameReport.Update()
 
-	desc, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceDescriptionProperty)
-	address, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceAddressProperty)
-	currency, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceCurrencyProperty)
-	hourlyRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceHourlyRateProperty)
-	taxRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceTaxRateProperty)
+	// desc, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceDescriptionProperty)
+	// address, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceAddressProperty)
+	// currency, _ := c.ctx.Query.GetInheritedStringProp(c.project.ID, config.InvoiceCurrencyProperty)
+	// hourlyRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceHourlyRateProperty)
+	// taxRate, _ := c.ctx.Query.GetInheritedFloatProp(c.project.ID, config.InvoiceTaxRateProperty)
 
 	return invoiceConfig{
 		projectID:   c.project.ID,
 		projectName: c.project.Name,
-		currency:    currency,
-		taxRate:     taxRate,
-		address:     address,
+		// currency:    currency,
+		// taxRate:     taxRate,
+		// address:     address,
 		lines: []ProjectInvoiceLine{
 			{
 				ProjectName: c.project.Name,
 				Hours:       result.Duration.Get().Hours(),
-				Description: desc,
-				Currency:    currency,
-				HourlyRate:  hourlyRate,
+				// Description: desc,
+				// Currency:    currency,
+				// HourlyRate:  hourlyRate,
 			},
 		},
 	}, nil

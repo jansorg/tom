@@ -1,4 +1,4 @@
-package cmd
+package project
 
 import (
 	"fmt"
@@ -39,7 +39,7 @@ func (o projectList) Get(index int, prop string, format string, ctx *context.Tom
 	}
 }
 
-func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	nameDelimiter := ""
 	recentProjects := 0
 
@@ -68,8 +68,8 @@ func newProjectsCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 
 	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
-
 	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
+
 	parent.AddCommand(cmd)
 	return cmd
 }

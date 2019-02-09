@@ -13,6 +13,8 @@ import (
 
 	"github.com/jansorg/tom/go-tom/cmd/edit"
 	"github.com/jansorg/tom/go-tom/cmd/frames"
+	"github.com/jansorg/tom/go-tom/cmd/project"
+	"github.com/jansorg/tom/go-tom/cmd/property"
 	"github.com/jansorg/tom/go-tom/cmd/remove"
 	"github.com/jansorg/tom/go-tom/cmd/report"
 	"github.com/jansorg/tom/go-tom/cmd/status"
@@ -21,6 +23,7 @@ import (
 	"github.com/jansorg/tom/go-tom/i18n"
 	"github.com/jansorg/tom/go-tom/query"
 	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/storeHelper"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -39,7 +42,8 @@ func init() {
 	RootCmd.Flags().String("mem-profile", "", "create a memory profile for performance measurement")
 	RootCmd.Flag("mem-profile").Hidden = true
 
-	newProjectsCommand(&ctx, RootCmd)
+	project.NewCommand(&ctx, RootCmd)
+	property.NewCommand(&ctx, RootCmd)
 	newTagsCommand(&ctx, RootCmd)
 	frames.NewCommand(&ctx, RootCmd)
 	newCreateCommand(&ctx, RootCmd)
@@ -86,7 +90,7 @@ func initConfig() {
 	}
 
 	ctx.Store = dataStore
-	ctx.StoreHelper = store.NewStoreHelper(dataStore)
+	ctx.StoreHelper = storeHelper.NewStoreHelper(dataStore)
 	ctx.Query = query.NewStoreQuery(dataStore)
 	ctx.Language = i18n.FindPreferredLanguages()
 	ctx.LocalePrinter = message.NewPrinter(ctx.Language)

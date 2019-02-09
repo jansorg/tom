@@ -11,6 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/i18n"
 	"github.com/jansorg/tom/go-tom/query"
 	store2 "github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/storeHelper"
 )
 
 func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
@@ -26,7 +27,7 @@ func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
 
 	return &context.TomContext{
 		Store:           store,
-		StoreHelper:     store2.NewStoreHelper(store),
+		StoreHelper:     storeHelper.NewStoreHelper(store),
 		Query:           query.NewStoreQuery(store),
 		Language:        lang,
 		LocalePrinter:   message.NewPrinter(lang),

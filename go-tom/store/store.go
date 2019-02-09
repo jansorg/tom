@@ -16,6 +16,8 @@ import (
 )
 
 var ErrTagNotFound = fmt.Errorf("tag not found")
+var ErrPropertyNotFound = fmt.Errorf("property not found")
+var ErrPropertyExists = fmt.Errorf("property already exists")
 
 func NewStore(dir string) (model.Store, error) {
 	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
@@ -23,10 +25,11 @@ func NewStore(dir string) (model.Store, error) {
 	}
 
 	store := &DataStore{
-		path:        dir,
-		ProjectFile: filepath.Join(dir, "projects.json"),
-		TagFile:     filepath.Join(dir, "tags.json"),
-		FrameFile:   filepath.Join(dir, "frames.json"),
+		path:         dir,
+		ProjectFile:  filepath.Join(dir, "projects.json"),
+		TagFile:      filepath.Join(dir, "tags.json"),
+		FrameFile:    filepath.Join(dir, "frames.json"),
+		PropertyFile: filepath.Join(dir, "properties.json"),
 	}
 
 	if err := store.loadLocked(); err != nil {
@@ -39,15 +42,17 @@ type DataStore struct {
 	path      string
 	batchMode int32
 
-	ProjectFile string
-	TagFile     string
-	FrameFile   string
+	ProjectFile  string
+	TagFile      string
+	FrameFile    string
+	PropertyFile string
 
 	mu          sync.RWMutex
 	projectsMap map[string]*model.Project
 	projects    []*model.Project
 	tags        []*model.Tag
 	frames      []*model.Frame
+	properties  []*model.Property
 }
 
 func (d *DataStore) DirPath() string {
@@ -126,6 +131,15 @@ func (d *DataStore) loadLocked() error {
 		}
 	}
 
+	if fileExists(d.PropertyFile) {
+		if data, err = ioutil.ReadFile(d.PropertyFile); err != nil {
+			return err
+		}
+		if err = json.Unmarshal(data, &d.properties); err != nil {
+			return err
+		}
+	}
+
 	// update internal data
 	d.updateProjectsMapping()
 	for _, p := range d.projects {
@@ -174,6 +188,13 @@ func (d *DataStore) saveLocked() error {
 		return err
 	}
 	if err := ioutil.WriteFile(d.FrameFile, data, 0600); err != nil {
+		return err
+	}
+
+	if data, err = json.Marshal(d.properties); err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(d.PropertyFile, data, 0600); err != nil {
 		return err
 	}
 
@@ -236,7 +257,7 @@ func (d *DataStore) updateProjectInternals(p *model.Project) {
 	p.Store = d
 
 	if p.Properties == nil {
-		p.Properties = make(map[string]string)
+		p.Properties = make(map[string]interface{})
 	}
 
 	p.FullName = []string{p.Name}
@@ -508,4 +529,46 @@ func (d *DataStore) updateProjectsMapping() {
 	for _, p := range d.projects {
 		d.projectsMap[p.ID] = p
 	}
+}
+
+func (d *DataStore) Properties() []*model.Property {
+	return d.properties
+}
+
+func (d *DataStore) AddProperty(newProperty *model.Property) (*model.Property, error) {
+	// make sure that the property does not yet exist
+	for _, prop := range d.properties {
+		if newProperty.Name == prop.Name {
+			return nil, ErrPropertyExists
+		}
+	}
+
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	newProperty.ID = model.NextID()
+	d.properties = append(d.properties, newProperty)
+	return newProperty, d.saveLocked()
+}
+
+func (d *DataStore) RemoveProperty(id string) error {
+	for i, prop := range d.properties {
+		if prop.ID == id {
+			d.properties = append(d.properties[:i], d.properties[i+1:]...)
+			return d.saveLocked()
+		}
+	}
+	return ErrPropertyNotFound
+}
+
+func (d *DataStore) GetProperty(id string) (*model.Property, error) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	for _, prop := range d.properties {
+		if prop.ID == id {
+			return prop, nil
+		}
+	}
+	return nil, ErrPropertyNotFound
 }
