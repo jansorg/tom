@@ -82,9 +82,9 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 				return p.Sprintf("%.2f", floatValue)
 			}
 			if floatValue, ok := n.(float32); ok {
-				return r.ctx.LocalePrinter.Sprintf("%.2f", floatValue)
+				return r.ctx.LocalePrinter.Sprintf(message.Key("float-format", "%.2f"), floatValue)
 			}
-			return "u " + r.ctx.LocalePrinter.Sprint(n)
+			return r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
 			return r.ctx.DateTimePrinter.Time(date)
