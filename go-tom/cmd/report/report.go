@@ -14,6 +14,7 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/htmlreport"
 	"github.com/jansorg/tom/go-tom/model"
+	properties2 "github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/report"
 	"github.com/jansorg/tom/go-tom/util"
 )
@@ -212,7 +213,7 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 		target.Report.IncludeArchived = source.Report.IncludeArchived
 	}
 	if cmd.Flag("properties").Changed {
-		target.Report.NumericProperties = source.Report.NumericProperties
+		target.Report.Properties = source.Report.Properties
 	}
 }
 
@@ -291,7 +292,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	}
 
 	// properties
-	var properties []*model.Property
+	var properties []*properties2.Property
 	for _, idOrName := range opts.properties {
 		property, err := ctx.Query.FindPropertyByNameOrID(idOrName)
 		if err != nil {
@@ -314,7 +315,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			IncludeSubprojects: opts.includeSubproject,
 			IncludeArchived:    opts.archivedFrames,
 			DateFilterRange:    filterRange,
-			NumericProperties:  properties,
+			Properties:         properties,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
 			EntryRounding: util.RoundingConfig{

@@ -29,12 +29,12 @@ func newSetValueCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 			}
 
 			previousValue, _ := ctx.Query.FindPropertyValue(property.ID, project.ID)
-			convertedValue, err := property.FromString(args[2])
+			convertedValue, err := property.Type().Parse(args[2], property.ID)
 			if err != nil {
 				util.Fatal(err)
 			}
 
-			if err = project.SetPropertyValue(property.ID, convertedValue); err != nil {
+			if err = project.SetProperty(convertedValue); err != nil {
 				util.Fatal(err)
 			}
 

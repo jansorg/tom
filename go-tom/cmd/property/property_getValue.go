@@ -8,12 +8,13 @@ import (
 	"github.com/jansorg/tom/go-tom/cmd/cmdUtil"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
 type propertyList struct {
 	project    *model.Project
-	properties []*model.Property
+	properties []*properties.Property
 }
 
 func (p propertyList) Size() int {
@@ -60,7 +61,7 @@ func newGetValueCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 				if property, err := ctx.Query.FindPropertyByNameOrID(args[1]); err != nil {
 					util.Fatal(err)
 				} else {
-					data.properties = []*model.Property{property}
+					data.properties = []*properties.Property{property}
 				}
 			default:
 				util.Fatal("unsupported number of arguments")

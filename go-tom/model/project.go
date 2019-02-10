@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/jansorg/tom/go-tom/properties"
 )
 
 var errPropNotFound = fmt.Errorf("property not found")
@@ -12,10 +14,10 @@ var errPropValueNotFound = fmt.Errorf("property value not found")
 type Project struct {
 	Store Store `json:"-"`
 
-	ID         string                 `json:"id"`
-	ParentID   string                 `json:"parent"`
-	Name       string                 `json:"name"`
-	Properties map[string]interface{} `json:"properties,omitempty"`
+	ID         string                     `json:"id"`
+	ParentID   string                     `json:"parent"`
+	Name       string                     `json:"name"`
+	Properties []properties.PropertyValue `json:"properties,omitempty"`
 
 	FullName []string `json:"-"`
 }
@@ -43,35 +45,52 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func (p *Project) GetPropertyValue(id string) (interface{}, error) {
-	v, ok := p.Properties[id]
-	if !ok {
-		return nil, errPropValueNotFound
+func (p *Project) GetPropertyValue(id string) (properties.PropertyValue, error) {
+	for _, p := range p.Properties {
+		if p.PropertyID() == id {
+			return p, nil
+		}
 	}
-	return v, nil
+	return nil, errPropValueNotFound
 }
 
 func (p *Project) HasPropertyValue(id string) bool {
-	_, exists := p.Properties[id]
-	return exists
+	_, err := p.GetPropertyValue(id)
+	return err == nil
 }
 
-func (p *Project) SetPropertyValue(id string, value interface{}) error {
+func (p *Project) SetPropertyValue(id string, value string) error {
 	prop, err := p.Store.GetProperty(id)
 	if err != nil {
 		return err
 	}
 
-	if err := prop.Validate(value); err != nil {
+	propValue, err := prop.Type().Parse(value, id)
+	if err != nil {
 		return err
 	}
 
-	p.Properties[id] = value
+	p.Properties = append(p.Properties, propValue)
+	return nil
+}
+
+func (p *Project) SetProperty(value properties.PropertyValue) error {
+	_, err := p.Store.GetProperty(value.PropertyID())
+	if err != nil {
+		return err
+	}
+
+	p.Properties = append(p.Properties, value)
 	return nil
 }
 
 func (p *Project) RemovePropertyValue(id string) {
-	_ = p.SetPropertyValue(id, nil)
+	for i, prop := range p.Properties {
+		if prop.PropertyID() == id {
+			p.Properties = append(p.Properties[:i], p.Properties[i+1:]...)
+			return
+		}
+	}
 }
 
 type DetailedProject Project

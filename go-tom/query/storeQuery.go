@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/slices"
 	"github.com/jansorg/tom/go-tom/store"
 	"github.com/jansorg/tom/go-tom/util"
@@ -37,9 +38,9 @@ type StoreQuery interface {
 
 	IsToplevelProject(id string) bool
 
-	FindPropertyValue(propertyID string, projectId string) (interface{}, error)
-	FindPropertyValues(projectId string) map[*model.Property]interface{}
-	FindPropertyByNameOrID(nameOrID string) (*model.Property, error)
+	FindPropertyValue(propertyID string, projectId string) (properties.PropertyValue, error)
+	FindPropertyValues(projectId string) map[*properties.Property]properties.PropertyValue
+	FindPropertyByNameOrID(nameOrID string) (*properties.Property, error)
 }
 
 func NewStoreQuery(store model.Store) StoreQuery {
@@ -274,8 +275,8 @@ func (q *defaultStoreQuery) ActiveFrames() []*model.Frame {
 	return frames
 }
 
-func (q *defaultStoreQuery) FindPropertyValue(propertyID string, projectID string) (interface{}, error) {
-	var value interface{}
+func (q *defaultStoreQuery) FindPropertyValue(propertyID string, projectID string) (properties.PropertyValue, error) {
+	var value properties.PropertyValue
 	found := false
 
 	prop, err := q.store.GetProperty(propertyID)
@@ -303,8 +304,8 @@ func (q *defaultStoreQuery) FindPropertyValue(propertyID string, projectID strin
 	return value, nil
 }
 
-func (q *defaultStoreQuery) FindPropertyValues(projectID string) map[*model.Property]interface{} {
-	result := make(map[*model.Property]interface{})
+func (q *defaultStoreQuery) FindPropertyValues(projectID string) map[*properties.Property]properties.PropertyValue {
+	result := make(map[*properties.Property]properties.PropertyValue)
 
 	for _, prop := range q.store.Properties() {
 		q.WithProjectAndParents(projectID, func(p *model.Project) bool {
@@ -325,7 +326,7 @@ func (q *defaultStoreQuery) FindPropertyValues(projectID string) map[*model.Prop
 	return result
 }
 
-func (q *defaultStoreQuery) FindPropertyByNameOrID(nameOrID string) (*model.Property, error) {
+func (q *defaultStoreQuery) FindPropertyByNameOrID(nameOrID string) (*properties.Property, error) {
 	property, err := q.store.GetProperty(nameOrID)
 	if err == nil {
 		return property, nil

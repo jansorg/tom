@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
@@ -466,10 +467,10 @@ func TestReportWithProperties(t *testing.T) {
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
 
-	hourlyRate, err := ctx.Store.AddProperty(&model.Property{
+	hourlyRate, err := ctx.Store.AddProperty(&properties.Property{
 		Name:               "hourlyRate",
 		ApplyToSubprojects: true,
-		Type:               model.NumericType,
+		TypeID:             properties.CurrencyType.ID(),
 	})
 	require.NoError(t, err)
 
@@ -478,13 +479,13 @@ func TestReportWithProperties(t *testing.T) {
 	require.NoError(t, err)
 	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
 	require.NoError(t, err)
-	err = pTop.SetPropertyValue(hourlyRate.ID, 10)
+	err = pTop.SetPropertyValue(hourlyRate.ID, "10 EUR")
 	require.NoError(t, err)
 
 	// p2 has a rate of 100 EUR
 	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child2")
 	require.NoError(t, err)
-	err = p2.SetPropertyValue(hourlyRate.ID, 100)
+	err = p2.SetPropertyValue(hourlyRate.ID, "100 EUR")
 	require.NoError(t, err)
 
 	// 2 hour timespan
@@ -509,10 +510,10 @@ func TestReportWithProperties(t *testing.T) {
 	frames.Sort()
 
 	report := NewBucketReport(frames.Copy(), Config{
-		ProjectIDs:        []string{pTop.ID},
+		ProjectIDs: []string{pTop.ID},
 		// ShowEmpty:         true,
 		// Splitting:         []SplitOperation{SplitByProject},
-		NumericProperties: []*model.Property{hourlyRate},
+		Properties: []*properties.Property{hourlyRate},
 	}, ctx)
 	report.Update()
 

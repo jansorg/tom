@@ -13,6 +13,7 @@ import (
 	"sync/atomic"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/properties"
 )
 
 var ErrTagNotFound = fmt.Errorf("tag not found")
@@ -52,7 +53,7 @@ type DataStore struct {
 	projects    []*model.Project
 	tags        []*model.Tag
 	frames      []*model.Frame
-	properties  []*model.Property
+	properties  []*properties.Property
 }
 
 func (d *DataStore) DirPath() string {
@@ -257,7 +258,7 @@ func (d *DataStore) updateProjectInternals(p *model.Project) {
 	p.Store = d
 
 	if p.Properties == nil {
-		p.Properties = make(map[string]interface{})
+		p.Properties = []properties.PropertyValue{}
 	}
 
 	p.FullName = []string{p.Name}
@@ -531,11 +532,11 @@ func (d *DataStore) updateProjectsMapping() {
 	}
 }
 
-func (d *DataStore) Properties() []*model.Property {
+func (d *DataStore) Properties() []*properties.Property {
 	return d.properties
 }
 
-func (d *DataStore) AddProperty(newProperty *model.Property) (*model.Property, error) {
+func (d *DataStore) AddProperty(newProperty *properties.Property) (*properties.Property, error) {
 	// make sure that the property does not yet exist
 	for _, prop := range d.properties {
 		if newProperty.Name == prop.Name {
@@ -561,7 +562,7 @@ func (d *DataStore) RemoveProperty(id string) error {
 	return ErrPropertyNotFound
 }
 
-func (d *DataStore) GetProperty(id string) (*model.Property, error) {
+func (d *DataStore) GetProperty(id string) (*properties.Property, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 

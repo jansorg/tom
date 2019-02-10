@@ -13,7 +13,7 @@
                 <th class="time-header">{{i18n "Exact duration"}}</th>
             {{end}}
             {{range .Properties}}
-                <th class="time-header">{{.Property.Name}} ({{.Property.Suffix}})</th>
+                <th class="time-header">{{.Property.Name}} ({{.Property.Unit}})</th>
             {{end}}
         </tr>
         </thead>
@@ -26,7 +26,7 @@
                     <td class="time">{{minDuration .Duration.GetExact}}</td>
                 {{end}}
                 {{range .Properties}}
-                    <th class="align-right">{{formatNumber .ValueForRounded}} {{.Property.Suffix}}</th>
+                    <th class="align-right">{{formatNumber .ValueForRounded}} {{.Property.Unit}}</th>
                 {{end}}
             </tr>
         {{end}}
@@ -39,7 +39,7 @@
                 <th class="time time-header">{{minDuration $bucket.Duration.GetExact}}</th>
             {{end}}
             {{range $bucket.Properties}}
-                <th class="time-header">{{formatNumber .ValueForExact}} {{.Property.Suffix}}</th>
+                <th class="time-header">{{formatNumber .ValueForExact}} {{.Property.Unit}}</th>
             {{end}}
         </tr>
         </tfoot>

@@ -61,7 +61,7 @@ func (b *ResultBucket) Update() {
 
 	// property values
 	// fixme optimize this
-	for _, prop := range b.config.NumericProperties {
+	for _, prop := range b.config.Properties {
 		propValue := PropertyValue{
 			Property:        prop,
 			ValueForRounded: 0,
@@ -70,15 +70,15 @@ func (b *ResultBucket) Update() {
 
 		if b.Empty() {
 			// we can't just multiply with the rounded duration as the frames might be from different projects with different property values
-			for _, frame := range b.Frames.Frames() {
-				// fixme handle rounded
-				if value, err := b.ctx.Query.FindPropertyValue(prop.ID, frame.ProjectId); err == nil {
-					if floatValue, err := prop.ToFloat(value); err == nil {
-						propValue.ValueForExact += frame.Duration().Hours() * floatValue
-						propValue.ValueForRounded += frame.Duration().Hours() * floatValue
-					}
-				}
-			}
+			// for _, frame := range b.Frames.Frames() {
+			// fixme handle rounded
+			// if value, err := b.ctx.Query.FindPropertyValue(prop.ID, frame.ProjectId); err == nil {
+			// if floatValue, err := prop.ToFloat(value); err == nil {
+			// 	propValue.ValueForExact += frame.Duration().Hours() * floatValue
+			// 	propValue.ValueForRounded += frame.Duration().Hours() * floatValue
+			// }
+			// }
+			// }
 			// fixme make sure that we properly sum up the values of a project with subproject with hidden sub-projects
 			// 		add a test for this scenario
 		} else {

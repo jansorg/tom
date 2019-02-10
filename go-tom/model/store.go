@@ -1,8 +1,6 @@
 package model
 
-type PropertyHolder interface {
-	GetProperties() map[string]string
-}
+import "github.com/jansorg/tom/go-tom/properties"
 
 type Store interface {
 	DirPath() string
@@ -34,8 +32,8 @@ type Store interface {
 	FindFirstFrame(func(*Frame) bool) (*Frame, error)
 	FindFrames(func(*Frame) (bool, error)) ([]*Frame, error)
 
-	Properties() []*Property
-	AddProperty(p *Property) (*Property, error)
+	Properties() []*properties.Property
+	AddProperty(p *properties.Property) (*properties.Property, error)
 	RemoveProperty(id string) error
-	GetProperty(id string) (*Property, error)
+	GetProperty(id string) (*properties.Property, error)
 }

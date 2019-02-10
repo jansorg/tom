@@ -6,31 +6,29 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
-	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newCreateCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
-	typeName := "number"
+	typeName := properties.CurrencyType.ID()
+	description := ""
 	applyToSubprojects := true
-	prefix := ""
-	suffix := ""
 
 	var cmd = &cobra.Command{
 		Use:   "create <property name>",
 		Short: "Adds a new property definition",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			typeID, err := model.TypeFromString(typeName)
-			if err != nil {
-				util.Fatal(err)
+			propType := properties.FindType(typeName)
+			if propType == nil {
+				util.Fatal("property type %s not found", typeName)
 			}
 
-			prop, err := ctx.Store.AddProperty(&model.Property{
+			prop, err := ctx.Store.AddProperty(&properties.Property{
 				Name:               args[0],
-				Type:               typeID,
-				Prefix:             prefix,
-				Suffix:             suffix,
+				Description:        description,
+				TypeID:             propType.ID(),
 				ApplyToSubprojects: applyToSubprojects,
 			})
 
@@ -42,10 +40,9 @@ func newCreateCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 		},
 	}
 
-	cmd.Flags().StringVarP(&typeName, "type", "", typeName, "Property data type. Values: string | number")
+	cmd.Flags().StringVarP(&typeName, "type", "", typeName, "Property data type. Values: currency")
+	cmd.Flags().StringVarP(&description, "description", "", description, "Optional description with details about this property.")
 	cmd.Flags().BoolVarP(&applyToSubprojects, "subprojects", "s", applyToSubprojects, "Values of this property will be inherited by subprojects")
-	cmd.Flags().StringVarP(&prefix, "prefix", "", prefix, "Prefix string to display next to values of this property type")
-	cmd.Flags().StringVarP(&suffix, "suffix", "", suffix, "Suffix string to display next to values of this property type")
 
 	parent.AddCommand(cmd)
 	return cmd
