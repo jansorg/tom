@@ -14,7 +14,6 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/htmlreport"
 	"github.com/jansorg/tom/go-tom/model"
-	properties2 "github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/report"
 	"github.com/jansorg/tom/go-tom/util"
 )
@@ -212,9 +211,6 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	if cmd.Flag("include-archived").Changed {
 		target.Report.IncludeArchived = source.Report.IncludeArchived
 	}
-	if cmd.Flag("properties").Changed {
-		target.Report.Properties = source.Report.Properties
-	}
 }
 
 func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Options, error) {
@@ -291,16 +287,6 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		projectIDs = append(projectIDs, id)
 	}
 
-	// properties
-	var properties []*properties2.Property
-	for _, idOrName := range opts.properties {
-		property, err := ctx.Query.FindPropertyByNameOrID(idOrName)
-		if err != nil {
-			return htmlreport.Options{}, err
-		}
-		properties = append(properties, property)
-	}
-
 	return htmlreport.Options{
 		TemplateFilePath:  &opts.templateFilePath,
 		TemplateName:      &opts.templateName,
@@ -315,7 +301,6 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			IncludeSubprojects: opts.includeSubproject,
 			IncludeArchived:    opts.archivedFrames,
 			DateFilterRange:    filterRange,
-			Properties:         properties,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
 			EntryRounding: util.RoundingConfig{

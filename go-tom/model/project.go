@@ -4,20 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	"github.com/jansorg/tom/go-tom/properties"
 )
 
 var errPropValueNotFound = fmt.Errorf("property value not found")
 
+type ProjectProperties struct {
+	HourlyRate *Money `json:"hourlyRate,omitempty"`
+}
+
 type Project struct {
-	Store Store `json:"-"`
+	ID         string             `json:"id"`
+	ParentID   string             `json:"parent"`
+	Name       string             `json:"name"`
+	Properties *ProjectProperties `json:"properties,omitempty"`
 
-	ID         string                    `json:"id"`
-	ParentID   string                    `json:"parent"`
-	Name       string                    `json:"name"`
-	Properties properties.PropertyValues `json:"properties,omitempty"`
-
+	Store    Store    `json:"-"`
 	FullName []string `json:"-"`
 }
 
@@ -44,52 +45,18 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func (p *Project) GetPropertyValue(id string) (properties.PropertyValue, error) {
-	for _, p := range p.Properties {
-		if p.PropertyID() == id {
-			return p, nil
-		}
+func (p *Project) HourlyRate() *Money {
+	if p.Properties == nil {
+		return nil
 	}
-	return nil, errPropValueNotFound
+	return p.Properties.HourlyRate
 }
 
-func (p *Project) HasPropertyValue(id string) bool {
-	_, err := p.GetPropertyValue(id)
-	return err == nil
-}
-
-func (p *Project) SetPropertyValue(id string, value string) error {
-	prop, err := p.Store.GetProperty(id)
-	if err != nil {
-		return err
+func (p *Project) SetHourlyRate(value *Money) {
+	if p.Properties == nil {
+		p.Properties = &ProjectProperties{}
 	}
-
-	propValue, err := prop.Type().Parse(value, id)
-	if err != nil {
-		return err
-	}
-
-	p.Properties = append(p.Properties, propValue)
-	return nil
-}
-
-func (p *Project) SetProperty(value properties.PropertyValue) error {
-	_, err := p.Store.GetProperty(value.PropertyID())
-	if err != nil {
-		return err
-	}
-
-	p.Properties = append(p.Properties, value)
-	return nil
-}
-
-func (p *Project) RemovePropertyValue(id string) {
-	for i, prop := range p.Properties {
-		if prop.PropertyID() == id {
-			p.Properties = append(p.Properties[:i], p.Properties[i+1:]...)
-			return
-		}
-	}
+	p.Properties.HourlyRate = value
 }
 
 type DetailedProject Project

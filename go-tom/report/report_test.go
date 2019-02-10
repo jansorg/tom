@@ -10,7 +10,6 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/jansorg/tom/go-tom/model"
-	"github.com/jansorg/tom/go-tom/properties"
 	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
@@ -460,74 +459,6 @@ func TestReportWithoutArchived(t *testing.T) {
 	report.Update()
 	assert.EqualValues(t, 5, report.result.FrameCount, "expected 5 frames in total")
 	assert.EqualValues(t, 10*time.Hour, report.result.Duration.SumExact)
-}
-
-func TestReportWithProperties(t *testing.T) {
-	ctx, err := test_setup.CreateTestContext(language.German)
-	require.NoError(t, err)
-	defer test_setup.CleanupTestContext(ctx)
-
-	hourlyRate, err := ctx.Store.AddProperty(&properties.Property{
-		Name:               "hourlyRate",
-		ApplyToSubprojects: true,
-		TypeID:             properties.CurrencyType.ID(),
-	})
-	require.NoError(t, err)
-
-	// p1 and p1/child1 has a rate of 10 EUR
-	pTop, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1")
-	require.NoError(t, err)
-	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
-	require.NoError(t, err)
-	err = pTop.SetPropertyValue(hourlyRate.ID, "10 EUR")
-	require.NoError(t, err)
-
-	// p2 has a rate of 100 EUR
-	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child2")
-	require.NoError(t, err)
-	err = p2.SetPropertyValue(hourlyRate.ID, "100 EUR")
-	require.NoError(t, err)
-
-	// 2 hour timespan
-	start := newDate(2017, time.May, 10, 10, 0).UTC()
-	end := newDate(2017, time.May, 10, 12, 0).UTC()
-
-	// adding 5*2 hours = 10 hours on project p1
-	frames := model.NewEmptyFrameList()
-	for i := 0; i < 5; i++ {
-		newStart := start.AddDate(0, 0, 1)
-		newEnd := end.AddDate(0, 0, 1)
-		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p1.ID})
-	}
-
-	// adding 5*2 hours = 10 hours on project p2
-	for i := 0; i < 5; i++ {
-		newStart := start.AddDate(0, 0, 1)
-		newEnd := end.AddDate(0, 0, 1)
-		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p2.ID})
-	}
-
-	frames.Sort()
-
-	report := NewBucketReport(frames.Copy(), Config{
-		ProjectIDs: []string{pTop.ID},
-		// ShowEmpty:         true,
-		// Splitting:         []SplitOperation{SplitByProject},
-		Properties: []*properties.Property{hourlyRate},
-	}, ctx)
-	report.Update()
-
-	assert.EqualValues(t, 10, report.result.FrameCount, "expected 10 frames in total")
-	assert.EqualValues(t, 20*time.Hour, report.result.Duration.SumExact)
-
-	// p2 must have a hourlyRate value of 10hours * 100 = 1000 EUR
-	// p1 must have a hourlyRate value of 10hours *  10 = 100 EUR
-	// the top-level contains must have the value of 1100 EUR
-	value, err := report.Result().PropertyValue(hourlyRate.ID)
-	require.NoError(t, err)
-	assert.EqualValues(t, hourlyRate, value.Property())
-	assert.EqualValues(t, []string{"€1,100.00"}, value.FormatExact(ctx))
-	assert.EqualValues(t, []string{"€1,100.00"}, value.FormatRounded(ctx))
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

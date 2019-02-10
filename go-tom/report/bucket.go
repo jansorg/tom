@@ -7,7 +7,6 @@ import (
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
-	"github.com/jansorg/tom/go-tom/store"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -19,13 +18,12 @@ type ResultBucket struct {
 	dateRange        util.DateRange
 	trackedDateRange util.DateRange
 
-	Frames       *model.FrameList   `json:"-"`
-	FrameCount   int                `json:"frameCount"`
-	Duration     *util.DurationSum  `json:"duration"`
-	Properties   []PropertyValueSum `json:"properties"`
-	SplitByType  SplitOperation     `json:"split_type,omitempty"`
-	SplitBy      interface{}        `json:"split_by,omitempty"`
-	ChildBuckets []*ResultBucket    `json:"results,omitempty"`
+	Frames       *model.FrameList  `json:"-"`
+	FrameCount   int               `json:"frameCount"`
+	Duration     *util.DurationSum `json:"duration"`
+	SplitByType  SplitOperation    `json:"split_type,omitempty"`
+	SplitBy      interface{}       `json:"split_by,omitempty"`
+	ChildBuckets []*ResultBucket   `json:"results,omitempty"`
 }
 
 func (b *ResultBucket) Update() {
@@ -58,41 +56,6 @@ func (b *ResultBucket) Update() {
 	} else {
 		b.trackedDateRange = util.DateRange{}
 	}
-
-	// property values
-	// fixme optimize this
-	for _, prop := range b.config.Properties {
-		sum := NewPropertyValueSum(prop, b.config.EntryRounding)
-		if sum == nil {
-			continue
-		}
-
-		if b.Empty() {
-			// we can't just multiply with the rounded duration as the frames might be from different projects with different property values
-			for _, frame := range b.Frames.Frames() {
-				sum.Add(frame, b.ctx)
-			}
-			// fixme make sure that we properly sum up the values of a project with subproject with hidden sub-projects add a test for this scenario
-		} else {
-			// add child bucket values
-			for _, child := range b.ChildBuckets {
-				if childValue, err := child.PropertyValue(prop.ID); err == nil {
-					sum.AddSum(childValue, b.ctx)
-				}
-			}
-		}
-
-		b.Properties = append(b.Properties, sum)
-	}
-}
-
-func (b *ResultBucket) PropertyValue(id string) (PropertyValueSum, error) {
-	for _, v := range b.Properties {
-		if v.Property().ID == id {
-			return v, nil
-		}
-	}
-	return nil, store.ErrPropertyNotFound
 }
 
 func (b *ResultBucket) AppliedFilterRange() util.DateRange {

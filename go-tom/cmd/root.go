@@ -15,7 +15,6 @@ import (
 	"github.com/jansorg/tom/go-tom/cmd/frames"
 	"github.com/jansorg/tom/go-tom/cmd/import"
 	"github.com/jansorg/tom/go-tom/cmd/project"
-	"github.com/jansorg/tom/go-tom/cmd/property"
 	"github.com/jansorg/tom/go-tom/cmd/remove"
 	"github.com/jansorg/tom/go-tom/cmd/report"
 	"github.com/jansorg/tom/go-tom/cmd/status"
@@ -44,7 +43,6 @@ func init() {
 	RootCmd.Flag("mem-profile").Hidden = true
 
 	project.NewCommand(&ctx, RootCmd)
-	property.NewCommand(&ctx, RootCmd)
 	newTagsCommand(&ctx, RootCmd)
 	frames.NewCommand(&ctx, RootCmd)
 	newCreateCommand(&ctx, RootCmd)

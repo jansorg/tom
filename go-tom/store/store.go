@@ -13,7 +13,6 @@ import (
 	"sync/atomic"
 
 	"github.com/jansorg/tom/go-tom/model"
-	"github.com/jansorg/tom/go-tom/properties"
 )
 
 var ErrTagNotFound = fmt.Errorf("tag not found")
@@ -53,7 +52,6 @@ type DataStore struct {
 	projects    []*model.Project
 	tags        []*model.Tag
 	frames      []*model.Frame
-	properties  []*properties.Property
 }
 
 func (d *DataStore) DirPath() string {
@@ -132,15 +130,6 @@ func (d *DataStore) loadLocked() error {
 		}
 	}
 
-	if fileExists(d.PropertyFile) {
-		if data, err = ioutil.ReadFile(d.PropertyFile); err != nil {
-			return err
-		}
-		if err = json.Unmarshal(data, &d.properties); err != nil {
-			return err
-		}
-	}
-
 	// update internal data
 	d.updateProjectsMapping()
 	for _, p := range d.projects {
@@ -189,13 +178,6 @@ func (d *DataStore) saveLocked() error {
 		return err
 	}
 	if err := ioutil.WriteFile(d.FrameFile, data, 0600); err != nil {
-		return err
-	}
-
-	if data, err = json.Marshal(d.properties); err != nil {
-		return err
-	}
-	if err := ioutil.WriteFile(d.PropertyFile, data, 0600); err != nil {
 		return err
 	}
 
@@ -256,10 +238,6 @@ func (d *DataStore) AddProject(project model.Project) (*model.Project, error) {
 
 func (d *DataStore) updateProjectInternals(p *model.Project) {
 	p.Store = d
-
-	if p.Properties == nil {
-		p.Properties = []properties.PropertyValue{}
-	}
 
 	p.FullName = []string{p.Name}
 	if p.ParentID == "" {
@@ -530,46 +508,4 @@ func (d *DataStore) updateProjectsMapping() {
 	for _, p := range d.projects {
 		d.projectsMap[p.ID] = p
 	}
-}
-
-func (d *DataStore) Properties() []*properties.Property {
-	return d.properties
-}
-
-func (d *DataStore) AddProperty(newProperty *properties.Property) (*properties.Property, error) {
-	// make sure that the property does not yet exist
-	for _, prop := range d.properties {
-		if newProperty.Name == prop.Name {
-			return nil, ErrPropertyExists
-		}
-	}
-
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	newProperty.ID = model.NextID()
-	d.properties = append(d.properties, newProperty)
-	return newProperty, d.saveLocked()
-}
-
-func (d *DataStore) RemoveProperty(id string) error {
-	for i, prop := range d.properties {
-		if prop.ID == id {
-			d.properties = append(d.properties[:i], d.properties[i+1:]...)
-			return d.saveLocked()
-		}
-	}
-	return ErrPropertyNotFound
-}
-
-func (d *DataStore) GetProperty(id string) (*properties.Property, error) {
-	d.mu.Lock()
-	defer d.mu.Unlock()
-
-	for _, prop := range d.properties {
-		if prop.ID == id {
-			return prop, nil
-		}
-	}
-	return nil, ErrPropertyNotFound
 }

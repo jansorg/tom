@@ -1,7 +1,5 @@
 package model
 
-import "github.com/jansorg/tom/go-tom/properties"
-
 type Store interface {
 	DirPath() string
 	StartBatch()
@@ -31,9 +29,4 @@ type Store interface {
 	RemoveFrame(id string) error
 	FindFirstFrame(func(*Frame) bool) (*Frame, error)
 	FindFrames(func(*Frame) (bool, error)) ([]*Frame, error)
-
-	Properties() []*properties.Property
-	AddProperty(p *properties.Property) (*properties.Property, error)
-	RemoveProperty(id string) error
-	GetProperty(id string) (*properties.Property, error)
 }
