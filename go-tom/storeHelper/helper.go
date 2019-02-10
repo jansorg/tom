@@ -180,3 +180,26 @@ func (s *Helper) RemoveProject(project *model.Project) (int, int, error) {
 
 	return removedProjects, removedFrames, nil
 }
+
+func (s *Helper) RemoveProperty(idOrName string, removeProjectValues bool) error {
+	prop, err := s.query.FindPropertyByNameOrID(idOrName)
+	if err != nil {
+		return err
+	}
+
+	if removeProjectValues {
+		for _, project := range s.store.Projects() {
+			project.RemovePropertyValue(prop.ID)
+		}
+	} else {
+		// validate
+		for _, project := range s.store.Projects() {
+			_, err := project.GetPropertyValue(prop.ID)
+			if err != nil {
+				return fmt.Errorf("the property is still assigned to projects")
+			}
+		}
+	}
+
+	return s.store.RemoveProperty(prop.ID)
+}

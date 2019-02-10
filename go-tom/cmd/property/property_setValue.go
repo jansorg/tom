@@ -45,7 +45,7 @@ func newSetValueCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.C
 			if previousValue == nil {
 				fmt.Printf("%s=%v\n", args[1], convertedValue)
 			} else {
-				fmt.Printf("%s=%v (previously: %s)\n", args[1], convertedValue, previousValue)
+				fmt.Printf("%s=%v (previously: %v)\n", args[1], convertedValue, previousValue)
 			}
 		},
 	}

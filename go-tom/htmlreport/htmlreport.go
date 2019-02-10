@@ -10,6 +10,8 @@ import (
 	"time"
 
 	assetTemplate "github.com/arschles/go-bindata-html-template"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
@@ -73,7 +75,14 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			return base.String()
 		},
 		"formatNumber": func(n interface{}) string {
-			return r.ctx.LocalePrinter.Sprint(n)
+			if floatValue, ok := n.(float64); ok {
+				p := message.NewPrinter(language.German)
+				return p.Sprintf("%.2f", floatValue)
+			}
+			if floatValue, ok := n.(float32); ok {
+				return r.ctx.LocalePrinter.Sprintf("%.2f", floatValue)
+			}
+			return "u "+ r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
 			return r.ctx.DateTimePrinter.Time(date)
@@ -111,7 +120,7 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 
 			for _, b := range parent.ChildBuckets {
 				childCount := len(b.ChildBuckets)
-				if childCount >= childIndex  && childIndex < childCount {
+				if childCount >= childIndex && childIndex < childCount {
 					sum.AddSum(b.ChildBuckets[childIndex].Duration)
 				}
 			}

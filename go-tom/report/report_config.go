@@ -3,6 +3,7 @@ package report
 import (
 	"time"
 
+	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -16,4 +17,5 @@ type Config struct {
 	IncludeArchived    bool                `json:"include_archived"`
 	EntryRounding      util.RoundingConfig `json:"rounding_entry"`
 	SumRounding        util.RoundingConfig `json:"rounding_total"`
+	NumericProperties  []*model.Property   `json:"properties"`
 }

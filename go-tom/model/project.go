@@ -70,6 +70,10 @@ func (p *Project) SetPropertyValue(id string, value interface{}) error {
 	return nil
 }
 
+func (p *Project) RemovePropertyValue(id string) {
+	_ = p.SetPropertyValue(id, nil)
+}
+
 type DetailedProject Project
 
 func (p *DetailedProject) MarshalJSON() ([]byte, error) {

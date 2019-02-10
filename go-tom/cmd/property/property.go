@@ -13,6 +13,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	}
 
 	newCreateCommand(ctx, cmd)
+	newRemoveCommand(ctx, cmd)
 	newGetValueCommand(ctx, cmd)
 	newSetValueCommand(ctx, cmd)
 

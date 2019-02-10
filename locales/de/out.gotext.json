@@ -2,6 +2,21 @@
     "language": "de",
     "messages": [
         {
+            "id": "{FloatValue}",
+            "message": "{FloatValue}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "FloatValue",
+                    "string": "%.2[1]f",
+                    "type": "float64",
+                    "underlyingType": "float64",
+                    "argNum": 1,
+                    "expr": "floatValue"
+                }
+            ]
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Dauer"
@@ -15,6 +30,11 @@
             "id": "Total",
             "message": "Total",
             "translation": "Gesamt"
+        },
+        {
+            "id": "Rounded duration",
+            "message": "Rounded duration",
+            "translation": "Gerundete Zeit"
         },
         {
             "id": "Project",
@@ -35,11 +55,6 @@
             "id": "Exact tracked time:",
             "message": "Exact tracked time:",
             "translation": "Exakt erfasste Zeit:"
-        },
-        {
-            "id": "Frames:",
-            "message": "Frames:",
-            "translation": "Einträge"
         },
         {
             "id": "Date",

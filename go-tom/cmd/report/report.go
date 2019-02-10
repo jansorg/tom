@@ -40,6 +40,7 @@ type flags struct {
 	templateName      string
 	templateFilePath  string
 	archivedFrames    bool
+	properties        []string
 }
 
 var defaultFlags = flags{
@@ -92,25 +93,25 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config.Report, ctx)
 			result := frameReport.Update()
 
+			var data []byte
 			if jsonOutput {
-				data, err := json.MarshalIndent(result, "", "  ")
+				data, err = json.MarshalIndent(result, "", "  ")
 				if err != nil {
 					log.Fatal(err)
 				}
-				fmt.Println(string(data))
 			} else {
-				if html, err := renderReport(ctx, frameReport, config); err != nil {
+				if data, err = renderReport(ctx, frameReport, config); err != nil {
 					util.Fatal(fmt.Errorf("error while rendering: %s", err.Error()))
-				} else {
-					if htmlOutputFile != "" {
-						err = ioutil.WriteFile(htmlOutputFile, html, 0600)
-						if err != nil {
-							util.Fatal(err)
-						}
-					} else {
-						fmt.Println(string(html))
-					}
 				}
+			}
+
+			if htmlOutputFile != "" {
+				err = ioutil.WriteFile(htmlOutputFile, data, 0600)
+				if err != nil {
+					util.Fatal(err)
+				}
+			} else {
+				fmt.Println(string(data))
 			}
 		},
 	}
@@ -155,6 +156,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.title, "title", "", "", "This will be displayed as the reports title when you're using the default templates")
 	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
 	cmd.Flags().BoolVarP(&opts.archivedFrames, "include-archived", "", defaultFlags.archivedFrames, "Include archived frames in the reported times")
+	cmd.Flags().StringSliceVarP(&opts.properties, "property", "", defaultFlags.properties, "Project properties to include in the report")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -186,10 +188,10 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 		target.Report.EntryRounding.Mode = source.Report.EntryRounding.Mode
 	}
 	if cmd.Flag("round-totals-to").Changed {
-		target.Report.EntryRounding.Size = source.Report.EntryRounding.Size
+		target.Report.SumRounding.Size = source.Report.SumRounding.Size
 	}
 	if cmd.Flag("round-totals").Changed {
-		target.Report.EntryRounding.Mode = source.Report.EntryRounding.Mode
+		target.Report.SumRounding.Mode = source.Report.SumRounding.Mode
 	}
 	if cmd.Flag("decimal").Changed {
 		target.DecimalDuration = source.DecimalDuration
@@ -208,6 +210,9 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("include-archived").Changed {
 		target.Report.IncludeArchived = source.Report.IncludeArchived
+	}
+	if cmd.Flag("properties").Changed {
+		target.Report.NumericProperties = source.Report.NumericProperties
 	}
 }
 
@@ -285,6 +290,16 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		projectIDs = append(projectIDs, id)
 	}
 
+	// properties
+	var properties []*model.Property
+	for _, idOrName := range opts.properties {
+		property, err := ctx.Query.FindPropertyByNameOrID(idOrName)
+		if err != nil {
+			return htmlreport.Options{}, err
+		}
+		properties = append(properties, property)
+	}
+
 	return htmlreport.Options{
 		TemplateFilePath:  &opts.templateFilePath,
 		TemplateName:      &opts.templateName,
@@ -299,6 +314,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			IncludeSubprojects: opts.includeSubproject,
 			IncludeArchived:    opts.archivedFrames,
 			DateFilterRange:    filterRange,
+			NumericProperties:  properties,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
 			EntryRounding: util.RoundingConfig{

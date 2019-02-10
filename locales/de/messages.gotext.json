@@ -17,6 +17,11 @@
             "translation": "Gesamt"
         },
         {
+            "id": "Rounded duration",
+            "message": "Rounded duration",
+            "translation": "Gerundete Zeit"
+        },
+        {
             "id": "Project",
             "message": "Project",
             "translation": "Projekt"
@@ -60,6 +65,21 @@
             "id": "Notes",
             "message": "Notes",
             "translation": "Anmerkungen"
+        },
+        {
+            "id": "{FloatValue}",
+            "message": "{FloatValue}",
+            "translation": "",
+            "placeholders": [
+                {
+                    "id": "FloatValue",
+                    "string": "%.2[1]f",
+                    "type": "float64",
+                    "underlyingType": "float64",
+                    "argNum": 1,
+                    "expr": "floatValue"
+                }
+            ]
         }
     ]
 }

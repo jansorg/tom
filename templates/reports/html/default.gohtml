@@ -12,6 +12,9 @@
             {{if $showExact}}
                 <th class="time-header">{{i18n "Exact duration"}}</th>
             {{end}}
+            {{range .Properties}}
+                <th class="time-header">{{.Property.Name}} ({{.Property.Suffix}})</th>
+            {{end}}
         </tr>
         </thead>
         <tbody>
@@ -22,6 +25,9 @@
                 {{if $showExact}}
                     <td class="time">{{minDuration .Duration.GetExact}}</td>
                 {{end}}
+                {{range .Properties}}
+                    <th class="align-right">{{formatNumber .ValueForRounded}} {{.Property.Suffix}}</th>
+                {{end}}
             </tr>
         {{end}}
         </tbody>
@@ -31,6 +37,9 @@
             <th class="time time-header">{{minDuration $bucket.Duration.Get}}</th>
             {{if $showExact}}
                 <th class="time time-header">{{minDuration $bucket.Duration.GetExact}}</th>
+            {{end}}
+            {{range $bucket.Properties}}
+                <th class="time-header">{{formatNumber .ValueForExact}} {{.Property.Suffix}}</th>
             {{end}}
         </tr>
         </tfoot>
@@ -73,7 +82,8 @@
                             {{else}}
                                 <span>{{minDuration .Duration.Get}}</span>
                                 {{- if $showExact -}}
-                                    <br><span class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
+                                    <br><span
+                                            class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
                                 {{end}}
                             {{end}}
                         </td>

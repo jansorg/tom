@@ -36,42 +36,43 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
+	"%.2f":                12,
 	"Date":                8,
 	"Duration":            0,
 	"End":                 10,
 	"Exact duration":      1,
-	"Exact tracked time:": 6,
-	"Frames:":             7,
+	"Exact tracked time:": 7,
 	"Notes":               11,
-	"Project":             3,
+	"Project":             4,
+	"Rounded duration":    3,
 	"Start":               9,
-	"Time range:":         4,
+	"Time range:":         5,
 	"Total":               2,
-	"Tracked time:":       5,
+	"Tracked time:":       6,
 }
 
-var deIndex = []uint32{ // 13 elements
+var deIndex = []uint32{ // 14 elements
 	0x00000000, 0x00000006, 0x00000013, 0x0000001a,
-	0x00000022, 0x0000002f, 0x0000003e, 0x00000053,
-	0x0000005d, 0x00000063, 0x0000006a, 0x0000006f,
-	0x0000007b,
-} // Size: 76 bytes
+	0x00000029, 0x00000031, 0x0000003e, 0x0000004d,
+	0x00000062, 0x00000068, 0x0000006f, 0x00000074,
+	0x00000080, 0x00000080,
+} // Size: 80 bytes
 
-const deData string = "" + // Size: 123 bytes
-	"\x02Dauer\x02Exakte Dauer\x02Gesamt\x02Projekt\x02Zeitbereich:\x02Erfass" +
-	"te Zeit:\x02Exakt erfasste Zeit:\x02Einträge\x02Datum\x02Beginn\x02Ende" +
-	"\x02Anmerkungen"
+const deData string = "" + // Size: 128 bytes
+	"\x02Dauer\x02Exakte Dauer\x02Gesamt\x02Gerundete Zeit\x02Projekt\x02Zeit" +
+	"bereich:\x02Erfasste Zeit:\x02Exakt erfasste Zeit:\x02Datum\x02Beginn" +
+	"\x02Ende\x02Anmerkungen"
 
-var enIndex = []uint32{ // 13 elements
+var enIndex = []uint32{ // 14 elements
 	0x00000000, 0x00000009, 0x00000018, 0x0000001e,
-	0x00000026, 0x00000032, 0x00000040, 0x00000054,
-	0x0000005c, 0x00000061, 0x00000067, 0x0000006b,
-	0x00000071,
-} // Size: 76 bytes
+	0x0000002f, 0x00000037, 0x00000043, 0x00000051,
+	0x00000065, 0x0000006a, 0x00000070, 0x00000074,
+	0x0000007a, 0x00000082,
+} // Size: 80 bytes
 
-const enData string = "" + // Size: 113 bytes
-	"\x02Duration\x02Exact duration\x02Total\x02Project\x02Time range:\x02Tra" +
-	"cked time:\x02Exact tracked time:\x02Frames:\x02Date\x02Start\x02End\x02" +
-	"Notes"
+const enData string = "" + // Size: 130 bytes
+	"\x02Duration\x02Exact duration\x02Total\x02Rounded duration\x02Project" +
+	"\x02Time range:\x02Tracked time:\x02Exact tracked time:\x02Date\x02Start" +
+	"\x02End\x02Notes\x02%.2[1]f"
 
-	// Total table size 388 bytes (0KiB); checksum: D4EDAE7D
+	// Total table size 418 bytes (0KiB); checksum: B3D559A5
