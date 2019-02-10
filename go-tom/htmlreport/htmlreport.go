@@ -15,6 +15,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/report"
 	"github.com/jansorg/tom/go-tom/util"
 )
@@ -32,6 +33,7 @@ type Options struct {
 	ShowExactDurations bool             `json:"show_exact"`
 	ShowMatrixTables   bool             `json:"matrix_tables"`
 	DecimalDuration    bool             `json:"decimal_duration"`
+	ShowSales          bool             `json:"show_sales"`
 	TemplateName       *string          `json:"template_name"`
 	TemplateFilePath   *string          `json:"template_path"`
 	CustomCSS          htmlTemplate.CSS `json:"css"`
@@ -82,7 +84,7 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			if floatValue, ok := n.(float32); ok {
 				return r.ctx.LocalePrinter.Sprintf("%.2f", floatValue)
 			}
-			return "u "+ r.ctx.LocalePrinter.Sprint(n)
+			return "u " + r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
 			return r.ctx.DateTimePrinter.Time(date)
@@ -92,6 +94,13 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 		},
 		"formatDateTime": func(date time.Time) string {
 			return r.ctx.DateTimePrinter.DateTime(date)
+		},
+		"formatMoney": func(money *money.Money) string {
+			if money == nil {
+				return ""
+			}
+			// fixme make i18n aware
+			return money.Currency().Formatter().Format(money.Amount())
 		},
 		"minDuration": func(duration time.Duration) string {
 			if r.options.DecimalDuration {

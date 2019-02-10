@@ -8,7 +8,9 @@ import (
 
 func i18n_dummy(){
 p:= message.NewPrinter(language.Tag{})
+p.Printf("Sales")
 p.Printf("Duration")
+p.Printf("Exact sales")
 p.Printf("Exact duration")
 p.Printf("Total")
 p.Printf("Total")

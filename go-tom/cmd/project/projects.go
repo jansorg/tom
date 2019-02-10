@@ -34,6 +34,18 @@ func (o projectList) Get(index int, prop string, format string, ctx *context.Tom
 		return o.projects[index].GetFullName(o.nameDelimiter), nil
 	case "name":
 		return o.projects[index].Name, nil
+	case "hourlyRate":
+		rate := o.projects[index].HourlyRate()
+		if rate == nil {
+			return "", nil
+		}
+		return rate.ParsableString(), nil
+	case "appliedHourlyRate":
+		rate, err := ctx.Query.HourlyRate(o.projects[index].ID)
+		if rate == nil || err != nil {
+			return "", nil
+		}
+		return rate.ParsableString(), nil
 	default:
 		return "", fmt.Errorf("unknown property %s", prop)
 	}
@@ -68,7 +80,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
-	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "trackedDay"})
+	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "hourlyRate", "appliedHourlyRate"})
 
 	parent.AddCommand(cmd)
 	return cmd

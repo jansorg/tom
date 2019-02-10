@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/slices"
 	"github.com/jansorg/tom/go-tom/util"
 )
@@ -33,6 +34,8 @@ type StoreQuery interface {
 	FramesByProject(id string, includeSubprojects bool) model.FrameList
 	FramesByTag(id string) []*model.Frame
 	ActiveFrames() []*model.Frame
+
+	HourlyRate(projectID string) (*money.Money, error)
 
 	IsToplevelProject(id string) bool
 }
@@ -267,4 +270,18 @@ func (q *defaultStoreQuery) ActiveFrames() []*model.Frame {
 		return f.IsActive(), nil
 	})
 	return frames
+}
+
+func (q *defaultStoreQuery) HourlyRate(projectID string) (*money.Money, error) {
+	var result *money.Money
+
+	q.WithProjectAndParents(projectID, func(project *model.Project) bool {
+		result = project.HourlyRate()
+		return result == nil
+	})
+
+	if result == nil {
+		return nil, fmt.Errorf("no hourly rate available")
+	}
+	return result, nil
 }

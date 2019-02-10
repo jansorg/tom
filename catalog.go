@@ -36,43 +36,45 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%.2f":                12,
-	"Date":                8,
-	"Duration":            0,
-	"End":                 10,
-	"Exact duration":      1,
-	"Exact tracked time:": 7,
-	"Notes":               11,
-	"Project":             4,
-	"Rounded duration":    3,
-	"Start":               9,
-	"Time range:":         5,
-	"Total":               2,
-	"Tracked time:":       6,
+	"%.2f":                0,
+	"Date":                11,
+	"Duration":            2,
+	"End":                 13,
+	"Exact duration":      4,
+	"Exact sales":         3,
+	"Exact tracked time:": 10,
+	"Notes":               14,
+	"Project":             7,
+	"Rounded duration":    6,
+	"Sales":               1,
+	"Start":               12,
+	"Time range:":         8,
+	"Total":               5,
+	"Tracked time:":       9,
 }
 
-var deIndex = []uint32{ // 14 elements
-	0x00000000, 0x00000006, 0x00000013, 0x0000001a,
-	0x00000029, 0x00000031, 0x0000003e, 0x0000004d,
-	0x00000062, 0x00000068, 0x0000006f, 0x00000074,
-	0x00000080, 0x00000080,
-} // Size: 80 bytes
+var deIndex = []uint32{ // 16 elements
+	0x00000000, 0x00000008, 0x0000000f, 0x00000015,
+	0x00000024, 0x00000031, 0x00000038, 0x00000047,
+	0x0000004f, 0x0000005c, 0x0000006b, 0x00000080,
+	0x00000086, 0x0000008d, 0x00000092, 0x0000009e,
+} // Size: 88 bytes
 
-const deData string = "" + // Size: 128 bytes
-	"\x02Dauer\x02Exakte Dauer\x02Gesamt\x02Gerundete Zeit\x02Projekt\x02Zeit" +
-	"bereich:\x02Erfasste Zeit:\x02Exakt erfasste Zeit:\x02Datum\x02Beginn" +
-	"\x02Ende\x02Anmerkungen"
+const deData string = "" + // Size: 158 bytes
+	"\x02%.2[1]f\x02Umsatz\x02Dauer\x02Exakter Umsatz\x02Exakte Dauer\x02Gesa" +
+	"mt\x02Gerundete Zeit\x02Projekt\x02Zeitbereich:\x02Erfasste Zeit:\x02Exa" +
+	"kt erfasste Zeit:\x02Datum\x02Beginn\x02Ende\x02Anmerkungen"
 
-var enIndex = []uint32{ // 14 elements
-	0x00000000, 0x00000009, 0x00000018, 0x0000001e,
-	0x0000002f, 0x00000037, 0x00000043, 0x00000051,
-	0x00000065, 0x0000006a, 0x00000070, 0x00000074,
-	0x0000007a, 0x00000082,
-} // Size: 80 bytes
+var enIndex = []uint32{ // 16 elements
+	0x00000000, 0x00000008, 0x0000000e, 0x00000017,
+	0x00000023, 0x00000032, 0x00000038, 0x00000049,
+	0x00000051, 0x0000005d, 0x0000006b, 0x0000007f,
+	0x00000084, 0x0000008a, 0x0000008e, 0x00000094,
+} // Size: 88 bytes
 
-const enData string = "" + // Size: 130 bytes
-	"\x02Duration\x02Exact duration\x02Total\x02Rounded duration\x02Project" +
-	"\x02Time range:\x02Tracked time:\x02Exact tracked time:\x02Date\x02Start" +
-	"\x02End\x02Notes\x02%.2[1]f"
+const enData string = "" + // Size: 148 bytes
+	"\x02%.2[1]f\x02Sales\x02Duration\x02Exact sales\x02Exact duration\x02Tot" +
+	"al\x02Rounded duration\x02Project\x02Time range:\x02Tracked time:\x02Exa" +
+	"ct tracked time:\x02Date\x02Start\x02End\x02Notes"
 
-	// Total table size 418 bytes (0KiB); checksum: B3D559A5
+	// Total table size 482 bytes (0KiB); checksum: 774B414F

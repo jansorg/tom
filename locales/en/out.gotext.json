@@ -2,9 +2,40 @@
     "language": "en",
     "messages": [
         {
+            "id": "{FloatValue}",
+            "message": "{FloatValue}",
+            "translation": "{FloatValue}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "FloatValue",
+                    "string": "%.2[1]f",
+                    "type": "float64",
+                    "underlyingType": "float64",
+                    "argNum": 1,
+                    "expr": "floatValue"
+                }
+            ],
+            "fuzzy": true
+        },
+        {
+            "id": "Sales",
+            "message": "Sales",
+            "translation": "Sales",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Duration",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Exact sales",
+            "message": "Exact sales",
+            "translation": "Exact sales",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -83,23 +114,6 @@
             "message": "Notes",
             "translation": "Notes",
             "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "{FloatValue}",
-            "message": "{FloatValue}",
-            "translation": "{FloatValue}",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "FloatValue",
-                    "string": "%.2[1]f",
-                    "type": "float64",
-                    "underlyingType": "float64",
-                    "argNum": 1,
-                    "expr": "floatValue"
-                }
-            ],
             "fuzzy": true
         }
     ]

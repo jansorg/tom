@@ -21,12 +21,15 @@ type ResultBucket struct {
 	Frames       *model.FrameList  `json:"-"`
 	FrameCount   int               `json:"frameCount"`
 	Duration     *util.DurationSum `json:"duration"`
+	Sales        *Sales            `json:"sales"`
 	SplitByType  SplitOperation    `json:"split_type,omitempty"`
 	SplitBy      interface{}       `json:"split_by,omitempty"`
 	ChildBuckets []*ResultBucket   `json:"results,omitempty"`
 }
 
 func (b *ResultBucket) Update() {
+	b.Sales = NewSales(b.ctx, b.config.EntryRounding)
+
 	b.FrameCount = b.Frames.Size()
 	for _, f := range b.Frames.Frames() {
 		b.Duration.AddStartEndP(f.Start, f.End)
@@ -55,6 +58,19 @@ func (b *ResultBucket) Update() {
 		b.trackedDateRange = util.NewDateRange(first.TrackedDateRange().Start, last.TrackedDateRange().End, b.ctx.Locale)
 	} else {
 		b.trackedDateRange = util.DateRange{}
+	}
+
+	if b.Empty() {
+		for _, f := range b.Frames.Frames() {
+			_ = b.Sales.Add(f)
+		}
+	} else {
+		for _, c := range b.ChildBuckets {
+			// fixme handle error
+			if c.Sales != nil {
+				_ = b.Sales.AddSales(c.Sales)
+			}
+		}
 	}
 }
 

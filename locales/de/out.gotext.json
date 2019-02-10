@@ -2,9 +2,34 @@
     "language": "de",
     "messages": [
         {
+            "id": "{FloatValue}",
+            "message": "{FloatValue}",
+            "translation": "%.2[1]f",
+            "placeholders": [
+                {
+                    "id": "FloatValue",
+                    "string": "%.2[1]f",
+                    "type": "float64",
+                    "underlyingType": "float64",
+                    "argNum": 1,
+                    "expr": "floatValue"
+                }
+            ]
+        },
+        {
+            "id": "Sales",
+            "message": "Sales",
+            "translation": "Umsatz"
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Dauer"
+        },
+        {
+            "id": "Exact sales",
+            "message": "Exact sales",
+            "translation": "Exakter Umsatz"
         },
         {
             "id": "Exact duration",
@@ -60,21 +85,6 @@
             "id": "Notes",
             "message": "Notes",
             "translation": "Anmerkungen"
-        },
-        {
-            "id": "{FloatValue}",
-            "message": "{FloatValue}",
-            "translation": "",
-            "placeholders": [
-                {
-                    "id": "FloatValue",
-                    "string": "%.2[1]f",
-                    "type": "float64",
-                    "underlyingType": "float64",
-                    "argNum": 1,
-                    "expr": "floatValue"
-                }
-            ]
         }
     ]
 }

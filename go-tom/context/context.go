@@ -18,7 +18,6 @@ const (
 )
 
 type TomContext struct {
-
 	Store                  model.Store
 	StoreHelper            *storeHelper.Helper
 	Query                  query.StoreQuery

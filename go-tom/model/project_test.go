@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/jansorg/tom/go-tom/money"
 )
 
 func Test_ValidateProject(t *testing.T) {
@@ -21,7 +23,7 @@ func Test_ValidateProject(t *testing.T) {
 
 func TestJson(t *testing.T) {
 	p := &Project{}
-	p.SetHourlyRate(NewMoney(100, "EUR"))
+	p.SetHourlyRate(money.NewMoney(100, "EUR"))
 
 	bytes, err := json.Marshal(p)
 	require.NoError(t, err)
@@ -30,7 +32,7 @@ func TestJson(t *testing.T) {
 	err = json.Unmarshal(bytes, &p2)
 	require.NoError(t, err)
 
-	assert.EqualValues(t, 100, p2.HourlyRate().Amount)
+	assert.EqualValues(t, 100, p2.HourlyRate().Amount())
 }
 
 func TestJsonEmpty(t *testing.T) {

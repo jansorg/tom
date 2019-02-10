@@ -2,9 +2,19 @@
     "language": "de",
     "messages": [
         {
+            "id": "Sales",
+            "message": "Sales",
+            "translation": "Umsatz"
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Dauer"
+        },
+        {
+            "id": "Exact sales",
+            "message": "Exact sales",
+            "translation": "Exakter Umsatz"
         },
         {
             "id": "Exact duration",
@@ -42,11 +52,6 @@
             "translation": "Exakt erfasste Zeit:"
         },
         {
-            "id": "Frames:",
-            "message": "Frames:",
-            "translation": "Einträge"
-        },
-        {
             "id": "Date",
             "message": "Date",
             "translation": "Datum"
@@ -69,7 +74,7 @@
         {
             "id": "{FloatValue}",
             "message": "{FloatValue}",
-            "translation": "",
+            "translation": "%.2[1]f",
             "placeholders": [
                 {
                     "id": "FloatValue",

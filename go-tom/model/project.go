@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/jansorg/tom/go-tom/money"
 )
 
 var errPropValueNotFound = fmt.Errorf("property value not found")
 
 type ProjectProperties struct {
-	HourlyRate *Money `json:"hourlyRate,omitempty"`
+	HourlyRate *money.Money `json:"hourlyRate,omitempty"`
 }
 
 type Project struct {
@@ -45,14 +47,22 @@ func (p *Project) Validate() error {
 	return nil
 }
 
-func (p *Project) HourlyRate() *Money {
+func (p *Project) HourlyRate() *money.Money {
 	if p.Properties == nil {
 		return nil
 	}
 	return p.Properties.HourlyRate
 }
 
-func (p *Project) SetHourlyRate(value *Money) {
+func (p *Project) SetHourlyRate(value *money.Money) {
+	if value == nil {
+		if p.Properties != nil {
+			// fixme only valid as long as we have a single property
+			p.Properties = nil
+		}
+		return
+	}
+
 	if p.Properties == nil {
 		p.Properties = &ProjectProperties{}
 	}

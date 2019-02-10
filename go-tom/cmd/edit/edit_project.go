@@ -8,6 +8,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -15,7 +16,7 @@ func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 	var name string
 	var parentNameOrID string
 	var nameDelimiter string
-	// fixme add properties
+	var hourlyRate string
 
 	var cmd = &cobra.Command{
 		Use:   "project fullName | ID",
@@ -24,8 +25,8 @@ func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 		Run: func(cmd *cobra.Command, args []string) {
 			if cmd.Flag("name").Changed && len(name) == 0 {
 				util.Fatal("unable to use empty project name")
-			} else if !cmd.Flag("name").Changed && !cmd.Flag("parent").Changed {
-				util.Fatalf("no modification defined, use --name or --parent to update project data")
+			} else if !cmd.Flag("name").Changed && !cmd.Flag("parent").Changed && !cmd.Flag("hourly-rate").Changed {
+				util.Fatalf("no modification defined, use --name, --parent, or --hourly-rate to update project data")
 			}
 
 			var parent *string
@@ -33,7 +34,11 @@ func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 				parent = &(parentNameOrID)
 			}
 
-			if err := doEditProjectCommand(name, parent, nameDelimiter, args, ctx); err != nil {
+			var hourlyRateValue *string
+			if cmd.Flag("hourly-rate").Changed {
+				hourlyRateValue = &hourlyRate
+			}
+			if err := doEditProjectCommand(name, parent, nameDelimiter, hourlyRateValue, args, ctx); err != nil {
 				util.Fatal(err)
 			} else {
 				println("Successfully updated project data")
@@ -44,12 +49,13 @@ func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 	cmd.Flags().StringVarP(&name, "name", "n", "", "update the project name")
 	cmd.Flags().StringVarP(&parentNameOrID, "parent", "p", "", "update the parent. Use an empty ID to make it a top-level project. A project keeps all frames and subprojects when it's assigned to a new parent project.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in full project names")
+	cmd.Flags().StringVarP(&hourlyRate, "hourly-rate", "", "", "Optional hourly rate which applies to this project and all subproject without hourly rate values")
 
 	parent.AddCommand(cmd)
 	return cmd
 }
 
-func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, projectIDsOrNames []string, ctx *context.TomContext) error {
+func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, hourlyRate *string, projectIDsOrNames []string, ctx *context.TomContext) error {
 	var err error
 	var parentProjectID string
 
@@ -59,6 +65,18 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 			return fmt.Errorf("parent project %s not found", *parentNameOrID)
 		} else {
 			parentProjectID = parent.ID
+		}
+	}
+
+	var parsedHourlyRate *money.Money
+	if hourlyRate != nil {
+		if *hourlyRate == "" {
+			// remove the current value
+			parsedHourlyRate = nil
+		} else {
+			if parsedHourlyRate, err = money.Parse(*hourlyRate); err != nil {
+				return nil
+			}
 		}
 	}
 
@@ -80,6 +98,10 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 	for _, p := range projects {
 		if len(newName) > 0 {
 			p.Name = newName
+		}
+
+		if hourlyRate != nil {
+			p.SetHourlyRate(parsedHourlyRate)
 		}
 
 		if parentNameOrID != nil {

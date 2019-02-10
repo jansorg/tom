@@ -10,6 +10,7 @@ import (
 	"golang.org/x/text/language"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
@@ -459,6 +460,55 @@ func TestReportWithoutArchived(t *testing.T) {
 	report.Update()
 	assert.EqualValues(t, 5, report.result.FrameCount, "expected 5 frames in total")
 	assert.EqualValues(t, 10*time.Hour, report.result.Duration.SumExact)
+}
+
+func TestSalesStats(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	// pTop with 100 EUR / hour
+	pTop, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1")
+	require.NoError(t, err)
+	pTop.SetHourlyRate(money.NewMoney(100*100, "EUR"))
+
+	// p1 with 50 EUR / hour
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
+	require.NoError(t, err)
+	p1.SetHourlyRate(money.NewMoney(50*100, "EUR"))
+
+	// p2 with 75 USD / hour
+	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child2")
+	require.NoError(t, err)
+	p2.SetHourlyRate(money.NewMoney(75*100, "USD"))
+
+	// 2 hours
+	start := newDate(2017, time.May, 10, 10, 0).UTC()
+	end := newDate(2017, time.May, 10, 12, 0).UTC()
+
+	// adding 5*2 hours = 10 hours each on projects pTop, p1, p2
+	frames := model.NewEmptyFrameList()
+	for i := 0; i < 5; i++ {
+		newStart := start.AddDate(0, 0, 1)
+		newEnd := end.AddDate(0, 0, 1)
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: pTop.ID})
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p1.ID})
+		frames.Append(&model.Frame{Start: &newStart, End: &newEnd, ProjectId: p2.ID})
+	}
+	frames.Sort()
+
+	report := NewBucketReport(frames.Copy(), Config{
+		ProjectIDs: []string{pTop.ID},
+		Splitting:  []SplitOperation{SplitByProject, SplitByMonth},
+	}, ctx)
+	report.Update()
+	assert.EqualValues(t, 15, report.result.FrameCount, "expected 5 frames in total")
+	assert.EqualValues(t, 30*time.Hour, report.result.Duration.SumExact)
+
+	// EUR sales = p1 + p2 = 5*2hours * 100 EUR + 5*2hours * 50 EUR = 1500 EUR
+	// USD sales = p3 = 5*2 hours * 75 USD = 750 USD
+	assert.EqualValues(t, "€1,500.00", report.Result().Sales.values["EUR"].String())
+	assert.EqualValues(t, "$750.00", report.Result().Sales.values["USD"].String())
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

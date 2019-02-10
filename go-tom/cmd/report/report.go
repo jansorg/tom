@@ -36,6 +36,7 @@ type flags struct {
 	roundModeFrames   string
 	roundModeTotal    string
 	decimalDurations  bool
+	showSales         bool
 	showSummary       bool
 	templateName      string
 	templateFilePath  string
@@ -47,6 +48,7 @@ var defaultFlags = flags{
 	templateName:     "default",
 	showMatrixTables: true,
 	archivedFrames:   true,
+	showSales:        false,
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -157,6 +159,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
 	cmd.Flags().BoolVarP(&opts.archivedFrames, "include-archived", "", defaultFlags.archivedFrames, "Include archived frames in the reported times")
 	cmd.Flags().StringSliceVarP(&opts.properties, "property", "", defaultFlags.properties, "Project properties to include in the report")
+	cmd.Flags().BoolVarP(&opts.showSales, "show-sales", "", defaultFlags.showSales, "Show sales summaries")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -210,6 +213,9 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("include-archived").Changed {
 		target.Report.IncludeArchived = source.Report.IncludeArchived
+	}
+	if cmd.Flag("show-sales").Changed {
+		target.ShowSales = source.ShowSales
 	}
 }
 
@@ -295,6 +301,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		ShowSummary:       opts.showSummary,
 		CustomTitle:       &opts.title,
 		CustomDescription: &opts.description,
+		ShowSales:         opts.showSales,
 		Report: report.Config{
 			// fixme missing timezone
 			ProjectIDs:         projectIDs,
