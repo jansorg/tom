@@ -9,7 +9,7 @@ import (
 
 var ErrUnsupportedType = fmt.Errorf("unsupported property type")
 
-type PropertyTypeValue interface {
+type PropertyValue interface {
 	json.Marshaler
 	json.Unmarshaler
 	fmt.Stringer
