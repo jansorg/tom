@@ -6,8 +6,6 @@ import (
 	"time"
 )
 
-
-
 func ParseRoundingMode(mode string) RoundingMode {
 	if mode == "" {
 		return RoundNone

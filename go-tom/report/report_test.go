@@ -525,9 +525,9 @@ func TestReportWithProperties(t *testing.T) {
 	// the top-level contains must have the value of 1100 EUR
 	value, err := report.Result().PropertyValue(hourlyRate.ID)
 	require.NoError(t, err)
-	assert.EqualValues(t, hourlyRate, value.Property)
-	assert.EqualValues(t, 1100, value.ValueForExact)
-	assert.EqualValues(t, 1100, value.ValueForRounded)
+	assert.EqualValues(t, hourlyRate, value.Property())
+	assert.EqualValues(t, []string{"€1,100.00"}, value.FormatExact(ctx))
+	assert.EqualValues(t, []string{"€1,100.00"}, value.FormatRounded(ctx))
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

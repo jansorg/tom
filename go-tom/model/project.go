@@ -8,16 +8,15 @@ import (
 	"github.com/jansorg/tom/go-tom/properties"
 )
 
-var errPropNotFound = fmt.Errorf("property not found")
 var errPropValueNotFound = fmt.Errorf("property value not found")
 
 type Project struct {
 	Store Store `json:"-"`
 
-	ID         string                     `json:"id"`
-	ParentID   string                     `json:"parent"`
-	Name       string                     `json:"name"`
-	Properties []properties.PropertyValue `json:"properties,omitempty"`
+	ID         string                    `json:"id"`
+	ParentID   string                    `json:"parent"`
+	Name       string                    `json:"name"`
+	Properties properties.PropertyValues `json:"properties,omitempty"`
 
 	FullName []string `json:"-"`
 }

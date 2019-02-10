@@ -3,9 +3,9 @@ package properties
 type Property struct {
 	ID                 string `json:"id,required"`
 	Name               string `json:"name,required"`
-	Description        string `json:"description"`
-	TypeID             string `json:"type"`
-	ApplyToSubprojects bool   `json:"subprojects"`
+	TypeID             string `json:"type,required"`
+	Description        string `json:"description,omitempty"`
+	ApplyToSubprojects bool   `json:"subprojects,omitempty"`
 }
 
 func (p *Property) Type() PropertyType {

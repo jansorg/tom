@@ -11,6 +11,13 @@ type CurrencyValue struct {
 	value      *money.Money
 }
 
+func NewCurrency(propertyID string, value *money.Money) *CurrencyValue {
+	return &CurrencyValue{
+		propertyID: propertyID,
+		value:      value,
+	}
+}
+
 func (c CurrencyValue) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		PropertyID string `json:"property,required"`
