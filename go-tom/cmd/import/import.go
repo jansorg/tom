@@ -1,4 +1,4 @@
-package cmd
+package imports
 
 import (
 	"github.com/spf13/cobra"
@@ -6,15 +6,15 @@ import (
 	"github.com/jansorg/tom/go-tom/context"
 )
 
-func newImportCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "import",
 		Short: "import frames and projects",
 	}
 
-	newImportFanurioCommand(ctx, cmd)
-	newImportWatsonCommand(ctx, cmd)
-	newImportMacTimeTrackCommand(ctx, cmd)
+	newFanurioCommand(ctx, cmd)
+	newWatsonCommand(ctx, cmd)
+	newMacTimeTrackCommand(ctx, cmd)
 
 	parent.AddCommand(cmd)
 	return cmd

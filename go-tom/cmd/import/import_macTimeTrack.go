@@ -1,4 +1,4 @@
-package cmd
+package imports
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/util"
 )
 
-func newImportMacTimeTrackCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func newMacTimeTrackCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "macTimeTracker timeTrackerExport.csv",
 		Short: "",

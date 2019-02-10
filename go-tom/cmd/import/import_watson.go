@@ -1,4 +1,4 @@
-package cmd
+package imports
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"github.com/jansorg/tom/go-tom/util"
 )
 
-func newImportWatsonCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func newWatsonCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "watson",
 		Short: "",

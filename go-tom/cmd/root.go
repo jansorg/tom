@@ -13,6 +13,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom/cmd/edit"
 	"github.com/jansorg/tom/go-tom/cmd/frames"
+	"github.com/jansorg/tom/go-tom/cmd/import"
 	"github.com/jansorg/tom/go-tom/cmd/project"
 	"github.com/jansorg/tom/go-tom/cmd/property"
 	"github.com/jansorg/tom/go-tom/cmd/remove"
@@ -54,7 +55,7 @@ func init() {
 	newCancelCommand(&ctx, RootCmd)
 	edit.NewEditCommand(&ctx, RootCmd)
 	report.NewCommand(&ctx, RootCmd)
-	newImportCommand(&ctx, RootCmd)
+	imports.NewCommand(&ctx, RootCmd)
 	status.NewCommand(&ctx, RootCmd)
 	newInvoiceCommand(&ctx, RootCmd)
 	newConfigCommand(&ctx, RootCmd)
