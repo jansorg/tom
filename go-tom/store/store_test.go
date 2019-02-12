@@ -1,30 +1,39 @@
 package store_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
 
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/store"
+	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
 func Test_StoreNoDataDir(t *testing.T) {
-	_, err := store.NewStore(filepath.Join(os.TempDir(), "gotime-does-not-exist"))
+	_, err := store.NewStore(filepath.Join(os.TempDir(), "gotime-does-not-exist"), filepath.Join(os.TempDir(), "backup-dir"), 5)
 	require.Error(t, err)
 }
 
 func Test_Store(t *testing.T) {
-	dir, err := ioutil.TempDir("", "gotime")
+	dir, err := ioutil.TempDir("", "tom")
 	require.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	s, err := store.NewStore(dir)
+	backupDir, err := ioutil.TempDir("", "tom-backup")
+	require.NoError(t, err)
+	defer os.RemoveAll(backupDir)
+
+	s, err := store.NewStore(dir, backupDir, 10)
 	require.NoError(t, err)
 	require.NoError(t, err)
 	assert.Empty(t, s.Projects())
@@ -94,4 +103,78 @@ func Test_Store(t *testing.T) {
 	assert.FileExists(t, dataStore.ProjectFile)
 	assert.FileExists(t, dataStore.TagFile)
 	assert.FileExists(t, dataStore.FrameFile)
+
+	// several backups have to exist at this points
+	files, err := ioutil.ReadDir(backupDir)
+	require.NoError(t, err)
+	require.NotEmpty(t, files)
+	for _, name := range files {
+		assert.True(t, strings.HasPrefix(name.Name(), "tom-"))
+	}
+}
+
+func TestBackups(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.English)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	require.EqualValues(t, 0, countBackups(ctx.Store.BackupDirPath()))
+
+	for i := 1; i <= 20; i++ {
+		_, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(fmt.Sprintf("project-%d", i))
+		require.NoError(t, err)
+
+		if i == 1 {
+			require.EqualValues(t, 1, countBackups(ctx.Store.BackupDirPath()))
+		} else if i <= ctx.Store.MaxBackups() {
+			require.EqualValues(t, i, countBackups(ctx.Store.BackupDirPath()))
+		} else {
+			require.EqualValues(t, ctx.Store.MaxBackups(), countBackups(ctx.Store.BackupDirPath()))
+		}
+	}
+
+	// open latest dir and check number of projects
+	dirs, err := sortedBackupDirs(ctx.Store.BackupDirPath())
+	require.NoError(t, err)
+	newStore, err := store.NewStore(dirs[len(dirs)-1], "", 1)
+	require.NoError(t, err)
+
+	assert.EqualValues(t, 20, len(ctx.Store.Projects()), "expected backup to contain latest set of projects")
+	assert.EqualValues(t, 19, len(newStore.Projects()), "expected backup to contain latest set of projects, 1 less than the live data")
+}
+
+func countBackups(path string) int {
+	infos, err := ioutil.ReadDir(path)
+	if err != nil {
+		return -1
+	}
+
+	c := 0
+	for _, i := range infos {
+		if strings.HasPrefix(i.Name(), "tom-") {
+			c++
+		}
+	}
+
+	return c
+}
+
+func sortedBackupDirs(path string) ([]string, error) {
+	infos, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var dirs []string
+	for _, i := range infos {
+		if strings.HasPrefix(i.Name(), "tom-") {
+			dirs = append(dirs, filepath.Join(path, i.Name()))
+		}
+	}
+
+	sort.Slice(dirs, func(i, j int) bool {
+		return strings.Compare(dirs[i], dirs[j]) < 0
+	})
+
+	return dirs, nil
 }

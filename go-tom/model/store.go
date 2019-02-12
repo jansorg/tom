@@ -2,6 +2,8 @@ package model
 
 type Store interface {
 	DirPath() string
+	BackupDirPath() string
+	MaxBackups() int
 	StartBatch()
 	StopBatch()
 

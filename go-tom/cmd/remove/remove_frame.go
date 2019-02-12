@@ -17,6 +17,9 @@ func newRemoveFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 			removed := 0
 			notFound := 0
 
+			ctx.Store.StartBatch()
+			defer ctx.Store.StopBatch()
+
 			for _, id := range args {
 				if err := ctx.Store.RemoveFrame(id); err != nil {
 					notFound ++

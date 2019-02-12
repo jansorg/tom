@@ -11,21 +11,23 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/jansorg/tom/go-tom/model"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 var ErrTagNotFound = fmt.Errorf("tag not found")
-var ErrPropertyNotFound = fmt.Errorf("property not found")
-var ErrPropertyExists = fmt.Errorf("property already exists")
 
-func NewStore(dir string) (model.Store, error) {
+func NewStore(dir string, backupDir string, maxBackups int) (model.Store, error) {
 	if _, err := os.Stat(dir); err != nil && os.IsNotExist(err) {
 		return nil, fmt.Errorf("directory %s does not exist", dir)
 	}
 
 	store := &DataStore{
 		path:         dir,
+		backupPath:   backupDir,
+		maxBackups:   maxBackups,
 		ProjectFile:  filepath.Join(dir, "projects.json"),
 		TagFile:      filepath.Join(dir, "tags.json"),
 		FrameFile:    filepath.Join(dir, "frames.json"),
@@ -39,8 +41,11 @@ func NewStore(dir string) (model.Store, error) {
 }
 
 type DataStore struct {
-	path      string
-	batchMode int32
+	path       string
+	backupPath string
+	batchMode  int32
+
+	maxBackups int
 
 	ProjectFile  string
 	TagFile      string
@@ -55,7 +60,15 @@ type DataStore struct {
 }
 
 func (d *DataStore) DirPath() string {
-	return filepath.Dir(d.ProjectFile)
+	return d.path
+}
+
+func (d *DataStore) BackupDirPath() string {
+	return d.backupPath
+}
+
+func (d *DataStore) MaxBackups() int {
+	return d.maxBackups
 }
 
 func (d *DataStore) StartBatch() {
@@ -153,6 +166,8 @@ func (d *DataStore) saveLocked() error {
 		return nil
 	}
 
+	d.backupLocked()
+
 	d.sortProjects()
 	d.sortTags()
 	d.sortFrames()
@@ -160,6 +175,7 @@ func (d *DataStore) saveLocked() error {
 	var data []byte
 	var err error
 
+	// projects
 	if data, err = json.Marshal(d.projects); err != nil {
 		return err
 	}
@@ -167,6 +183,7 @@ func (d *DataStore) saveLocked() error {
 		return err
 	}
 
+	// tags
 	if data, err = json.Marshal(d.tags); err != nil {
 		return err
 	}
@@ -174,6 +191,7 @@ func (d *DataStore) saveLocked() error {
 		return err
 	}
 
+	// frames
 	if data, err = json.Marshal(d.frames); err != nil {
 		return err
 	}
@@ -508,4 +526,56 @@ func (d *DataStore) updateProjectsMapping() {
 	for _, p := range d.projects {
 		d.projectsMap[p.ID] = p
 	}
+}
+
+func (d *DataStore) backupLocked() error {
+	if d.backupPath == "" || d.Empty() {
+		return nil
+	}
+
+	targetDir := filepath.Join(d.backupPath, fmt.Sprintf("tom-%s", time.Now().Format(time.RFC3339Nano)))
+	err := os.MkdirAll(targetDir, 0700)
+	if os.IsExist(err) {
+		return fmt.Errorf("backup directory already exists: %s", err.Error())
+	}
+
+	for _, sourceFile := range []string{d.ProjectFile, d.FrameFile, d.TagFile} {
+		if err = util.CopyFile(sourceFile, filepath.Join(targetDir, filepath.Base(sourceFile)), false); err != nil {
+			// fixme cleanup?
+			return err
+		}
+	}
+
+	// remove backups > max backups
+	if d.maxBackups > 0 {
+		infos, err := ioutil.ReadDir(d.backupPath)
+		if err == nil && len(infos) > d.maxBackups {
+			// filter and validate
+			var matching []string
+			for _, info := range infos {
+				baseName := info.Name()
+				if info.IsDir() && strings.HasPrefix(baseName, "tom-") {
+					matching = append(matching, filepath.Join(d.backupPath, baseName))
+				}
+			}
+
+			// remove oldest backups first
+			if len(matching) > d.maxBackups {
+				// sort newest to oldest
+				sort.Slice(matching, func(i, j int) bool {
+					return strings.Compare(matching[i], matching[j]) >= 0
+				})
+
+				for _, dirName := range matching[d.maxBackups:] {
+					_ = os.RemoveAll(dirName)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (d *DataStore) Empty() bool {
+	return len(d.projects) == 0 && len(d.tags) == 0 && len(d.frames) == 0
 }

@@ -1,4 +1,4 @@
-package cmd
+package config
 
 import (
 	"fmt"
@@ -14,10 +14,12 @@ import (
 func newConfigSetCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "set",
-		Short: "sets a configuration value",
+		Short: "Sets a configuration value",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			createEmptyConfig(viper.GetString(config.KeyDataDir))
+			if err := createConfigIfNotExists(viper.GetString(config.KeyDataDir)); err != nil {
+				util.Fatal(err)
+			}
 
 			viper.Set(args[0], args[1])
 			if err := viper.WriteConfig(); err != nil {

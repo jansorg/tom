@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"golang.org/x/text/message"
 
+	_config "github.com/jansorg/tom/go-tom/cmd/config"
 	"github.com/jansorg/tom/go-tom/cmd/edit"
 	"github.com/jansorg/tom/go-tom/cmd/frames"
 	"github.com/jansorg/tom/go-tom/cmd/import"
@@ -34,8 +35,8 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.tom)")
+	RootCmd.PersistentFlags().String("backup-dir", "", "backup directory (default is $HOME/.tom/backup)")
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.tom/tom.yaml)")
-	// RootCmd.PersistentFlags().StringVarP(&configFile, "format", "o", "", "output format of the response: plain | json")
 
 	RootCmd.PersistentFlags().String("cpu-profile", "", "create a cpu profile for performance measurement")
 	RootCmd.Flag("cpu-profile").Hidden = true
@@ -56,11 +57,14 @@ func init() {
 	imports.NewCommand(&ctx, RootCmd)
 	status.NewCommand(&ctx, RootCmd)
 	newInvoiceCommand(&ctx, RootCmd)
-	newConfigCommand(&ctx, RootCmd)
+	_config.NewCommand(&ctx, RootCmd)
 	// hidden command
 	newCompletionCommand(&ctx, RootCmd)
 
 	if err := viper.BindPFlag(config.KeyDataDir, RootCmd.PersistentFlags().Lookup("data-dir")); err != nil {
+		util.Fatal(err)
+	}
+	if err := viper.BindPFlag(config.KeyBackupDir, RootCmd.PersistentFlags().Lookup("backup-dir")); err != nil {
 		util.Fatal(err)
 	}
 }
@@ -79,11 +83,17 @@ func initConfig() {
 		}
 	}
 
-	if err := viper.ReadInConfig(); !os.IsNotExist(err) {
-		// fatal(err)
+	// setup backup dir if it doesn't exist
+	backupDir := viper.GetString(config.KeyBackupDir)
+	if _, err := os.Stat(dataDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dataDir, 0700); err != nil {
+			util.Fatal(err)
+		}
 	}
 
-	dataStore, err := store.NewStore(dataDir)
+	_ = viper.ReadInConfig()
+
+	dataStore, err := store.NewStore(dataDir, backupDir, viper.GetInt(config.KeyMaxBackups))
 	if err != nil {
 		util.Fatal(err)
 	}

@@ -15,12 +15,17 @@ import (
 )
 
 func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
-	dir, err := ioutil.TempDir("", "gotime")
+	dir, err := ioutil.TempDir("", "tom-data")
 	if err != nil {
 		return nil, err
 	}
 
-	store, err := store2.NewStore(dir)
+	backupDir, err := ioutil.TempDir("", "tom-backup")
+	if err != nil {
+		return nil, err
+	}
+
+	store, err := store2.NewStore(dir, backupDir, 5)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +42,6 @@ func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
 }
 
 func CleanupTestContext(ctx *context.TomContext) {
-	dir := ctx.Store.DirPath()
-	os.RemoveAll(dir)
+	os.RemoveAll(ctx.Store.DirPath())
+	os.RemoveAll(ctx.Store.BackupDirPath())
 }

@@ -9,6 +9,8 @@ import (
 )
 
 const KeyDataDir = "data_dir"
+const KeyBackupDir = "backup_dir"
+const KeyMaxBackups = "max_backups"
 const KeyActivityStopOnStart = "activity.stop_on_start"
 const KeyProjectCreateMissing = "projects.create_missing"
 
@@ -21,7 +23,10 @@ func SetDefaults() {
 	}
 
 	dataDirPath := filepath.Join(home, ".tom")
+	backupDirPath := filepath.Join(dataDirPath, "backup")
 	viper.SetDefault(KeyDataDir, dataDirPath)
+	viper.SetDefault(KeyBackupDir, backupDirPath)
+	viper.SetDefault(KeyMaxBackups, 10)
 	viper.SetDefault(KeyProjectCreateMissing, false)
 	viper.SetDefault(KeyActivityStopOnStart, true)
 
