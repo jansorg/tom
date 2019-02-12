@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -16,43 +17,47 @@ import (
 )
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+	output := "yaml"
+
 	var cmd = &cobra.Command{
 		Use:   "config",
 		Short: "prints the current configuration on stdout",
 		Long:  "Prints the configuration values of tom. If no arguments are passed, then the complete configuration will be printed. If one or more arguments are passed, then each is printed with its current configuration values.",
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) == 0 {
-				if cfg, err := settingsAsYaml(); err != nil {
-					util.Fatal(err)
-				} else {
-					fmt.Println(cfg)
-				}
+			data, err := doConfigCommand(output, args...)
+			if err != nil {
+				util.Fatal(err)
 			} else {
-				for _, name := range args {
-					value := viper.Get(name)
-					bs, err := yaml.Marshal(value)
-					if err != nil {
-						util.Fatal(fmt.Errorf("unable to marshal config to YAML: %v", err))
-					}
-					fmt.Printf("%s=%s", name, string(bs))
-				}
+				fmt.Println(string(data))
 			}
 		},
 	}
 
+	cmd.Flags().StringVarP(&output, "output", "o", output, "Output format. Supported: yaml | json. Default: "+output)
+
 	newConfigSetCommand(ctx, cmd)
 	parent.AddCommand(cmd)
-
 	return cmd
 }
 
-func settingsAsYaml() (string, error) {
-	c := viper.AllSettings()
-	bs, err := yaml.Marshal(c)
-	if err != nil {
-		return "", fmt.Errorf("unable to marshal config to YAML: %v", err)
+func doConfigCommand(outputFormat string, keys ...string) ([]byte, error) {
+	settings := make(map[string]interface{})
+	if len(keys) == 0 {
+		settings = viper.AllSettings()
+	} else {
+		for _, k := range keys {
+			settings[k] = viper.Get(k)
+		}
 	}
-	return string(bs), nil
+
+	switch outputFormat {
+	case "yaml":
+		return yaml.Marshal(settings)
+	case "json":
+		return json.MarshalIndent(settings, "", "  ")
+	default:
+		return nil, fmt.Errorf("unsupported format %s", outputFormat)
+	}
 }
 
 func createConfigIfNotExists(dataDir string) error {

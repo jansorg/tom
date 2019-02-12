@@ -9,8 +9,8 @@ import (
 )
 
 const KeyDataDir = "data_dir"
-const KeyBackupDir = "backup_dir"
-const KeyMaxBackups = "max_backups"
+const KeyBackupDir = "backup.directory"
+const KeyMaxBackups = "backup.max_to_keep"
 const KeyActivityStopOnStart = "activity.stop_on_start"
 const KeyProjectCreateMissing = "projects.create_missing"
 
