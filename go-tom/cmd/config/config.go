@@ -23,7 +23,6 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 		Use:       "config",
 		Short:     "Output configuration values as YAML or JSON.",
 		Long:      "If no arguments are passed, then the complete configuration will be printed. If one or more arguments are passed, then each is printed with its current configuration values. Bash completion will suggest built-in configuration keys.",
-		ValidArgs: config.Keys,
 		Run: func(cmd *cobra.Command, args []string) {
 			data, err := doConfigCommand(output, args...)
 			if err != nil {
@@ -36,7 +35,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	cmd.Flags().StringVarP(&output, "output", "o", output, "Output format. Supported: yaml | json")
 
-	newConfigSetCommand(ctx, cmd)
+	newSetCommand(ctx, cmd)
 	parent.AddCommand(cmd)
 	return cmd
 }

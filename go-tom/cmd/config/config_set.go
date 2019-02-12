@@ -11,7 +11,7 @@ import (
 	"github.com/jansorg/tom/go-tom/util"
 )
 
-func newConfigSetCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
+func newSetCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:                   "set <key> <value>",
 		Short:                 "Sets a configuration value",
