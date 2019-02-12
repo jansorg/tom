@@ -9,12 +9,12 @@ tom\-config\-set \- Sets a configuration value
 
 .SH SYNOPSIS
 .PP
-\fBtom config set [flags]\fP
+\fBtom config set  \fP
 
 
 .SH DESCRIPTION
 .PP
-Sets a configuration value
+Sets a configuration value to a new value. Use \fB\fCtom config\fR to see a list of all supported keys. Bash completion will suggest the names of built\-in keys.
 
 
 .SH OPTIONS
@@ -35,6 +35,17 @@ Sets a configuration value
 .PP
 \fB\-\-data\-dir\fP=""
 	data directory (default is $HOME/.tom)
+
+
+.SH EXAMPLE
+.PP
+.RS
+
+.nf
+tom config set data\_dir $HOME/tom\-data
+
+.fi
+.RE
 
 
 .SH SEE ALSO

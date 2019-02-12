@@ -18,7 +18,7 @@ tom is a command line application to track time.
 ### SEE ALSO
 
 * [tom cancel](tom_cancel.md)	 - cancel removed the currently running activity. No data will be recorded.
-* [tom config](tom_config.md)	 - prints the current configuration on stdout
+* [tom config](tom_config.md)	 - Output configuration values as YAML or JSON.
 * [tom create](tom_create.md)	 - create new content. See the available sub commands.
 * [tom edit](tom_edit.md)	 - edit properties of projects or frames
 * [tom frames](tom_frames.md)	 - Print a listing of all frames

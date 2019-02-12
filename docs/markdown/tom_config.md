@@ -1,10 +1,10 @@
 ## tom config
 
-prints the current configuration on stdout
+Output configuration values as YAML or JSON.
 
 ### Synopsis
 
-Prints the configuration values of tom. If no arguments are passed, then the complete configuration will be printed. If one or more arguments are passed, then each is printed with its current configuration values.
+If no arguments are passed, then the complete configuration will be printed. If one or more arguments are passed, then each is printed with its current configuration values. Bash completion will suggest built-in configuration keys.
 
 ```
 tom config [flags]
@@ -14,7 +14,7 @@ tom config [flags]
 
 ```
   -h, --help            help for config
-  -o, --output string   Output format. Supported: yaml | json. Default: yaml (default "yaml")
+  -o, --output string   Output format. Supported: yaml | json (default "yaml")
 ```
 
 ### Options inherited from parent commands

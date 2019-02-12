@@ -13,9 +13,13 @@ import (
 
 func newConfigSetCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	var cmd = &cobra.Command{
-		Use:   "set",
-		Short: "Sets a configuration value",
-		Args:  cobra.ExactArgs(2),
+		Use:                   "set <key> <value>",
+		Short:                 "Sets a configuration value",
+		Long:                  "Sets a configuration value to a new value. Use `tom config` to see a list of all supported keys. Bash completion will suggest the names of built-in keys.",
+		Example:               fmt.Sprintf("tom config set %s $HOME/tom-data", config.KeyDataDir),
+		Args:                  cobra.ExactArgs(2),
+		ValidArgs:             config.Keys,
+		DisableFlagsInUseLine: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := createConfigIfNotExists(viper.GetString(config.KeyDataDir)); err != nil {
 				util.Fatal(err)

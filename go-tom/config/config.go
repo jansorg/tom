@@ -14,6 +14,14 @@ const KeyMaxBackups = "backup.max_to_keep"
 const KeyActivityStopOnStart = "activity.stop_on_start"
 const KeyProjectCreateMissing = "projects.create_missing"
 
+var Keys = []string{
+	KeyDataDir,
+	KeyBackupDir,
+	KeyMaxBackups,
+	KeyActivityStopOnStart,
+	KeyProjectCreateMissing,
+}
+
 const ConfigFilename = "tom"
 
 func SetDefaults() {
