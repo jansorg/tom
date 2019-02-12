@@ -1,19 +1,19 @@
-## tom cancel
+## tom rename
 
-cancel removed the currently running activity. No data will be recorded.
+rename a project or a tag
 
 ### Synopsis
 
-cancel removed the currently running activity. No data will be recorded.
+rename a project or a tag
 
 ```
-tom cancel [flags]
+tom rename TYPE {name | ID} newName [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help   help for cancel
+  -h, --help   help for rename
 ```
 
 ### Options inherited from parent commands
