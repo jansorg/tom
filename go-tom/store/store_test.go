@@ -143,6 +143,36 @@ func TestBackups(t *testing.T) {
 	assert.EqualValues(t, 19, len(newStore.Projects()), "expected backup to contain latest set of projects, 1 less than the live data")
 }
 
+func TestBackupsBatchMode(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.English)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	ctx.Store.StartBatch()
+
+	require.EqualValues(t, 0, countBackups(ctx.Store.BackupDirPath()))
+
+	for i := 1; i <= 20; i++ {
+		_, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(fmt.Sprintf("project-%d", i))
+		require.NoError(t, err)
+		require.EqualValues(t, 0, countBackups(ctx.Store.BackupDirPath()))
+	}
+
+	ctx.Store.StopBatch()
+	require.EqualValues(t, 1, countBackups(ctx.Store.BackupDirPath()))
+
+	_, _, err = ctx.StoreHelper.GetOrCreateNestedProjectNames(fmt.Sprintf("project-%d", 21))
+
+	// open latest dir and check number of projects
+	dirs, err := sortedBackupDirs(ctx.Store.BackupDirPath())
+	require.NoError(t, err)
+	newStore, err := store.NewStore(dirs[len(dirs)-1], "", 1)
+	require.NoError(t, err)
+
+	assert.EqualValues(t, 21, len(ctx.Store.Projects()), "expected backup to contain latest set of projects")
+	assert.EqualValues(t, 20, len(newStore.Projects()), "expected backup to contain latest set of projects, 1 less than the live data")
+}
+
 func countBackups(path string) int {
 	infos, err := ioutil.ReadDir(path)
 	if err != nil {
