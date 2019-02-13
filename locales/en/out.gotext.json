@@ -26,6 +26,20 @@
             "fuzzy": true
         },
         {
+            "id": "Daily un-tracked",
+            "message": "Daily un-tracked",
+            "translation": "Daily un-tracked",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Daily tracked",
+            "message": "Daily tracked",
+            "translation": "Daily tracked",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Duration",
@@ -85,6 +99,20 @@
             "id": "Exact tracked time:",
             "message": "Exact tracked time:",
             "translation": "Exact tracked time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Daily tracked time:",
+            "message": "Daily tracked time:",
+            "translation": "Daily tracked time:",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Daily untracked time:",
+            "message": "Daily untracked time:",
+            "translation": "Daily untracked time:",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },

@@ -22,6 +22,16 @@
             "translation": "Umsatz"
         },
         {
+            "id": "Daily un-tracked",
+            "message": "Daily un-tracked",
+            "translation": "Täglich unerfasst"
+        },
+        {
+            "id": "Daily tracked",
+            "message": "Daily tracked",
+            "translation": "Täglich erfasst"
+        },
+        {
             "id": "Duration",
             "message": "Duration",
             "translation": "Dauer"
@@ -65,6 +75,16 @@
             "id": "Exact tracked time:",
             "message": "Exact tracked time:",
             "translation": "Exakt erfasste Zeit:"
+        },
+        {
+            "id": "Daily tracked time:",
+            "message": "Daily tracked time:",
+            "translation": "Täglich erfasst Zeit"
+        },
+        {
+            "id": "Daily untracked time:",
+            "message": "Daily untracked time:",
+            "translation": "Täglich unerfasste Zeit"
         },
         {
             "id": "Date",

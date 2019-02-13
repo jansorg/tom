@@ -42,7 +42,8 @@ type flags struct {
 	templateName      string
 	templateFilePath  string
 	archivedFrames    bool
-	properties        []string
+	showTracked       bool
+	showUnTracked     bool
 }
 
 var defaultFlags = flags{
@@ -50,6 +51,8 @@ var defaultFlags = flags{
 	showMatrixTables: true,
 	archivedFrames:   true,
 	showSales:        false,
+	showTracked:      false,
+	showUnTracked:    false,
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -64,6 +67,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
+			// fixme
 			config := htmlreport.DefaultOptions
 			var err error
 
@@ -159,8 +163,10 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.title, "title", "", "", "This will be displayed as the reports title when you're using the default templates")
 	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
 	cmd.Flags().BoolVarP(&opts.archivedFrames, "include-archived", "", defaultFlags.archivedFrames, "Include archived frames in the reported times")
-	cmd.Flags().StringSliceVarP(&opts.properties, "property", "", defaultFlags.properties, "Project properties to include in the report")
 	cmd.Flags().BoolVarP(&opts.showSales, "show-sales", "", defaultFlags.showSales, "Show sales summaries")
+
+	cmd.Flags().BoolVarP(&opts.showTracked, "show-tracked", "", defaultFlags.showTracked, "Show min/max/avg of daily tracked time")
+	cmd.Flags().BoolVarP(&opts.showUnTracked, "show-untracked", "", defaultFlags.showUnTracked, "Show min/max/avg of daily untracked time, i.e. the untracked time between first and last entries of a day")
 
 	parent.AddCommand(cmd)
 	return cmd
@@ -218,6 +224,12 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	if cmd.Flag("show-sales").Changed {
 		target.ShowSales = source.ShowSales
 	}
+	if cmd.Flag("show-tracked").Changed {
+		target.ShowTracked = source.ShowTracked
+	}
+	if cmd.Flag("show-untracked").Changed {
+		target.ShowUnTracked = source.ShowUnTracked
+	}
 }
 
 func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Options, error) {
@@ -229,7 +241,7 @@ func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Option
 	}
 
 	// validate project IDs
-	ids := []string{}
+	var ids []string
 	for _, idOrName := range config.Report.ProjectIDs {
 		project, err := ctx.Query.ProjectByFullNameOrID(idOrName, "/")
 		if err != nil {
@@ -303,6 +315,8 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		CustomTitle:       &opts.title,
 		CustomDescription: &opts.description,
 		ShowSales:         opts.showSales,
+		ShowTracked:       opts.showTracked,
+		ShowUnTracked:     opts.showUnTracked,
 		Report: report.Config{
 			// fixme missing timezone
 			ProjectIDs:         projectIDs,

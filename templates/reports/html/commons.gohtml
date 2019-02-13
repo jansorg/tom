@@ -1,3 +1,18 @@
+{{define "moneyList"}}
+    {{range .}}
+        {{formatMoney .}}<br>
+    {{end}}
+{{end}}
+
+{{define "trackedInfo"}}
+    {{with .}}
+        {{- /*gotype: github.com/jansorg/tom/go-tom/dateTime.TimeEntrySeries*/ -}}
+        {{/*{{minDuration .Min}}*/}}
+        {{/*{{minDuration .Max}}*/}}
+        {{minDuration .Avg}}
+    {{end}}
+{{end}}
+
 {{define "Summary"}}
     {{- /*gotype: github.com/jansorg/gotime/gotime/report.ResultBucket*/ -}}
 
@@ -23,6 +38,22 @@
             <tr>
                 <td>{{i18n "Exact tracked time:"}}</td>
                 <td class="time">{{minDuration .Duration.GetExact}}</td>
+            </tr>
+        {{end}}
+        {{if and reportOptions.ShowTracked .HasDailyTracked}}
+            <tr>
+                <td>{{i18n "Daily tracked time:"}}</td>
+                <td class="time">
+                    {{template "trackedInfo" .GetDailyTracked}}
+                </td>
+            </tr>
+        {{end}}
+        {{if and reportOptions.ShowUnTracked .HasDailyUnTracked}}
+            <tr>
+                <td>{{i18n "Daily untracked time:"}}</td>
+                <td class="time">
+                    {{template "trackedInfo" .GetDailyUnTracked}}
+                </td>
             </tr>
         {{end}}
         </tbody>
@@ -186,7 +217,7 @@
         }
 
         .start-day, .start-time, .stop-time {
-            min-width:6rem;
+            min-width: 6rem;
             white-space: nowrap;
         }
 

@@ -8,7 +8,7 @@ import (
 )
 
 func TestUntrackedSeries(t *testing.T) {
-	s := NewUntrackedDaily()
+	s := NewUntrackedDaily(nil)
 
 	first := time.Date(2018, time.February, 10, 6, 0, 0, 0, time.UTC)
 

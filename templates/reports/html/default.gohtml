@@ -1,11 +1,5 @@
 {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
 
-{{define "moneyList"}}
-    {{range .}}
-        {{formatMoney .}}<br>
-    {{end}}
-{{end}}
-
 {{define "TableBucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
@@ -19,7 +13,12 @@
         <tr>
             <th class="th-wide"><span class="title">{{.Title}}</span></th>
             {{if $opts.ShowSales}}
-            <th class="money-header">{{i18n "Sales"}}</th>
+                <th class="money-header">{{i18n "Sales"}}</th> {{end}}
+            {{if $opts.ShowUnTracked}}
+                <th class="time-header">{{i18n "Daily un-tracked"}}</th>
+            {{end}}
+            {{if $opts.ShowTracked}}
+                <th class="time-header">{{i18n "Daily tracked"}}</th>
             {{end}}
             <th class="time-header">{{i18n "Duration"}}</th>
             {{if $showExact}}
@@ -34,10 +33,19 @@
         {{range $bucket.ChildBuckets}}
             <tr>
                 <td>{{.Title}}</td>
-                {{if $opts.ShowSales}}<td class="money">{{template "moneyList" .Sales.Rounded}}</td>{{end}}
+                {{if $opts.ShowSales}}
+                <td class="money">{{template "moneyList" .Sales.Rounded}}</td>
+                {{end}}
+                {{if $opts.ShowUnTracked}}
+                <td class="time">{{template "trackedInfo" .GetDailyUnTracked}}</td>
+                {{end}}
+                {{if $opts.ShowTracked}}
+                <td class="time">{{template "trackedInfo" .GetDailyTracked}}</td>
+                {{end}}
                 <td class="time">{{minDuration .Duration.Get}}</td>
                 {{if $showExact}}
-                    {{if $opts.ShowSales}}<td class="money">{{template "moneyList" .Sales.Exact}}</td>{{end}}
+                    {{if $opts.ShowSales}}
+                    <td class="money">{{template "moneyList" .Sales.Exact}}</td>{{end}}
                     <td class="time">
                         {{minDuration .Duration.GetExact}}
                     </td>
@@ -48,10 +56,18 @@
         <tfoot>
         <tr class="row-subtotal">
             <th>{{i18n "Total"}}</th>
-            {{if $opts.ShowSales}}<th class="money money-header">{{template "moneyList" $bucket.Sales.Rounded}}</th>{{end}}
+            {{if $opts.ShowSales}}
+            <th class="money money-header">{{template "moneyList" $bucket.Sales.Rounded}}</th>{{end}}
+            {{if $opts.ShowUnTracked }}
+            <th class="time-header">{{template "trackedInfo" $bucket.GetDailyUnTracked}}</th>
+            {{end}}
+            {{if $opts.ShowTracked }}
+            <th class="time-header">{{template "trackedInfo" $bucket.GetDailyTracked}}</th>
+            {{end}}
             <th class="time time-header">{{minDuration $bucket.Duration.Get}}</th>
             {{if $showExact}}
-                {{if $opts.ShowSales}}<th class="money money-header">{{template "moneyList" $bucket.Sales.Exact}}</th>{{end}}
+                {{if $opts.ShowSales}}
+                <th class="money money-header">{{template "moneyList" $bucket.Sales.Exact}}</th>{{end}}
                 <th class="time time-header">{{minDuration $bucket.Duration.GetExact}}</th>
             {{end}}
         </tr>

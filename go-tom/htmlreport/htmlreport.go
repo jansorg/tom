@@ -35,6 +35,8 @@ type Options struct {
 	ShowMatrixTables   bool             `json:"matrix_tables"`
 	DecimalDuration    bool             `json:"decimal_duration"`
 	ShowSales          bool             `json:"show_sales"`
+	ShowTracked        bool             `json:"show_tracked"`
+	ShowUnTracked      bool             `json:"show_untracked"`
 	TemplateName       *string          `json:"template_name"`
 	TemplateFilePath   *string          `json:"template_path"`
 	CustomCSS          htmlTemplate.CSS `json:"css"`

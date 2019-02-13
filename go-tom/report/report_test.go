@@ -66,6 +66,20 @@ func TestReport(t *testing.T) {
 	assert.EqualValues(t, start, report.result.TrackedDateRange().Start)
 	assert.EqualValues(t, end, report.result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
+
+	tracked := report.result.GetDailyTracked()
+	require.NotNil(t, tracked)
+	assert.EqualValues(t, 2*time.Hour, tracked.Min())
+	assert.EqualValues(t, 2*time.Hour, tracked.Max())
+	assert.EqualValues(t, 2*time.Hour, tracked.Avg())
+	assert.EqualValues(t, 1, tracked.DistinctRanges())
+
+	unTracked := report.result.GetDailyUnTracked()
+	require.NotNil(t, unTracked)
+	assert.EqualValues(t, 0, unTracked.Min())
+	assert.EqualValues(t, 0, unTracked.Max())
+	assert.EqualValues(t, 0, unTracked.Avg())
+	assert.EqualValues(t, 1, unTracked.DistinctRanges())
 }
 
 func TestReportSplitYear(t *testing.T) {

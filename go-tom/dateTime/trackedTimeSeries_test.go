@@ -8,7 +8,7 @@ import (
 )
 
 func TestTrackedSeries(t *testing.T) {
-	s := NewTrackedDaily()
+	s := NewTrackedDaily(nil)
 
 	// day 1: 1 hour
 	start := time.Date(2018, time.February, 10, 12, 0, 0, 0, time.UTC)

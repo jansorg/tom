@@ -25,6 +25,9 @@ type ResultBucket struct {
 	SplitByType  SplitOperation        `json:"split_type,omitempty"`
 	SplitBy      interface{}           `json:"split_by,omitempty"`
 	ChildBuckets []*ResultBucket       `json:"results,omitempty"`
+
+	DailyTracked   dateTime.TimeEntrySeries `json:"daily_tracked"`
+	DailyUnTracked dateTime.TimeEntrySeries `json:"daily_untracked"`
 }
 
 func (b *ResultBucket) Update() {
@@ -33,6 +36,15 @@ func (b *ResultBucket) Update() {
 	b.FrameCount = b.Frames.Size()
 	for _, f := range b.Frames.Frames() {
 		b.Duration.AddStartEndP(f.Start, f.End)
+
+		if !f.IsActive() {
+			if b.DailyTracked != nil {
+				b.DailyTracked.Add(*f.Start, *f.End)
+			}
+			if b.DailyUnTracked != nil {
+				b.DailyUnTracked.Add(*f.Start, *f.End)
+			}
+		}
 	}
 
 	if b.dateRange.Empty() {
@@ -135,6 +147,22 @@ func (b *ResultBucket) IsDateBucket() bool {
 func (b *ResultBucket) IsProjectBucket() bool {
 	_, err := b.FindProjectBucket()
 	return err == nil
+}
+
+func (b *ResultBucket) HasDailyTracked() bool {
+	return b.DailyTracked != nil
+}
+
+func (b *ResultBucket) HasDailyUnTracked() bool {
+	return b.DailyUnTracked != nil
+}
+
+func (b *ResultBucket) GetDailyTracked() dateTime.TimeEntrySeries {
+	return b.DailyTracked
+}
+
+func (b *ResultBucket) GetDailyUnTracked() dateTime.TimeEntrySeries {
+	return b.DailyUnTracked
 }
 
 func (b *ResultBucket) FindProjectBucket() (*model.Project, error) {
@@ -249,10 +277,12 @@ func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, splitValue fun
 		mapping[value.(string)] = true
 
 		b.AddChild(&ResultBucket{
-			Frames:      frameSubset,
-			Duration:    dateTime.NewEmptyCopy(b.Duration),
-			SplitByType: splitType,
-			SplitBy:     value,
+			Frames:         frameSubset,
+			Duration:       dateTime.NewEmptyCopy(b.Duration),
+			DailyTracked:   dateTime.NewTrackedDaily(nil),
+			DailyUnTracked: dateTime.NewUntrackedDaily(nil),
+			SplitByType:    splitType,
+			SplitBy:        value,
 		})
 	}
 
@@ -299,13 +329,16 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation) {
 		matchingFrames := b.Frames.Copy()
 		matchingFrames.FilterByDateRange(value, false)
 
+		rangeCopy := value
 		if b.config.ShowEmpty || !matchingFrames.Empty() {
 			b.AddChild(&ResultBucket{
-				dateRange:   value,
-				Frames:      matchingFrames,
-				Duration:    dateTime.NewEmptyCopy(b.Duration),
-				SplitByType: splitType,
-				SplitBy:     value,
+				dateRange:      value,
+				Frames:         matchingFrames,
+				Duration:       dateTime.NewEmptyCopy(b.Duration),
+				SplitByType:    splitType,
+				SplitBy:        value,
+				DailyTracked:   dateTime.NewTrackedDaily(&rangeCopy),
+				DailyUnTracked: dateTime.NewUntrackedDaily(&rangeCopy),
 			})
 		}
 

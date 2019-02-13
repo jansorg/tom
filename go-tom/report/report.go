@@ -68,10 +68,12 @@ func (b *BucketReport) Update() *ResultBucket {
 	}
 
 	b.result = &ResultBucket{
-		ctx:      b.ctx,
-		config:   config,
-		Frames:   b.source,
-		Duration: dateTime.NewDurationSumAll(b.config.EntryRounding, nil, nil),
+		ctx:            b.ctx,
+		config:         config,
+		Frames:         b.source,
+		Duration:       dateTime.NewDurationSumAll(b.config.EntryRounding, nil, nil),
+		DailyTracked:   dateTime.NewTrackedDaily(nil),
+		DailyUnTracked: dateTime.NewUntrackedDaily(nil),
 	}
 
 	for _, op := range b.config.Splitting {
