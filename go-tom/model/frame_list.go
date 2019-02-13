@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-playground/locales"
 
-	"github.com/jansorg/tom/go-tom/util"
+	"github.com/jansorg/tom/go-tom/dateTime"
 )
 
 func NewFrameList(frames []*Frame) *FrameList {
@@ -88,7 +88,7 @@ func (f *FrameList) FilterByEndDate(maxEndDate time.Time, acceptUnstopped bool) 
 	})
 }
 
-func (f *FrameList) FilterByDateRange(dateRange util.DateRange, acceptUnstopped bool) {
+func (f *FrameList) FilterByDateRange(dateRange dateTime.DateRange, acceptUnstopped bool) {
 	f.FilterByStartDate(*dateRange.Start)
 	if dateRange.IsClosed() {
 		f.FilterByEndDate(*dateRange.End, acceptUnstopped)
@@ -171,10 +171,10 @@ func (f *FrameList) MapByProject() map[string]*FrameList {
 	return result
 }
 
-func (f *FrameList) DateRange(locale locales.Translator) util.DateRange {
+func (f *FrameList) DateRange(locale locales.Translator) dateTime.DateRange {
 	if f.Empty() {
-		return util.NewDateRange(nil, nil, locale)
+		return dateTime.NewDateRange(nil, nil, locale)
 	}
 
-	return util.NewDateRange(f.First().Start, f.Last().End, locale)
+	return dateTime.NewDateRange(f.First().Start, f.Last().End, locale)
 }

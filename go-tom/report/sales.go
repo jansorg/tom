@@ -2,12 +2,12 @@ package report
 
 import (
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/money"
-	"github.com/jansorg/tom/go-tom/util"
 )
 
-func NewSales(ctx *context.TomContext, entryRounding util.RoundingConfig) *Sales {
+func NewSales(ctx *context.TomContext, entryRounding dateTime.RoundingConfig) *Sales {
 	return &Sales{
 		ctx:           ctx,
 		entryRounding: entryRounding,
@@ -20,15 +20,15 @@ type Sales struct {
 	ctx           *context.TomContext
 	exactValues   map[string]*money.Money
 	values        map[string]*money.Money
-	entryRounding util.RoundingConfig
-	sumRounding   util.RoundingConfig
+	entryRounding dateTime.RoundingConfig
+	sumRounding   dateTime.RoundingConfig
 }
 
 func (s *Sales) Add(frame *model.Frame) error {
 	hourlyRate, err := s.ctx.Query.HourlyRate(frame.ProjectId)
 	if err == nil {
 		duration := frame.Duration()
-		rounded := util.RoundDuration(duration, s.entryRounding)
+		rounded := dateTime.RoundDuration(duration, s.entryRounding)
 
 		if _, ok := s.exactValues[hourlyRate.CurrencyCode()]; !ok {
 			s.exactValues[hourlyRate.CurrencyCode()] = money.NewMoney(0, hourlyRate.CurrencyCode())

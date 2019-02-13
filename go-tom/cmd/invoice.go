@@ -7,9 +7,9 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
-	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newInvoiceCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -39,9 +39,9 @@ type invoiceCmdConfig struct {
 	ctx             *context.TomContext
 	dryRun          bool
 	project         *model.Project
-	filterRange     util.DateRange
+	filterRange     dateTime.DateRange
 	roundFramesTo   time.Duration
-	roundFramesMode util.RoundingMode
+	roundFramesMode dateTime.RoundingMode
 }
 
 type invoiceConfig struct {
@@ -60,7 +60,7 @@ func (c invoiceCmdConfig) createSummary() (invoiceConfig, error) {
 		ProjectIDs:         []string{c.project.ID},
 		IncludeSubprojects: true,
 		DateFilterRange:    c.filterRange,
-		EntryRounding: util.RoundingConfig{
+		EntryRounding: dateTime.RoundingConfig{
 			Mode: c.roundFramesMode,
 			Size: c.roundFramesTo,
 		},
@@ -102,7 +102,7 @@ type ProjectInvoiceLine struct {
 }
 
 func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdConfig, error) {
-	var filterRange util.DateRange
+	var filterRange dateTime.DateRange
 
 	// fixme add start and end date
 
@@ -110,7 +110,7 @@ func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdCon
 		if month, err := cmd.Flags().GetInt("month"); err != nil {
 			return invoiceCmdConfig{}, err
 		} else {
-			filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
+			filterRange = dateTime.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, month, 0)
 		}
 	}
 
@@ -128,7 +128,7 @@ func parseInvoiceCmd(ctx *context.TomContext, cmd *cobra.Command) (invoiceCmdCon
 	if err != nil {
 		return invoiceCmdConfig{}, err
 	}
-	frameRoundingMode := util.ParseRoundingMode(roundModeFrames)
+	frameRoundingMode := dateTime.ParseRoundingMode(roundModeFrames)
 
 	roundFramesTo, err := cmd.Flags().GetDuration("round-frames-to")
 	if err != nil {

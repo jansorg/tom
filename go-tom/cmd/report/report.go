@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/htmlreport"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/report"
@@ -241,7 +242,7 @@ func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Option
 }
 
 func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htmlreport.Options, error) {
-	filterRange := util.NewDateRange(nil, nil, ctx.Locale)
+	filterRange := dateTime.NewDateRange(nil, nil, ctx.Locale)
 
 	if opts.fromDateString != "" {
 		start, err := parseDate(&opts.fromDateString)
@@ -261,11 +262,11 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 
 	// day, month, year params override the filter values
 	if cmd.Flag("day").Changed {
-		filterRange = util.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, opts.day)
+		filterRange = dateTime.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, opts.day)
 	} else if cmd.Flag("month").Changed {
-		filterRange = util.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, opts.month, 0)
+		filterRange = dateTime.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, opts.month, 0)
 	} else if cmd.Flag("year").Changed {
-		filterRange = util.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(opts.year, 0, 0)
+		filterRange = dateTime.NewYearRange(time.Now(), ctx.Locale, time.Local).Shift(opts.year, 0, 0)
 	}
 
 	var splitOperations []report.SplitOperation
@@ -310,12 +311,12 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			DateFilterRange:    filterRange,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
-			EntryRounding: util.RoundingConfig{
-				Mode: util.RoundingByName(opts.roundModeFrames),
+			EntryRounding: dateTime.RoundingConfig{
+				Mode: dateTime.RoundingByName(opts.roundModeFrames),
 				Size: opts.roundFrames,
 			},
-			SumRounding: util.RoundingConfig{
-				Mode: util.RoundingByName(opts.roundModeTotal),
+			SumRounding: dateTime.RoundingConfig{
+				Mode: dateTime.RoundingByName(opts.roundModeTotal),
 				Size: opts.roundTotals,
 			},
 		},

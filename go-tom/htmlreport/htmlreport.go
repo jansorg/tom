@@ -15,6 +15,7 @@ import (
 
 	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/report"
 	"github.com/jansorg/tom/go-tom/util"
@@ -121,8 +122,8 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			return r.ctx.DurationPrinter.Long(duration)
 		},
 		"isMatrix": report.IsMatrix,
-		"sumChildValues": func(parent *report.ResultBucket, childIndex int) *util.DurationSum {
-			sum := util.NewDurationSum()
+		"sumChildValues": func(parent *report.ResultBucket, childIndex int) *dateTime.DurationSum {
+			sum := dateTime.NewDurationSum()
 			if parent == nil {
 				return sum
 			}

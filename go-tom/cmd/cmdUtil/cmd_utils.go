@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/util"
 )
 
@@ -102,7 +103,7 @@ func stringValue(v interface{}, ctx *context.TomContext) string {
 		return strconv.FormatInt(duration.Nanoseconds()/1000/1000, 10)
 	}
 
-	if date, ok := v.(util.DateRange); ok {
+	if date, ok := v.(dateTime.DateRange); ok {
 		return date.ShortString()
 	}
 

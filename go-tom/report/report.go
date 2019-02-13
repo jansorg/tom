@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/util"
 )
@@ -70,7 +71,7 @@ func (b *BucketReport) Update() *ResultBucket {
 		ctx:      b.ctx,
 		config:   config,
 		Frames:   b.source,
-		Duration: util.NewDurationSumAll(b.config.EntryRounding, nil, nil),
+		Duration: dateTime.NewDurationSumAll(b.config.EntryRounding, nil, nil),
 	}
 
 	for _, op := range b.config.Splitting {
