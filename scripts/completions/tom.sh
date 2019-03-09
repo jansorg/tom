@@ -249,18 +249,18 @@ __tom_handle_word()
     __tom_handle_word
 }
 
-__gotime_projects_get()
+__tom_projects_get()
 {
     local -a projects
-    readarray -t COMPREPLY < <(gotime projects 2>/dev/null | grep "$cur" | sed -e 's/ /\\ /g')
+    readarray -t COMPREPLY < <(tom projects 2>/dev/null | grep "$cur" | sed -e 's/ /\\ /g')
 }
 
-__gotime_get_projects()
+__tom_get_projects()
 {
     if [[ ${#nouns[@]} -eq 0 ]]; then
-        __gotime_projects_get ""
+        __tom_projects_get ""
 	else
-	    __gotime_projects_get ${nouns[${#nouns[@]} -1]}
+	    __tom_projects_get ${nouns[${#nouns[@]} -1]}
     fi
     if [[ $? -eq 0 ]]; then
         return 0
@@ -269,8 +269,8 @@ __gotime_get_projects()
 
 __custom_func() {
     case ${last_command} in
-        gotime_start)
-            __gotime_get_projects
+        tom_start)
+            __tom_get_projects
             return
             ;;
         *)
