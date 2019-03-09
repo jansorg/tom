@@ -36,6 +36,10 @@ nfpm:
     amd64: 64-bit
     386: 32-bit
     darwin: macOS
+  overrides:
+    deb:
+      dependencies:
+        - bash-completion
 
 archive:
   replacements:
