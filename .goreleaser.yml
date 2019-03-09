@@ -29,7 +29,7 @@ nfpm:
   name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
   bindir: /usr/bin
   files:
-    "scripts/completions/*": "/etc/bash_completion.d/"
+    "scripts/completions/tom.sh": "/etc/bash_completion.d/tom.sh"
   replacements:
     linux: Linux
     windows: Windows
@@ -54,4 +54,5 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^prep:'
       - '^wip'
