@@ -18,7 +18,7 @@ func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Co
 	var cmd = &cobra.Command{
 		Use:     "sevdesk",
 		Short:   "Create a new invoice at sevdesk.com",
-		Example: "gotime invoice sevdesk --project myProject",
+		Example: "tom invoice sevdesk --project myProject",
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg, err := parseInvoiceCmd(ctx, cmd)
 			if err != nil {
@@ -50,7 +50,7 @@ func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Co
 
 				var contactID string
 				for _, contact := range contacts {
-					found := strings.Contains(contact.Description, fmt.Sprintf("[gotime: %s]", invoiceData.projectID))
+					found := strings.Contains(contact.Description, fmt.Sprintf("[tom: %s]", invoiceData.projectID))
 					if found {
 						contactID = contact.ID
 						break
@@ -59,7 +59,7 @@ func newSevdeskCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Co
 
 				if contactID == "" {
 					// create a new company contact where invoices to this project will attach
-					contact, err := client.CreateCompanyContact(client.NewCompanyContact(fmt.Sprintf("[gotime] Project: %s", invoiceData.projectName), fmt.Sprintf("[gotime: %s]", invoiceData.projectID)))
+					contact, err := client.CreateCompanyContact(client.NewCompanyContact(fmt.Sprintf("[tom] Project: %s", invoiceData.projectName), fmt.Sprintf("[gotime: %s]", invoiceData.projectID)))
 					if err != nil {
 						util.Fatal(err)
 					}

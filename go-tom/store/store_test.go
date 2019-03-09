@@ -20,7 +20,7 @@ import (
 )
 
 func Test_StoreNoDataDir(t *testing.T) {
-	_, err := store.NewStore(filepath.Join(os.TempDir(), "gotime-does-not-exist"), filepath.Join(os.TempDir(), "backup-dir"), 5)
+	_, err := store.NewStore(filepath.Join(os.TempDir(), "tom-does-not-exist"), filepath.Join(os.TempDir(), "backup-dir"), 5)
 	require.Error(t, err)
 }
 

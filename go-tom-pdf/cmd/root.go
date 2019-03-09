@@ -8,7 +8,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "gotime-pdf",
+	Use:   "tom-pdf",
 	Short: "Converts HTML to PDF using one of several converters",
 }
 

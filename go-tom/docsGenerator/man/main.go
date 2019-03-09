@@ -19,7 +19,7 @@ func main() {
 
 	cmd := cmd.RootCmd
 	header := &doc.GenManHeader{
-		Title:   "gotime",
+		Title:   "tom",
 		Section: "3",
 	}
 	err := doc.GenManTree(cmd, header, target)

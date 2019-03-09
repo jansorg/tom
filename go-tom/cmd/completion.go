@@ -16,12 +16,12 @@ func newCompletionCommand(context *context.TomContext, parent *cobra.Command) *c
 		Short:  "Generates bash completion scripts",
 		Long: `To load completion run
 
-. <(gotime completion)
+. <(tom completion)
 
 To configure your bash shell to load completions for each session add to your bashrc
 
 # ~/.bashrc or ~/.profile
-. <(gotime completion)
+. <(tom completion)
 `,
 		Run: func(cmd *cobra.Command, args []string) {
 			RootCmd.GenBashCompletion(os.Stdout);

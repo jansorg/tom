@@ -128,7 +128,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&saveConfigFile, "save-config", "", "", "Path where the options are saved as a template")
 	cmd.Flags().StringVarP(&htmlOutputFile, "output-file", "o", "", "Path where the rendered data will be written")
 
-	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime.")
+	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with tom.")
 
 	templateAnnotations := make(map[string][]string)
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}

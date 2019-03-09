@@ -20,7 +20,7 @@ func newCreateProjectCommand(context *context.TomContext, parent *cobra.Command)
 		Use:     "project",
 		Short:   "Create a new project",
 		Args:    cobra.MinimumNArgs(1),
-		Example: "gotime create project \"Installation\" \"Deployment\" \"Support\"",
+		Example: "tom create project \"Installation\" \"Deployment\" \"Support\"",
 		Run: func(cmd *cobra.Command, args []string) {
 			for _, name := range args {
 				var project *model.Project
