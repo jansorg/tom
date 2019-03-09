@@ -12,7 +12,7 @@ bash ./update_docs.bash
 git commit -m "updating documentation for release of v$VERSION" . && git push
 
 # gotext generates data in unstable order, we can't use go generate here because it's called by goreleaser
-go generate gotext -srclang=en update -out=catalog.go -lang=en,de
+gotext -srclang=en update -out=catalog.go -lang=en,de
 git commit -m "updating translations for release of v$VERSION" . && git push
 
 git tag "v$VERSION"
