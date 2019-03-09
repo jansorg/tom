@@ -25,7 +25,8 @@ nfpm:
     - deb
   vendor: "ja-dev.eu"
   homepage: "https://github.com/jansorg/tom"
-  description: "Tom is a command line tool to track time",
+  maintainer: "Joachim Ansorg <tom@ja-dev.eu>"
+  description: "Tom is a command line tool to track time"
   license: ""
   name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
   bindir: /usr/bin
