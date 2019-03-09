@@ -145,7 +145,7 @@ __custom_func() {
 var RootCmd = &cobra.Command{
 	Use:                    "tom",
 	Short:                  "tom is a command line application to track time.",
-	Version:                "0.0.1",
+	Version:                "unknown",
 	BashCompletionFunction: bash_completion_func,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		cpuProfile, _ := cmd.Flags().GetString("cpu-profile")
@@ -182,7 +182,9 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-func Execute() {
+func Execute(version, commit, date string) {
+	RootCmd.Version = version
+
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
