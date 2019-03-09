@@ -2,16 +2,14 @@ before:
   hooks:
     - go generate ./...
 builds:
-  -
-    main: .
+  - main: .
     goos:
       - windows
       - darwin
       - linux
     goarch:
       - amd64
-  -
-    main: ./go-tom-pdf/.
+  - main: ./go-tom-pdf/.
     binary: tom-pdf
     goos:
       - windows
@@ -23,7 +21,7 @@ builds:
 nfpm:
   formats:
     - deb
-  vendor: "ja-dev.eu"
+  vendor: "https://github.com/jansorg/tom"
   homepage: "https://github.com/jansorg/tom"
   maintainer: "Joachim Ansorg <tom@ja-dev.eu>"
   description: "Tom is a command line tool to track time"
@@ -33,25 +31,19 @@ nfpm:
   files:
     "scripts/completions/": "/etc/bash_completion.d"
   replacements:
-    amd64: 64bit
-    386: 32bit
-    arm: ARM
-    arm64: ARM64
-    darwin: macOS
     linux: Linux
     windows: Windows
-    openbsd: OpenBSD
-    netbsd: NetBSD
-    freebsd: FreeBSD
-    dragonfly: DragonFlyBSD
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
 
 archive:
   replacements:
-    darwin: Darwin
     linux: Linux
     windows: Windows
-    386: i386
-    amd64: x86_64
+    amd64: 64-bit
+    386: 32-bit
+    darwin: macOS
 checksum:
   name_template: 'checksums.txt'
 snapshot:
@@ -60,6 +52,6 @@ changelog:
   sort: asc
   filters:
     exclude:
-    - '^docs:'
-    - '^test:'
-    - '^wip'
+      - '^docs:'
+      - '^test:'
+      - '^wip'
