@@ -13,7 +13,7 @@ tom invoice sevdesk [flags]
 ### Examples
 
 ```
-gotime invoice sevdesk --project myProject
+tom invoice sevdesk --project myProject
 ```
 
 ### Options

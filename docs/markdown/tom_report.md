@@ -36,7 +36,7 @@ tom report [flags]
       --show-untracked             Show min/max/avg of daily untracked time, i.e. the untracked time between first and last entries of a day
   -s, --split string               Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project (default "project")
       --subprojects                Automatically add the subprojects of the selected projects. (default true)
-      --template string            Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with gotime. (default "default")
+      --template string            Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with tom. (default "default")
       --template-file string       Custom gohtml template file to use for rendering. See the website for more details.
       --title string               This will be displayed as the reports title when you're using the default templates
   -t, --to string                  Optional end date

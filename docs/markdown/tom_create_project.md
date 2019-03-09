@@ -13,7 +13,7 @@ tom create project [flags]
 ### Examples
 
 ```
-gotime create project "Installation" "Deployment" "Support"
+tom create project "Installation" "Deployment" "Support"
 ```
 
 ### Options
