@@ -67,7 +67,6 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 		Use:   "report",
 		Short: "Generate reports about your tracked time",
 		Run: func(cmd *cobra.Command, args []string) {
-			// fixme
 			config := htmlreport.DefaultOptions
 			var err error
 
@@ -96,6 +95,12 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 					util.Fatal(err)
 				}
 			}
+
+			// update the time zone of the filter range to the target zone of the report
+			if config.Report.Timezone == nil {
+				config.Report.Timezone = time.Local
+			}
+			config.Report.DateFilterRange = config.Report.DateFilterRange.In(config.Report.Timezone)
 
 			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config.Report, ctx)
 			result := frameReport.Update()

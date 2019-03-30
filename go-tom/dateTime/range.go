@@ -2,6 +2,7 @@ package dateTime
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/go-playground/locales"
@@ -99,10 +100,19 @@ func (r DateRange) ShortString() string {
 	if r.End != nil {
 		end = ShortDateString(*r.End)
 	}
-	return fmt.Sprintf("%s - %s", start, end)
+	return strings.TrimSpace(fmt.Sprintf("%s - %s", start, end))
 }
 
 func (r DateRange) MinimalString() string {
+	if r.Start != nil && r.End == nil {
+		return fmt.Sprintf("%s -", r.locale.FmtDateShort(*r.Start))
+	} else if r.Start == nil && r.End != nil {
+		return fmt.Sprintf("- %s", r.locale.FmtDateShort(*r.End))
+	} else if r.Start == nil && r.End == nil {
+		// fixme return error?
+		return ""
+	}
+
 	// year
 	if r.Start.AddDate(1, 0, 0).Equal(*r.End) {
 		return fmt.Sprintf("%04d", r.Start.Year())

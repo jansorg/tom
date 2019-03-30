@@ -24,7 +24,12 @@
                 <td class="title">{{.Title}}</td>
             </tr>
         {{end}}
-        {{if not .DateRange.Empty}}
+        {{if not reportOptions.Report.DateFilterRange.Empty }}
+            <tr>
+                <td>{{i18n "Time range:"}}</td>
+                <td class="time-range">{{reportOptions.Report.DateFilterRange.MinimalString}}</td>
+            </tr>
+        {{else if not .DateRange.Empty}}
             <tr>
                 <td>{{i18n "Time range:"}}</td>
                 <td class="time-range">{{.DateRange.MinimalString}}</td>

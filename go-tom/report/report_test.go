@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/text/language"
-
+	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/test_setup"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
 )
 
 func TestSplitEmptyReport(t *testing.T) {
@@ -523,6 +523,42 @@ func TestSalesStats(t *testing.T) {
 	// USD sales = p3 = 5*2 hours * 75 USD = 750 USD
 	assert.EqualValues(t, "€1,500.00", report.Result().Sales.values["EUR"].String())
 	assert.EqualValues(t, "$750.00", report.Result().Sales.values["USD"].String())
+}
+
+func TestReportTimeFilter(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+
+	// different time zones
+	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.FixedZone("UTC-2", -2*60*60))
+	end := time.Date(2019, time.January, 2, 0, 0, 0, 0, time.FixedZone("UTC+8", 8*60*60))
+
+	report := NewBucketReport(model.NewFrameList([]*model.Frame{}), Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
+		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
+		Timezone:           time.UTC,
+	}, ctx)
+	report.Update()
+	assert.NotNil(t, report.config.DateFilterRange.Start, "start must not non nil")
+	assert.EqualValues(t, "2019-01-01 02:00:00 +0000 UTC - 2019-01-01 16:00:00 +0000 UTC", report.config.DateFilterRange.String())
+
+	// different target zone
+	report = NewBucketReport(model.NewFrameList([]*model.Frame{}), Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
+		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
+		Timezone:           time.FixedZone("UTC+8", 8*60*60),
+	}, ctx)
+	report.Update()
+	assert.NotNil(t, report.config.DateFilterRange.Start, "start must not non nil")
+	assert.EqualValues(t, "2019-01-01 10:00:00 +0800 UTC+8 - 2019-01-02 00:00:00 +0800 UTC+8", report.config.DateFilterRange.String())
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
