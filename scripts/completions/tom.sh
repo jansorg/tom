@@ -1,6 +1,6 @@
 # bash completion for tom                                  -*- shell-script -*-
 
-__tom_debug()
+__debug()
 {
     if [[ -n ${BASH_COMP_DEBUG_FILE} ]]; then
         echo "$*" >> "${BASH_COMP_DEBUG_FILE}"
@@ -9,13 +9,13 @@ __tom_debug()
 
 # Homebrew on Macs have version 1.3 of bash-completion which doesn't include
 # _init_completion. This is a very minimal version of that function.
-__tom_init_completion()
+__my_init_completion()
 {
     COMPREPLY=()
     _get_comp_words_by_ref "$@" cur prev words cword
 }
 
-__tom_index_of_word()
+__index_of_word()
 {
     local w word=$1
     shift
@@ -27,7 +27,7 @@ __tom_index_of_word()
     index=-1
 }
 
-__tom_contains_word()
+__contains_word()
 {
     local w word=$1; shift
     for w in "$@"; do
@@ -36,9 +36,9 @@ __tom_contains_word()
     return 1
 }
 
-__tom_handle_reply()
+__handle_reply()
 {
-    __tom_debug "${FUNCNAME[0]}"
+    __debug "${FUNCNAME[0]}"
     case $cur in
         -*)
             if [[ $(type -t compopt) = "builtin" ]]; then
@@ -62,8 +62,8 @@ __tom_handle_reply()
                 fi
 
                 local index flag
-                flag="${cur%=*}"
-                __tom_index_of_word "${flag}" "${flags_with_completion[@]}"
+                flag="${cur%%=*}"
+                __index_of_word "${flag}" "${flags_with_completion[@]}"
                 COMPREPLY=()
                 if [[ ${index} -ge 0 ]]; then
                     PREFIX=""
@@ -81,7 +81,7 @@ __tom_handle_reply()
 
     # check if we are handling a flag with special work handling
     local index
-    __tom_index_of_word "${prev}" "${flags_with_completion[@]}"
+    __index_of_word "${prev}" "${flags_with_completion[@]}"
     if [[ ${index} -ge 0 ]]; then
         ${flags_completion[${index}]}
         return
@@ -107,43 +107,31 @@ __tom_handle_reply()
     fi
 
     if [[ ${#COMPREPLY[@]} -eq 0 ]]; then
-		if declare -F __tom_custom_func >/dev/null; then
-			# try command name qualified custom func
-			__tom_custom_func
-		else
-			# otherwise fall back to unqualified for compatibility
-			declare -F __custom_func >/dev/null && __custom_func
-		fi
+        declare -F __custom_func >/dev/null && __custom_func
     fi
 
     # available in bash-completion >= 2, not always present on macOS
     if declare -F __ltrim_colon_completions >/dev/null; then
         __ltrim_colon_completions "$cur"
     fi
-
-    # If there is only 1 completion and it is a flag with an = it will be completed
-    # but we don't want a space after the =
-    if [[ "${#COMPREPLY[@]}" -eq "1" ]] && [[ $(type -t compopt) = "builtin" ]] && [[ "${COMPREPLY[0]}" == --*= ]]; then
-       compopt -o nospace
-    fi
 }
 
 # The arguments should be in the form "ext1|ext2|extn"
-__tom_handle_filename_extension_flag()
+__handle_filename_extension_flag()
 {
     local ext="$1"
     _filedir "@(${ext})"
 }
 
-__tom_handle_subdirs_in_dir_flag()
+__handle_subdirs_in_dir_flag()
 {
     local dir="$1"
     pushd "${dir}" >/dev/null 2>&1 && _filedir -d && popd >/dev/null 2>&1
 }
 
-__tom_handle_flag()
+__handle_flag()
 {
-    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
     # if a command required a flag, and we found it, unset must_have_one_flag()
     local flagname=${words[c]}
@@ -151,33 +139,30 @@ __tom_handle_flag()
     # if the word contained an =
     if [[ ${words[c]} == *"="* ]]; then
         flagvalue=${flagname#*=} # take in as flagvalue after the =
-        flagname=${flagname%=*} # strip everything after the =
+        flagname=${flagname%%=*} # strip everything after the =
         flagname="${flagname}=" # but put the = back
     fi
-    __tom_debug "${FUNCNAME[0]}: looking for ${flagname}"
-    if __tom_contains_word "${flagname}" "${must_have_one_flag[@]}"; then
+    __debug "${FUNCNAME[0]}: looking for ${flagname}"
+    if __contains_word "${flagname}" "${must_have_one_flag[@]}"; then
         must_have_one_flag=()
     fi
 
     # if you set a flag which only applies to this command, don't show subcommands
-    if __tom_contains_word "${flagname}" "${local_nonpersistent_flags[@]}"; then
+    if __contains_word "${flagname}" "${local_nonpersistent_flags[@]}"; then
       commands=()
     fi
 
     # keep flag value with flagname as flaghash
-    # flaghash variable is an associative array which is only supported in bash > 3.
-    if [[ -z "${BASH_VERSION}" || "${BASH_VERSINFO[0]}" -gt 3 ]]; then
-        if [ -n "${flagvalue}" ] ; then
-            flaghash[${flagname}]=${flagvalue}
-        elif [ -n "${words[ $((c+1)) ]}" ] ; then
-            flaghash[${flagname}]=${words[ $((c+1)) ]}
-        else
-            flaghash[${flagname}]="true" # pad "true" for bool flag
-        fi
+    if [ -n "${flagvalue}" ] ; then
+        flaghash[${flagname}]=${flagvalue}
+    elif [ -n "${words[ $((c+1)) ]}" ] ; then
+        flaghash[${flagname}]=${words[ $((c+1)) ]}
+    else
+        flaghash[${flagname}]="true" # pad "true" for bool flag
     fi
 
     # skip the argument to a two word flag
-    if __tom_contains_word "${words[c]}" "${two_word_flags[@]}"; then
+    if __contains_word "${words[c]}" "${two_word_flags[@]}"; then
         c=$((c+1))
         # if we are looking for a flags value, don't show commands
         if [[ $c -eq $cword ]]; then
@@ -189,13 +174,13 @@ __tom_handle_flag()
 
 }
 
-__tom_handle_noun()
+__handle_noun()
 {
-    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
-    if __tom_contains_word "${words[c]}" "${must_have_one_noun[@]}"; then
+    if __contains_word "${words[c]}" "${must_have_one_noun[@]}"; then
         must_have_one_noun=()
-    elif __tom_contains_word "${words[c]}" "${noun_aliases[@]}"; then
+    elif __contains_word "${words[c]}" "${noun_aliases[@]}"; then
         must_have_one_noun=()
     fi
 
@@ -203,50 +188,42 @@ __tom_handle_noun()
     c=$((c+1))
 }
 
-__tom_handle_command()
+__handle_command()
 {
-    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
     local next_command
     if [[ -n ${last_command} ]]; then
         next_command="_${last_command}_${words[c]//:/__}"
     else
         if [[ $c -eq 0 ]]; then
-            next_command="_tom_root_command"
+            next_command="_$(basename "${words[c]//:/__}")"
         else
             next_command="_${words[c]//:/__}"
         fi
     fi
     c=$((c+1))
-    __tom_debug "${FUNCNAME[0]}: looking for ${next_command}"
+    __debug "${FUNCNAME[0]}: looking for ${next_command}"
     declare -F "$next_command" >/dev/null && $next_command
 }
 
-__tom_handle_word()
+__handle_word()
 {
     if [[ $c -ge $cword ]]; then
-        __tom_handle_reply
+        __handle_reply
         return
     fi
-    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
     if [[ "${words[c]}" == -* ]]; then
-        __tom_handle_flag
-    elif __tom_contains_word "${words[c]}" "${commands[@]}"; then
-        __tom_handle_command
-    elif [[ $c -eq 0 ]]; then
-        __tom_handle_command
-    elif __tom_contains_word "${words[c]}" "${command_aliases[@]}"; then
-        # aliashash variable is an associative array which is only supported in bash > 3.
-        if [[ -z "${BASH_VERSION}" || "${BASH_VERSINFO[0]}" -gt 3 ]]; then
-            words[c]=${aliashash[${words[c]}]}
-            __tom_handle_command
-        else
-            __tom_handle_noun
-        fi
+        __handle_flag
+    elif __contains_word "${words[c]}" "${commands[@]}"; then
+        __handle_command
+    elif [[ $c -eq 0 ]] && __contains_word "$(basename "${words[c]}")" "${commands[@]}"; then
+        __handle_command
     else
-        __tom_handle_noun
+        __handle_noun
     fi
-    __tom_handle_word
+    __handle_word
 }
 
 __tom_projects_get()
@@ -281,9 +258,6 @@ __custom_func() {
 _tom_cancel()
 {
     last_command="tom_cancel"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -305,9 +279,6 @@ _tom_cancel()
 _tom_config_set()
 {
     last_command="tom_config_set"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -334,9 +305,6 @@ _tom_config_set()
 _tom_config()
 {
     last_command="tom_config"
-
-    command_aliases=()
-
     commands=()
     commands+=("set")
 
@@ -362,9 +330,6 @@ _tom_config()
 _tom_create_project()
 {
     last_command="tom_create_project"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -392,9 +357,6 @@ _tom_create_project()
 _tom_create_tag()
 {
     last_command="tom_create_tag"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -416,9 +378,6 @@ _tom_create_tag()
 _tom_create()
 {
     last_command="tom_create"
-
-    command_aliases=()
-
     commands=()
     commands+=("project")
     commands+=("tag")
@@ -442,9 +401,6 @@ _tom_create()
 _tom_edit_frame()
 {
     last_command="tom_edit_frame"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -482,9 +438,6 @@ _tom_edit_frame()
 _tom_edit_project()
 {
     last_command="tom_edit_project"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -516,9 +469,6 @@ _tom_edit_project()
 _tom_edit()
 {
     last_command="tom_edit"
-
-    command_aliases=()
-
     commands=()
     commands+=("frame")
     commands+=("project")
@@ -542,9 +492,6 @@ _tom_edit()
 _tom_frames_archive()
 {
     last_command="tom_frames_archive"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -573,9 +520,6 @@ _tom_frames_archive()
 _tom_frames()
 {
     last_command="tom_frames"
-
-    command_aliases=()
-
     commands=()
     commands+=("archive")
 
@@ -615,9 +559,6 @@ _tom_frames()
 _tom_import_fanurio()
 {
     last_command="tom_import_fanurio"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -639,9 +580,6 @@ _tom_import_fanurio()
 _tom_import_macTimeTracker()
 {
     last_command="tom_import_macTimeTracker"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -663,9 +601,6 @@ _tom_import_macTimeTracker()
 _tom_import_watson()
 {
     last_command="tom_import_watson"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -687,9 +622,6 @@ _tom_import_watson()
 _tom_import()
 {
     last_command="tom_import"
-
-    command_aliases=()
-
     commands=()
     commands+=("fanurio")
     commands+=("macTimeTracker")
@@ -714,9 +646,6 @@ _tom_import()
 _tom_invoice_sevdesk()
 {
     last_command="tom_invoice_sevdesk"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -750,9 +679,6 @@ _tom_invoice_sevdesk()
 _tom_invoice()
 {
     last_command="tom_invoice"
-
-    command_aliases=()
-
     commands=()
     commands+=("sevdesk")
 
@@ -784,9 +710,6 @@ _tom_invoice()
 _tom_projects()
 {
     last_command="tom_projects"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -821,9 +744,6 @@ _tom_projects()
 _tom_remove_all()
 {
     last_command="tom_remove_all"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -849,9 +769,6 @@ _tom_remove_all()
 _tom_remove_frame()
 {
     last_command="tom_remove_frame"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -873,9 +790,6 @@ _tom_remove_frame()
 _tom_remove_project()
 {
     last_command="tom_remove_project"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -899,9 +813,6 @@ _tom_remove_project()
 _tom_remove()
 {
     last_command="tom_remove"
-
-    command_aliases=()
-
     commands=()
     commands+=("all")
     commands+=("frame")
@@ -926,9 +837,6 @@ _tom_remove()
 _tom_rename()
 {
     last_command="tom_rename"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -950,9 +858,6 @@ _tom_rename()
 _tom_report()
 {
     last_command="tom_report"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -1015,7 +920,7 @@ _tom_report()
     local_nonpersistent_flags+=("--template=")
     flags+=("--template-file=")
     flags_with_completion+=("--template-file")
-    flags_completion+=("__tom_handle_filename_extension_flag gohtml")
+    flags_completion+=("__handle_filename_extension_flag gohtml")
     local_nonpersistent_flags+=("--template-file=")
     flags+=("--title=")
     local_nonpersistent_flags+=("--title=")
@@ -1038,9 +943,6 @@ _tom_report()
 _tom_start()
 {
     last_command="tom_start"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -1068,9 +970,6 @@ _tom_start()
 _tom_status_projects()
 {
     last_command="tom_status_projects"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -1112,9 +1011,6 @@ _tom_status_projects()
 _tom_status()
 {
     last_command="tom_status"
-
-    command_aliases=()
-
     commands=()
     commands+=("projects")
 
@@ -1148,9 +1044,6 @@ _tom_status()
 _tom_stop()
 {
     last_command="tom_stop"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -1181,9 +1074,6 @@ _tom_stop()
 _tom_tags()
 {
     last_command="tom_tags"
-
-    command_aliases=()
-
     commands=()
 
     flags=()
@@ -1211,12 +1101,9 @@ _tom_tags()
     noun_aliases=()
 }
 
-_tom_root_command()
+_tom()
 {
     last_command="tom"
-
-    command_aliases=()
-
     commands=()
     commands+=("cancel")
     commands+=("config")
@@ -1254,11 +1141,10 @@ __start_tom()
 {
     local cur prev words cword
     declare -A flaghash 2>/dev/null || :
-    declare -A aliashash 2>/dev/null || :
     if declare -F _init_completion >/dev/null 2>&1; then
         _init_completion -s || return
     else
-        __tom_init_completion -n "=" || return
+        __my_init_completion -n "=" || return
     fi
 
     local c=0
@@ -1273,7 +1159,7 @@ __start_tom()
     local last_command
     local nouns=()
 
-    __tom_handle_word
+    __handle_word
 }
 
 if [[ $(type -t compopt) = "builtin" ]]; then
