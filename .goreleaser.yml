@@ -45,9 +45,9 @@ archive:
   replacements:
     linux: Linux
     windows: Windows
-    amd64: 64-bit
-    386: 32-bit
     darwin: macOS
+    amd64: amd64
+    386: x86
 checksum:
   name_template: 'checksums.txt'
 snapshot:
