@@ -37,6 +37,8 @@ func (o projectStatusList) Get(index int, prop string, format string, ctx *conte
 		return summary.Project.Name, nil
 	case "trackedDay":
 		return summary.TrackedDay.Get(), nil
+	case "trackedYesterday":
+		return summary.TrackedYesterday.Get(), nil
 	case "trackedWeek":
 		return summary.TrackedWeek.Get(), nil
 	case "trackedMonth":
@@ -47,6 +49,8 @@ func (o projectStatusList) Get(index int, prop string, format string, ctx *conte
 		return summary.TrackedAll.Get(), nil
 	case "totalTrackedDay":
 		return summary.TrackedTotalDay.Get(), nil
+	case "totalTrackedYesterday":
+		return summary.TrackedTotalYesterday.Get(), nil
 	case "totalTrackedWeek":
 		return summary.TrackedTotalWeek.Get(), nil
 	case "totalTrackedMonth":
@@ -102,8 +106,8 @@ func newProjectsStatusCommand(ctx *context.TomContext, parent *cobra.Command) *c
 
 	cmdUtil.AddListOutputFlags(cmd, "fullName,trackedDay,trackedWeek,trackedMonth", []string{
 		"id", "fullName", "name", "parentID",
-		"trackedDay", "trackedWeek", "trackedMonth", "trackedYear", "trackedAll",
-		"totalTrackedDay", "totalTrackedWeek", "totalTrackedMonth", "totalTrackedYear", "totalTrackedAll"})
+		"trackedDay", "trackedYesterday", "trackedWeek", "trackedMonth", "trackedYear", "trackedAll",
+		"totalTrackedDay", "totalTrackedYesterday", "totalTrackedWeek", "totalTrackedMonth", "totalTrackedYear", "totalTrackedAll"})
 	parent.AddCommand(cmd)
 	return cmd
 }

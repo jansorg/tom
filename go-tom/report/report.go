@@ -64,7 +64,9 @@ func (b *BucketReport) Update() *ResultBucket {
 
 	config := b.config
 	if config.DateFilterRange.Empty() {
-		config.DateFilterRange = b.source.DateRange(b.ctx.Locale)
+		config.DateFilterRange = b.source.DateRange(b.ctx.Locale).In(config.Timezone)
+	} else if config.Timezone != nil {
+		config.DateFilterRange = config.DateFilterRange.In(config.Timezone)
 	}
 
 	b.result = &ResultBucket{

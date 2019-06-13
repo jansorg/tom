@@ -8,54 +8,75 @@ import (
 	"github.com/jansorg/tom/go-tom/model"
 )
 
-func NewProjectSummary(year *dateTime.DateRange, month *dateTime.DateRange, week *dateTime.DateRange, day *dateTime.DateRange, refTime *time.Time, project *model.Project) *ProjectSummary {
-	return &ProjectSummary{
-		Project:           project,
-		TrackedAll:        dateTime.NewDurationSum(),
-		TrackedTotalAll:   dateTime.NewDurationSum(),
-		TrackedYear:       dateTime.NewDurationSumFiltered(year, refTime),
-		TrackedTotalYear:  dateTime.NewDurationSumFiltered(year, refTime),
-		TrackedMonth:      dateTime.NewDurationSumFiltered(month, refTime),
-		TrackedTotalMonth: dateTime.NewDurationSumFiltered(month, refTime),
-		TrackedWeek:       dateTime.NewDurationSumFiltered(week, refTime),
-		TrackedTotalWeek:  dateTime.NewDurationSumFiltered(week, refTime),
-		TrackedDay:        dateTime.NewDurationSumFiltered(day, refTime),
-		TrackedTotalDay:   dateTime.NewDurationSumFiltered(day, refTime),
+func NewProjectSummary(year *dateTime.DateRange, month *dateTime.DateRange, week *dateTime.DateRange, yesterday *dateTime.DateRange, day *dateTime.DateRange, refTime *time.Time, project *model.Project) *ProjectSummary {
+	summary := &ProjectSummary{
+		Project:               project,
+		TrackedAll:            dateTime.NewDurationSum(),
+		TrackedTotalAll:       dateTime.NewDurationSum(),
+		TrackedYear:           dateTime.NewDurationSumFiltered(year, refTime),
+		TrackedTotalYear:      dateTime.NewDurationSumFiltered(year, refTime),
+		TrackedMonth:          dateTime.NewDurationSumFiltered(month, refTime),
+		TrackedTotalMonth:     dateTime.NewDurationSumFiltered(month, refTime),
+		TrackedWeek:           dateTime.NewDurationSumFiltered(week, refTime),
+		TrackedTotalWeek:      dateTime.NewDurationSumFiltered(week, refTime),
+		TrackedYesterday:      dateTime.NewDurationSumFiltered(yesterday, refTime),
+		TrackedTotalYesterday: dateTime.NewDurationSumFiltered(yesterday, refTime),
+		TrackedDay:            dateTime.NewDurationSumFiltered(day, refTime),
+		TrackedTotalDay:       dateTime.NewDurationSumFiltered(day, refTime),
 	}
+
+	summary.trackedAll = []*dateTime.DurationSum{
+		summary.TrackedAll,
+		summary.TrackedYear,
+		summary.TrackedMonth,
+		summary.TrackedWeek,
+		summary.TrackedYesterday,
+		summary.TrackedDay,
+	}
+
+	summary.totalTrackedAll = []*dateTime.DurationSum{
+		summary.TrackedTotalAll,
+		summary.TrackedTotalYear,
+		summary.TrackedTotalMonth,
+		summary.TrackedTotalWeek,
+		summary.TrackedTotalYesterday,
+		summary.TrackedTotalDay,
+	}
+
+	return summary
 }
 
 type ProjectSummary struct {
 	Project *model.Project
 
-	TrackedAll   *dateTime.DurationSum
-	TrackedYear  *dateTime.DurationSum
-	TrackedMonth *dateTime.DurationSum
-	TrackedWeek  *dateTime.DurationSum
-	TrackedDay   *dateTime.DurationSum
+	trackedAll       []*dateTime.DurationSum
+	TrackedAll       *dateTime.DurationSum
+	TrackedYear      *dateTime.DurationSum
+	TrackedMonth     *dateTime.DurationSum
+	TrackedWeek      *dateTime.DurationSum
+	TrackedYesterday *dateTime.DurationSum
+	TrackedDay       *dateTime.DurationSum
 
-	TrackedTotalAll   *dateTime.DurationSum
-	TrackedTotalYear  *dateTime.DurationSum
-	TrackedTotalMonth *dateTime.DurationSum
-	TrackedTotalWeek  *dateTime.DurationSum
-	TrackedTotalDay   *dateTime.DurationSum
+	totalTrackedAll       []*dateTime.DurationSum
+	TrackedTotalAll       *dateTime.DurationSum
+	TrackedTotalYear      *dateTime.DurationSum
+	TrackedTotalMonth     *dateTime.DurationSum
+	TrackedTotalWeek      *dateTime.DurationSum
+	TrackedTotalYesterday *dateTime.DurationSum
+	TrackedTotalDay       *dateTime.DurationSum
 }
 
 func (p *ProjectSummary) add(frame *model.Frame) {
-	p.TrackedAll.AddStartEndP(frame.Start, frame.End)
-	p.TrackedYear.AddStartEndP(frame.Start, frame.End)
-	p.TrackedMonth.AddStartEndP(frame.Start, frame.End)
-	p.TrackedWeek.AddStartEndP(frame.Start, frame.End)
-	p.TrackedDay.AddStartEndP(frame.Start, frame.End)
-
+	for _, r := range p.trackedAll {
+		r.AddStartEndP(frame.Start, frame.End)
+	}
 	p.addTotal(frame)
 }
 
 func (p *ProjectSummary) addTotal(frame *model.Frame) {
-	p.TrackedTotalAll.AddStartEndP(frame.Start, frame.End)
-	p.TrackedTotalYear.AddStartEndP(frame.Start, frame.End)
-	p.TrackedTotalMonth.AddStartEndP(frame.Start, frame.End)
-	p.TrackedTotalWeek.AddStartEndP(frame.Start, frame.End)
-	p.TrackedTotalDay.AddStartEndP(frame.Start, frame.End)
+	for _, r := range p.totalTrackedAll {
+		r.AddStartEndP(frame.Start, frame.End)
+	}
 }
 
 func (p *ProjectSummary) Add(v *ProjectSummary) {
@@ -63,12 +84,14 @@ func (p *ProjectSummary) Add(v *ProjectSummary) {
 	p.TrackedYear.AddSum(v.TrackedYear)
 	p.TrackedMonth.AddSum(v.TrackedMonth)
 	p.TrackedWeek.AddSum(v.TrackedWeek)
+	p.TrackedYesterday.AddSum(v.TrackedYesterday)
 	p.TrackedDay.AddSum(v.TrackedDay)
 
 	p.TrackedTotalAll.AddSum(v.TrackedTotalAll)
 	p.TrackedTotalYear.AddSum(v.TrackedTotalYear)
 	p.TrackedTotalMonth.AddSum(v.TrackedTotalMonth)
 	p.TrackedTotalWeek.AddSum(v.TrackedTotalWeek)
+	p.TrackedTotalYesterday.AddSum(v.TrackedTotalYesterday)
 	p.TrackedTotalDay.AddSum(v.TrackedTotalDay)
 }
 
@@ -82,6 +105,7 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, includeArchive
 	month := dateTime.NewMonthRange(referenceDay, ctx.Locale, time.Local)
 	week := dateTime.NewWeekRange(referenceDay, ctx.Locale, time.Local)
 	day := dateTime.NewDayRange(referenceDay, ctx.Locale, time.Local)
+	yesterday := day.Shift(0, 0, -1)
 
 	result := map[string]*ProjectSummary{}
 	if showEmpty {
@@ -96,7 +120,7 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, includeArchive
 		ctx.Query.WithProjectAndParents(projectID, func(project *model.Project) bool {
 			target, ok := result[project.ID]
 			if !ok {
-				target = NewProjectSummary(&year, &month, &week, &day, activeEndRef, project)
+				target = NewProjectSummary(&year, &month, &week, &yesterday, &day, activeEndRef, project)
 				result[project.ID] = target
 			}
 
@@ -112,7 +136,7 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, includeArchive
 	}
 
 	if overallSummaryID != "" {
-		overall := NewProjectSummary(nil, nil, nil, nil, nil, &model.Project{ID: overallSummaryID, FullName: []string{overallSummaryID}})
+		overall := NewProjectSummary(nil, nil, nil, nil, nil, nil, &model.Project{ID: overallSummaryID, FullName: []string{overallSummaryID}})
 
 		// sum up all project summaries of top-level projects
 		for _, v := range result {

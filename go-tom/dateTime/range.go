@@ -66,6 +66,10 @@ type DateRange struct {
 }
 
 func (r DateRange) In(location *time.Location) DateRange {
+	if location == nil {
+		return r
+	}
+
 	start := r.Start
 	if start != nil {
 		in := start.In(location)
