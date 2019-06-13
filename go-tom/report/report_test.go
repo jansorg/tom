@@ -545,8 +545,9 @@ func TestReportTimeFilter(t *testing.T) {
 		Timezone:           time.UTC,
 	}, ctx)
 	report.Update()
-	assert.NotNil(t, report.config.DateFilterRange.Start, "start must not non nil")
-	assert.EqualValues(t, "2019-01-01 02:00:00 +0000 UTC - 2019-01-01 16:00:00 +0000 UTC", report.config.DateFilterRange.String())
+	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
+	assert.EqualValues(t, "2019-01-01 00:00:00 -0200 UTC-2 - 2019-01-02 00:00:00 +0800 UTC+8", report.config.DateFilterRange.String())
+	assert.EqualValues(t, "2019-01-01 02:00:00 +0000 UTC - 2019-01-01 16:00:00 +0000 UTC", report.result.config.DateFilterRange.String())
 
 	// different target zone
 	report = NewBucketReport(model.NewFrameList([]*model.Frame{}), Config{
@@ -557,8 +558,8 @@ func TestReportTimeFilter(t *testing.T) {
 		Timezone:           time.FixedZone("UTC+8", 8*60*60),
 	}, ctx)
 	report.Update()
-	assert.NotNil(t, report.config.DateFilterRange.Start, "start must not non nil")
-	assert.EqualValues(t, "2019-01-01 10:00:00 +0800 UTC+8 - 2019-01-02 00:00:00 +0800 UTC+8", report.config.DateFilterRange.String())
+	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
+	assert.EqualValues(t, "2019-01-01 10:00:00 +0800 UTC+8 - 2019-01-02 00:00:00 +0800 UTC+8", report.result.config.DateFilterRange.String())
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
