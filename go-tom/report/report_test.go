@@ -87,11 +87,11 @@ func TestReportSplitYear(t *testing.T) {
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
 
-	// two hours
+	// two hours, 10th of march 2018
 	start := newDate(2018, time.March, 10, 10, 0)
 	end := newDate(2018, time.March, 10, 12, 0)
 
-	// one hour
+	// one hour. 9th of march 2019
 	start2 := newDate(2019, time.March, 10, 9, 0)
 	end2 := newDate(2019, time.March, 10, 10, 0)
 
@@ -560,6 +560,118 @@ func TestReportTimeFilter(t *testing.T) {
 	report.Update()
 	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
 	assert.EqualValues(t, "2019-01-01 10:00:00 +0800 UTC+8 - 2019-01-02 00:00:00 +0800 UTC+8", report.result.config.DateFilterRange.String())
+}
+
+// test for https://github.com/jansorg/tom-ui/issues/91
+// make sure that entries which overlap the filter range are properly handled
+func TestReportTimeFilterOverlap(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+
+	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	end := start.Add(1 * time.Hour)
+
+	// the frame start 10 minutes before and end 10 minutes after the filter range
+	frameStart := start.Add(-10 * time.Minute)
+	frameEnd := end.Add(10 * time.Minute)
+
+	frames := model.NewEmptyFrameList()
+	frames.Append(&model.Frame{Start: &frameStart, End: &frameEnd, ProjectId: p1.ID})
+
+	// with filter
+	report := NewBucketReport(frames, Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByProject},
+		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
+		Timezone:           time.UTC,
+	}, ctx)
+	report.Update()
+	assert.EqualValues(t, 1*time.Hour, report.Result().Duration.GetExact(), "1 hour max range expected for overlapping entries")
+}
+
+// test for https://github.com/jansorg/tom-ui/issues/91
+// make sure that entries which overlap the filter range are properly handled
+func TestReportTimeFilterNoOverlap(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+
+	start := time.Date(2019, time.January, 15, 12, 0, 0, 0, time.UTC)
+	end := start.Add(1 * time.Hour)
+
+	// the frame start 10 minutes before and end 10 minutes after the filter range
+	frameStart := start.Add(-10 * time.Minute)
+	frameEnd := end.Add(10 * time.Minute)
+
+	frames := model.NewEmptyFrameList()
+	frames.Append(&model.Frame{Start: &frameStart, End: &frameEnd, ProjectId: p1.ID})
+
+	// without broader filter, i.e. without overlapping
+	beforeStart := start.AddDate(0, 0, -1)
+	afterEnd := end.AddDate(0, 0, 1)
+
+	report := NewBucketReport(frames, Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByProject},
+		DateFilterRange:    dateTime.NewDateRange(&beforeStart, &afterEnd, ctx.Locale),
+		Timezone:           time.UTC,
+	}, ctx)
+	report.Update()
+	assert.EqualValues(t, 1*time.Hour+20*time.Minute, report.Result().Duration.GetExact(), "expected full duration for non-overlapping frames")
+}
+
+func TestReportTimeFilterOverlapMultipleMonths(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+
+	// January 2019
+	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	end := start.AddDate(0, 0, 1)
+
+	// the frame start 10 minutes before and end 10 minutes after the filter range
+	frameStart := start.Add(-10 * time.Minute)
+	frameEnd := end.Add(10 * time.Minute)
+
+	frames := model.NewEmptyFrameList()
+	frames.Append(&model.Frame{Start: &frameStart, End: &frameEnd, ProjectId: p1.ID})
+
+	// no filter, but the month buckets must properly split the single frame
+	report := NewBucketReport(frames, Config{
+		ProjectIDs:         []string{p1.ID},
+		IncludeSubprojects: true,
+		Splitting:          []SplitOperation{SplitByDay},
+		Timezone:           time.UTC,
+	}, ctx)
+	report.Update()
+
+	assert.EqualValues(t, 24*time.Hour+20*time.Minute, report.Result().Duration.GetExact())
+
+	subBuckets := report.Result().ChildBuckets
+
+	require.EqualValues(t, 3, len(subBuckets))
+
+	assert.EqualValues(t, 10*time.Minute, subBuckets[0].Duration.GetExact())
+	assert.EqualValues(t, 1, subBuckets[0].FrameCount)
+	assert.EqualValues(t, 10*time.Minute, (*subBuckets[0].Frames)[0].Duration())
+
+	assert.EqualValues(t, 24*time.Hour, subBuckets[1].Duration.GetExact())
+	assert.EqualValues(t, 1, subBuckets[1].FrameCount)
+
+	assert.EqualValues(t, 10*time.Minute, subBuckets[2].Duration.GetExact())
+	assert.EqualValues(t, 1, subBuckets[2].FrameCount)
 }
 
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {

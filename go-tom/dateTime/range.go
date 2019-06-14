@@ -203,6 +203,10 @@ func (r DateRange) Intersection(start *time.Time, end *time.Time) time.Duration 
 	return 0
 }
 
+func (r DateRange) Intersects(start *time.Time, end *time.Time) bool {
+	return r.Intersection(start, end) > 0
+}
+
 func (r DateRange) Years(loc *time.Location) []DateRange {
 	first := r.Start.In(loc).Year()
 	last := r.End.In(loc).Year()

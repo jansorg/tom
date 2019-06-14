@@ -34,7 +34,8 @@ func (b *BucketReport) Update() *ResultBucket {
 		b.source.ExcludeArchived()
 	}
 	if !b.config.DateFilterRange.Empty() {
-		b.source.FilterByDateRange(b.config.DateFilterRange, false)
+		b.source.FilterByDateRange(b.config.DateFilterRange, false, true)
+		b.source.CutEntriesTo(b.config.DateFilterRange.Start, b.config.DateFilterRange.End)
 	}
 
 	projectIDs := b.config.ProjectIDs
@@ -62,18 +63,23 @@ func (b *BucketReport) Update() *ResultBucket {
 		})
 	}
 
+	// setup the date filter range in the target timezone
 	config := b.config
+	var filterRange *dateTime.DateRange
 	if config.DateFilterRange.Empty() {
 		config.DateFilterRange = b.source.DateRange(b.ctx.Locale).In(config.Timezone)
-	} else if config.Timezone != nil {
-		config.DateFilterRange = config.DateFilterRange.In(config.Timezone)
+	} else {
+		if config.Timezone != nil {
+			config.DateFilterRange = config.DateFilterRange.In(config.Timezone)
+		}
+		filterRange = &config.DateFilterRange
 	}
 
 	b.result = &ResultBucket{
 		ctx:            b.ctx,
 		config:         config,
 		Frames:         b.source,
-		Duration:       dateTime.NewDurationSumAll(b.config.EntryRounding, nil, nil),
+		Duration:       dateTime.NewDurationSumAll(b.config.EntryRounding, filterRange, nil),
 		DailyTracked:   dateTime.NewTrackedDaily(nil),
 		DailyUnTracked: dateTime.NewUntrackedDaily(nil),
 	}

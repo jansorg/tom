@@ -29,6 +29,19 @@ type Frame struct {
 	Archived  bool       `json:"archived,omitempty"`
 }
 
+func (f *Frame) copy() *Frame {
+	return &Frame{
+		ID:        f.ID,
+		ProjectId: f.ProjectId,
+		Start:     f.Start,
+		End:       f.End,
+		Updated:   f.Updated,
+		Notes:     f.Notes,
+		TagIDs:    f.TagIDs,
+		Archived:  f.Archived,
+	}
+}
+
 func (f *Frame) sortTagIDs() {
 	sort.Strings(f.TagIDs)
 }
@@ -133,6 +146,24 @@ func (f *Frame) Intersection(activeEnd *time.Time, timeRange *dateTime.DateRange
 
 	// no intersection
 	return time.Duration(0)
+}
+
+// Contains returns if this frame's time range contains this ref
+// an unstopped frame contains ref if the start time is equal to it
+func (f *Frame) Contains(ref *time.Time) bool {
+	if ref == nil || ref.IsZero() {
+		return false
+	}
+
+	if f.Start != nil && f.End != nil {
+		debug := fmt.Sprintf("%s -> %s <- %s", f.Start.String(), ref.String(), f.End.String())
+		fmt.Println(debug)
+
+		return ref.Equal(*f.Start) ||
+			ref.Equal(*f.End) ||
+			ref.After(*f.Start) && ref.Before(*f.End)
+	}
+	return f.Start != nil && f.Start.Equal(*ref)
 }
 
 func (f *Frame) IsBefore(other *Frame) bool {
