@@ -8,6 +8,12 @@ func NewDurationSum() *DurationSum {
 	return &DurationSum{}
 }
 
+func NewDurationSumWithRef(referenceTime *time.Time) *DurationSum {
+	return &DurationSum{
+		referenceTime: referenceTime,
+	}
+}
+
 func NewEmptyCopy(proto *DurationSum) *DurationSum {
 	return NewDurationSumAll(proto.rounding, proto.acceptedRange, proto.referenceTime)
 }
@@ -63,7 +69,11 @@ func (d *DurationSum) AddStartEnd(start time.Time, end time.Time) {
 }
 
 func (d *DurationSum) AddStartEndP(start *time.Time, end *time.Time) {
-	d.add(start, end)
+	if end == nil {
+		d.add(start, d.referenceTime)
+	} else {
+		d.add(start, end)
+	}
 }
 
 func (d *DurationSum) Add(duration time.Duration) {
