@@ -162,3 +162,44 @@ func Test_MultipleDaysNoArchived(t *testing.T) {
 	require.EqualValues(t, 12*time.Hour, reports[p.ID].TrackedTotalDay.Get())
 	require.EqualValues(t, 0*time.Hour, reports[p.ID].TrackedTotalYesterday.Get())
 }
+
+func Test_ActiveFrame(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p, err := ctx.Store.AddProject(model.Project{Name: "Project1"});
+	require.NoError(t, err)
+
+	// a wednesday, 12 am
+	refDate := time.Date(2018, time.July, 18, 12, 0, 0, 0, time.Local)
+
+	// 12 hours in the day, 11 in the next
+	start := refDate.Add(-10 * time.Minute)
+	end := refDate
+
+	startActive := refDate.Add(-10 * time.Minute)
+
+	// one closed frame, duration of 10 minutes
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &start, End: &end})
+	require.NoError(t, err)
+
+	// one active frame, duration of 10 minutes so far
+	_, err = ctx.Store.AddFrame(model.Frame{ProjectId: p.ID, Start: &startActive, End: nil})
+	require.NoError(t, err)
+
+	// exclude archived
+	reports := CreateProjectReports(refDate, false, false, &refDate, "", ctx)
+	require.EqualValues(t, 1, len(reports))
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedYear.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedMonth.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedWeek.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedDay.Get())
+	require.EqualValues(t, 0*time.Minute, reports[p.ID].TrackedYesterday.Get())
+
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedTotalYear.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedTotalMonth.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedTotalWeek.Get())
+	require.EqualValues(t, 20*time.Minute, reports[p.ID].TrackedTotalDay.Get())
+	require.EqualValues(t, 0*time.Minute, reports[p.ID].TrackedTotalYesterday.Get())
+}

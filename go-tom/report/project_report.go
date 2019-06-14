@@ -11,8 +11,8 @@ import (
 func NewProjectSummary(year *dateTime.DateRange, month *dateTime.DateRange, week *dateTime.DateRange, yesterday *dateTime.DateRange, day *dateTime.DateRange, refTime *time.Time, project *model.Project) *ProjectSummary {
 	summary := &ProjectSummary{
 		Project:               project,
-		TrackedAll:            dateTime.NewDurationSum(),
-		TrackedTotalAll:       dateTime.NewDurationSum(),
+		TrackedAll:            dateTime.NewDurationSumWithRef(refTime),
+		TrackedTotalAll:       dateTime.NewDurationSumWithRef(refTime),
 		TrackedYear:           dateTime.NewDurationSumFiltered(year, refTime),
 		TrackedTotalYear:      dateTime.NewDurationSumFiltered(year, refTime),
 		TrackedMonth:          dateTime.NewDurationSumFiltered(month, refTime),
