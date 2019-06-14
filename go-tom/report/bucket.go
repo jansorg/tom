@@ -313,30 +313,31 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation) {
 	start := filterRange.Start
 	end := filterRange.End
 
-	var value dateTime.DateRange
+	var splitValue dateTime.DateRange
 	switch splitType {
 	case SplitByYear:
-		value = dateTime.NewYearRange(*start, b.ctx.Locale, start.Location())
+		splitValue = dateTime.NewYearRange(*start, b.ctx.Locale, start.Location())
 	case SplitByMonth:
-		value = dateTime.NewMonthRange(*start, b.ctx.Locale, start.Location())
+		splitValue = dateTime.NewMonthRange(*start, b.ctx.Locale, start.Location())
 	case SplitByWeek:
-		value = dateTime.NewWeekRange(*start, b.ctx.Locale, start.Location())
+		splitValue = dateTime.NewWeekRange(*start, b.ctx.Locale, start.Location())
 	case SplitByDay:
-		value = dateTime.NewDayRange(*start, b.ctx.Locale, start.Location())
+		splitValue = dateTime.NewDayRange(*start, b.ctx.Locale, start.Location())
 	}
 
-	for value.IsClosed() && value.Start.Before(*end) {
+	for splitValue.IsClosed() && splitValue.Start.Before(*end) {
 		matchingFrames := b.Frames.Copy()
-		matchingFrames.FilterByDateRange(value, false)
+		matchingFrames.FilterByDateRange(splitValue, false, true)
+		matchingFrames.CutEntriesTo(splitValue.Start, splitValue.End)
 
-		rangeCopy := value
+		rangeCopy := splitValue
 		if b.config.ShowEmpty || !matchingFrames.Empty() {
 			b.AddChild(&ResultBucket{
-				dateRange:      value,
+				dateRange:      splitValue,
 				Frames:         matchingFrames,
 				Duration:       dateTime.NewEmptyCopy(b.Duration),
 				SplitByType:    splitType,
-				SplitBy:        value,
+				SplitBy:        splitValue,
 				DailyTracked:   dateTime.NewTrackedDaily(&rangeCopy),
 				DailyUnTracked: dateTime.NewUntrackedDaily(&rangeCopy),
 			})
@@ -344,13 +345,13 @@ func (b *ResultBucket) SplitByDateRange(splitType SplitOperation) {
 
 		switch splitType {
 		case SplitByYear:
-			value = value.Shift(1, 0, 0)
+			splitValue = splitValue.Shift(1, 0, 0)
 		case SplitByMonth:
-			value = value.Shift(0, 1, 0)
+			splitValue = splitValue.Shift(0, 1, 0)
 		case SplitByWeek:
-			value = value.Shift(0, 0, 7)
+			splitValue = splitValue.Shift(0, 0, 7)
 		case SplitByDay:
-			value = value.Shift(0, 0, 1)
+			splitValue = splitValue.Shift(0, 0, 1)
 		}
 	}
 

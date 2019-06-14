@@ -88,24 +88,37 @@ func (f *FrameList) FilterByEndDate(maxEndDate time.Time, acceptUnstopped bool) 
 	})
 }
 
-func (f *FrameList) FilterByDateRange(dateRange dateTime.DateRange, acceptUnstopped bool) {
+func (f *FrameList) FilterByDateRange(dateRange dateTime.DateRange, acceptUnstopped bool, keepOverlapping bool) {
+	if keepOverlapping {
+		f.Filter(func(frame *Frame) bool {
+			return acceptUnstopped && frame.End == nil || dateRange.Intersects(frame.Start, frame.End)
+		})
+		return
+	}
+
 	f.FilterByStartDate(*dateRange.Start)
 	if dateRange.IsClosed() {
 		f.FilterByEndDate(*dateRange.End, acceptUnstopped)
 	}
 }
 
-func (f *FrameList) FilterByDate(start time.Time, end time.Time, acceptUnstopped bool) {
-	f.FilterByStartDate(start)
-	f.FilterByEndDate(end, acceptUnstopped)
+func (f *FrameList) FilterByDate(start time.Time, end time.Time, acceptUnstopped bool, keepOverlapping bool) {
+	f.FilterByDatePtr(&start, &end, acceptUnstopped, keepOverlapping)
 }
 
-func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, includeActive bool) {
-	if start != nil && !start.IsZero() {
-		f.FilterByStartDate(*start)
+func (f *FrameList) FilterByDatePtr(start *time.Time, end *time.Time, acceptUnstopped bool, keepOverlapping bool) {
+	if keepOverlapping {
+		f.Filter(func(frame *Frame) bool {
+			return acceptUnstopped && frame.End == nil ||
+				start != nil && frame.Contains(start) ||
+				end != nil && frame.Contains(end)
+		})
+		return
 	}
-	if end != nil && !end.IsZero() {
-		f.FilterByEndDate(*end, includeActive)
+
+	f.FilterByStartDate(*start)
+	if end != nil {
+		f.FilterByEndDate(*end, acceptUnstopped)
 	}
 }
 
@@ -125,6 +138,30 @@ func (f *FrameList) ExcludeArchived() {
 	f.Filter(func(frame *Frame) bool {
 		return !frame.Archived
 	})
+}
+
+// CutEntriesTo cuts entries which span more than start->end
+func (f *FrameList) CutEntriesTo(start *time.Time, end *time.Time) {
+	length := len(*f)
+	for i := 0; i < length; i++ {
+		frame := (*f)[i]
+
+		// must not modify the original frame, it may still be referenced by other lists
+		adaptStart := start != nil && frame.Start.Before(*start)
+		adaptEnd := end != nil && frame.End != nil && frame.End.After(*end)
+
+		if adaptStart || adaptEnd {
+			copied := frame.copy()
+			if adaptStart {
+				copied.Start = start
+			}
+			if adaptEnd {
+				copied.End = end
+			}
+			(*f)[i] = copied
+		}
+	}
+	f.Sort()
 }
 
 // Split splits all frames into one ore more parts
