@@ -36,54 +36,54 @@ func init() {
 }
 
 var messageKeyToIndex = map[string]int{
-	"%.2f":                  18,
-	"Daily tracked":         2,
-	"Daily tracked time:":   12,
-	"Daily un-tracked":      1,
-	"Daily untracked time:": 13,
-	"Date":                  14,
-	"Duration":              3,
-	"End":                   16,
-	"Exact duration":        5,
-	"Exact sales":           4,
-	"Exact tracked time:":   11,
-	"Notes":                 17,
-	"Project":               8,
-	"Rounded duration":      7,
-	"Sales":                 0,
-	"Start":                 15,
-	"Time range:":           9,
-	"Total":                 6,
-	"Tracked time:":         10,
+	"%.2f":                  0,
+	"Daily tracked":         3,
+	"Daily tracked time:":   13,
+	"Daily un-tracked":      2,
+	"Daily untracked time:": 14,
+	"Date":                  15,
+	"Duration":              4,
+	"End":                   17,
+	"Exact duration":        6,
+	"Exact sales":           5,
+	"Exact tracked time:":   12,
+	"Notes":                 18,
+	"Project":               9,
+	"Rounded duration":      8,
+	"Sales":                 1,
+	"Start":                 16,
+	"Time range:":           10,
+	"Total":                 7,
+	"Tracked time:":         11,
 }
 
 var deIndex = []uint32{ // 20 elements
-	0x00000000, 0x00000007, 0x0000001a, 0x0000002b,
-	0x00000031, 0x00000040, 0x0000004d, 0x00000054,
-	0x00000063, 0x0000006b, 0x00000078, 0x00000087,
-	0x0000009c, 0x000000b2, 0x000000cb, 0x000000d1,
-	0x000000d8, 0x000000dd, 0x000000e9, 0x000000f1,
+	0x00000000, 0x00000008, 0x0000000f, 0x00000022,
+	0x00000033, 0x00000039, 0x00000048, 0x00000055,
+	0x0000005c, 0x0000006b, 0x00000073, 0x00000080,
+	0x0000008f, 0x000000a4, 0x000000ba, 0x000000d3,
+	0x000000d9, 0x000000e0, 0x000000e5, 0x000000f1,
 } // Size: 104 bytes
 
 const deData string = "" + // Size: 241 bytes
-	"\x02Umsatz\x02Täglich unerfasst\x02Täglich erfasst\x02Dauer\x02Exakter U" +
-	"msatz\x02Exakte Dauer\x02Gesamt\x02Gerundete Zeit\x02Projekt\x02Zeitbere" +
-	"ich:\x02Erfasste Zeit:\x02Exakt erfasste Zeit:\x02Täglich erfasst Zeit" +
-	"\x02Täglich unerfasste Zeit\x02Datum\x02Beginn\x02Ende\x02Anmerkungen" +
-	"\x02%.2[1]f"
+	"\x02%.2[1]f\x02Umsatz\x02Täglich unerfasst\x02Täglich erfasst\x02Dauer" +
+	"\x02Exakter Umsatz\x02Exakte Dauer\x02Gesamt\x02Gerundete Zeit\x02Projek" +
+	"t\x02Zeitbereich:\x02Erfasste Zeit:\x02Exakt erfasste Zeit:\x02Täglich e" +
+	"rfasst Zeit\x02Täglich unerfasste Zeit\x02Datum\x02Beginn\x02Ende\x02Anm" +
+	"erkungen"
 
 var enIndex = []uint32{ // 20 elements
-	0x00000000, 0x00000006, 0x00000017, 0x00000025,
-	0x0000002e, 0x0000003a, 0x00000049, 0x0000004f,
-	0x00000060, 0x00000068, 0x00000074, 0x00000082,
-	0x00000096, 0x000000aa, 0x000000c0, 0x000000c5,
-	0x000000cb, 0x000000cf, 0x000000d5, 0x000000dd,
+	0x00000000, 0x00000008, 0x0000000e, 0x0000001f,
+	0x0000002d, 0x00000036, 0x00000042, 0x00000051,
+	0x00000057, 0x00000068, 0x00000070, 0x0000007c,
+	0x0000008a, 0x0000009e, 0x000000b2, 0x000000c8,
+	0x000000cd, 0x000000d3, 0x000000d7, 0x000000dd,
 } // Size: 104 bytes
 
 const enData string = "" + // Size: 221 bytes
-	"\x02Sales\x02Daily un-tracked\x02Daily tracked\x02Duration\x02Exact sale" +
-	"s\x02Exact duration\x02Total\x02Rounded duration\x02Project\x02Time rang" +
-	"e:\x02Tracked time:\x02Exact tracked time:\x02Daily tracked time:\x02Dai" +
-	"ly untracked time:\x02Date\x02Start\x02End\x02Notes\x02%.2[1]f"
+	"\x02%.2[1]f\x02Sales\x02Daily un-tracked\x02Daily tracked\x02Duration" +
+	"\x02Exact sales\x02Exact duration\x02Total\x02Rounded duration\x02Projec" +
+	"t\x02Time range:\x02Tracked time:\x02Exact tracked time:\x02Daily tracke" +
+	"d time:\x02Daily untracked time:\x02Date\x02Start\x02End\x02Notes"
 
-	// Total table size 670 bytes (0KiB); checksum: 7FF5D278
+	// Total table size 670 bytes (0KiB); checksum: EF748F78
