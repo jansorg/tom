@@ -213,5 +213,28 @@ func (f *FrameList) DateRange(locale locales.Translator) dateTime.DateRange {
 		return dateTime.NewDateRange(nil, nil, locale)
 	}
 
-	return dateTime.NewDateRange(f.First().Start, f.Last().End, locale)
+	var start *time.Time
+	var end *time.Time
+
+	// locate first closed item
+	for _, f := range *f {
+		if f.Start != nil {
+			start = f.Start
+			break
+		}
+	}
+
+	// locate latest end value
+	// the list is sorted by start value, the last item isn't necessarily having the latest end value
+	// it should have it in normal circumstances, though
+	// for now we're assuming this
+	for i := f.Size() - 1; i >= 0; i-- {
+		frameEnd := (*f)[i].End
+		if frameEnd != nil {
+			end = frameEnd
+			break
+		}
+	}
+
+	return dateTime.NewDateRange(start, end, locale)
 }

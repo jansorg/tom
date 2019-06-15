@@ -674,6 +674,36 @@ func TestReportTimeFilterOverlapMultipleMonths(t *testing.T) {
 	assert.EqualValues(t, 1, subBuckets[2].FrameCount)
 }
 
+func TestReportWithActiveFrame(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.German)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top")
+	require.NoError(t, err)
+
+	// January 2019
+	start := time.Date(2019, time.January, 1, 0, 0, 0, 0, time.UTC)
+	end := start.Add(1 * time.Hour)
+
+	_, err = ctx.Store.AddFrame(model.Frame{Start: &start, End: &end, ProjectId: p1.ID})
+	require.NoError(t, err)
+	_, err = ctx.Store.AddFrame(model.Frame{Start: &start, End: nil, ProjectId: p1.ID})
+	require.NoError(t, err)
+
+	// no filter, but the month buckets must properly split the single frame
+	frames := ctx.Store.Frames()
+	report := NewBucketReport(&frames, Config{
+		IncludeSubprojects: false,
+		Splitting:          []SplitOperation{SplitByDay},
+		Timezone:           time.UTC,
+	}, ctx)
+	report.Update()
+
+	assert.EqualValues(t, 1*time.Hour, report.Result().Duration.GetExact())
+	require.EqualValues(t, 1, len(report.Result().ChildBuckets))
+}
+
 func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
 	date := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &date

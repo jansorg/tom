@@ -30,6 +30,11 @@ func (b *BucketReport) Result() *ResultBucket {
 }
 
 func (b *BucketReport) Update() *ResultBucket {
+	// for now we're only accepting closed entries
+	b.source.Filter(func(frame *model.Frame) bool {
+		return frame.IsStopped()
+	})
+
 	if !b.config.IncludeArchived {
 		b.source.ExcludeArchived()
 	}
