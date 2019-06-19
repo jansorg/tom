@@ -16,7 +16,7 @@ import (
 
 type PropList interface {
 	Size() int
-	Get(index int, prop string, format string, ctx* context.TomContext) (interface{}, error)
+	Get(index int, prop string, format string, ctx *context.TomContext) (interface{}, error)
 }
 
 func AddListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
@@ -65,6 +65,10 @@ func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error
 		rows = append(rows, r)
 	}
 
+	if len(rows) == 0 {
+		return nil
+	}
+
 	switch output {
 	case "plain":
 		for _, row := range rows {
@@ -83,6 +87,10 @@ func PrintList(cmd *cobra.Command, data PropList, ctx *context.TomContext) error
 }
 
 func PrintJSON(value interface{}) {
+	if value == nil {
+		return
+	}
+
 	if bytes, err := json.MarshalIndent(value, "", "  "); err != nil {
 		util.Fatal(err)
 	} else {
