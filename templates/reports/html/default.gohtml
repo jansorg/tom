@@ -33,6 +33,7 @@
         {{range $bucket.ChildBuckets}}
             <tr>
                 <td>{{.Title}}</td>
+
                 {{if $opts.ShowSales}}
                 <td class="money">{{template "moneyList" .Sales.Rounded}}</td>
                 {{end}}
@@ -42,13 +43,14 @@
                 {{if $opts.ShowTracked}}
                 <td class="time">{{template "trackedInfo" .GetDailyTracked}}</td>
                 {{end}}
+
                 <td class="time">{{minDuration .Duration.Get}}</td>
+
                 {{if $showExact}}
                     {{if $opts.ShowSales}}
-                    <td class="money">{{template "moneyList" .Sales.Exact}}</td>{{end}}
-                    <td class="time">
-                        {{minDuration .Duration.GetExact}}
-                    </td>
+                    <td class="money">{{template "moneyList" .Sales.Exact}}</td>
+                    {{end}}
+                    <td class="time">{{minDuration .Duration.GetExact}}</td>
                 {{end}}
             </tr>
         {{end}}

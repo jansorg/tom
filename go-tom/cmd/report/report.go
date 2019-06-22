@@ -44,6 +44,8 @@ type flags struct {
 	archivedFrames    bool
 	showTracked       bool
 	showUnTracked     bool
+	shortTitles       bool
+	projectDelimiter  string
 }
 
 var defaultFlags = flags{
@@ -53,6 +55,8 @@ var defaultFlags = flags{
 	showSales:        false,
 	showTracked:      false,
 	showUnTracked:    false,
+	shortTitles:      true,
+	projectDelimiter: "→",
 }
 
 func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -150,7 +154,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flag("month").NoOptDefVal = "0"
 	cmd.Flags().IntVarP(&opts.day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 
-	cmd.Flags().StringSliceVarP(&opts.projectFilter, "project", "p", []string{}, "--project ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
+	cmd.Flags().StringSliceVarP(&opts.projectFilter, "project", "p", []string{}, "ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
 	cmd.Flags().BoolVarP(&opts.includeSubproject, "subprojects", "", true, "Automatically add the subprojects of the selected projects.")
 
 	cmd.Flags().StringVarP(&opts.splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
@@ -169,6 +173,8 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.description, "description", "", "", "This will be displayed as the reports description when you're using the default templates")
 	cmd.Flags().BoolVarP(&opts.archivedFrames, "include-archived", "", defaultFlags.archivedFrames, "Include archived frames in the reported times")
 	cmd.Flags().BoolVarP(&opts.showSales, "show-sales", "", defaultFlags.showSales, "Show sales summaries")
+	cmd.Flags().BoolVarP(&opts.shortTitles, "short-titles", "", defaultFlags.shortTitles, "Display short project titles inside of project containers. Short titles do not repeat the project name of the parent container.")
+	cmd.Flags().StringVarP(&opts.projectDelimiter, "project-delimiter", "", defaultFlags.projectDelimiter, "The string used to render a full project name. Default: /")
 
 	cmd.Flags().BoolVarP(&opts.showTracked, "show-tracked", "", defaultFlags.showTracked, "Show min/max/avg of daily tracked time")
 	cmd.Flags().BoolVarP(&opts.showUnTracked, "show-untracked", "", defaultFlags.showUnTracked, "Show min/max/avg of daily untracked time, i.e. the untracked time between first and last entries of a day")
@@ -234,6 +240,12 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("show-untracked").Changed {
 		target.ShowUnTracked = source.ShowUnTracked
+	}
+	if cmd.Flag("short-titles").Changed {
+		target.Report.ShortTitles = source.Report.ShortTitles
+	}
+	if cmd.Flag("project-delimiter").Changed {
+		target.Report.ProjectDelimiter = source.Report.ProjectDelimiter
 	}
 }
 
@@ -330,6 +342,8 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			DateFilterRange:    filterRange,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
+			ShortTitles:        opts.shortTitles,
+			ProjectDelimiter:   opts.projectDelimiter,
 			EntryRounding: dateTime.RoundingConfig{
 				Mode: dateTime.RoundingByName(opts.roundModeFrames),
 				Size: opts.roundFrames,

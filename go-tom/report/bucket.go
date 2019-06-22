@@ -225,23 +225,38 @@ func (b *ResultBucket) FirstNonEmptyChild() *ResultBucket {
 func (b *ResultBucket) Title() string {
 	if id, ok := b.SplitBy.(string); ok {
 		if value, err := b.ctx.Query.AnyByID(id); err == nil {
+			// Title of a project
 			if p, ok := value.(*model.Project); ok {
-				return fmt.Sprintf("%s", p.GetFullName("/"))
+				name := p.GetFullName(b.config.ProjectDelimiter)
+
+				if b.config.ShortTitles {
+					if parent := b.FindProjectParent(); parent != nil {
+						parentName := parent.GetFullName(b.config.ProjectDelimiter)
+						return strings.TrimPrefix(name, parentName+b.config.ProjectDelimiter)
+					}
+				}
+
+				return name
 			}
 
+			// Title of a Tag
 			if t, ok := value.(*model.Tag); ok {
 				return fmt.Sprintf("#%s", t.Name)
 			}
 		}
 	}
 
+	// Title of a DateRange
 	if dates, ok := b.SplitBy.(dateTime.DateRange); ok {
 		return dates.MinimalString()
 	}
 
+	// Title of a Split container
 	if b.SplitBy != nil {
 		return fmt.Sprintf("%v", b.SplitBy)
 	}
+
+	// fallback
 	return ""
 }
 
@@ -366,4 +381,36 @@ func (b *ResultBucket) WithLeafBuckets(handler func(leaf *ResultBucket)) {
 	for _, sub := range b.ChildBuckets {
 		sub.WithLeafBuckets(handler)
 	}
+}
+
+func (b *ResultBucket) FindFirstParent(accepted func(parent *ResultBucket) bool) *ResultBucket {
+	parent := b.parent
+	for parent != nil {
+		if accepted(parent) {
+			return parent
+		}
+		parent = parent.parent
+	}
+	return nil
+}
+
+func (b *ResultBucket) FindProjectParent() *model.Project {
+	result := b.FindFirstParent(func(parent *ResultBucket) bool {
+		return parent.IsProjectBucket()
+	})
+
+	if result != nil {
+		if result, err := result.FindProjectBucket(); err == nil {
+			return result
+		}
+	}
+
+	// fallback in case only a single project is filtered for the report
+	if len(b.config.ProjectIDs) == 1 {
+		if p, err := b.ctx.Store.ProjectByID(b.config.ProjectIDs[0]); err == nil {
+			return p
+		}
+	}
+
+	return nil
 }
