@@ -18,6 +18,7 @@ func init() {
 	rootCmd.MarkPersistentFlagFilename("out", "pdf")
 
 	rootCmd.AddCommand(newAPI2PDFCommand())
+	rootCmd.AddCommand(newDocraptorCommand())
 }
 
 func Execute() {
