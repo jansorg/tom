@@ -7,8 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/date"
-
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dataImport"
 	"github.com/jansorg/tom/go-tom/model"
@@ -98,9 +96,9 @@ func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (dataImp
 }
 
 func parseTime(value string) (time.Time, error) {
-	d, err := date.ParseTime("02.01.06 15:04:05", value)
+	d, err := time.Parse("02.01.06 15:04:05", value)
 	if err != nil {
-		d, err = date.ParseTime("02.01.06 15:04", value)
+		d, err = time.Parse("02.01.06 15:04", value)
 	}
 	return d, err
 }

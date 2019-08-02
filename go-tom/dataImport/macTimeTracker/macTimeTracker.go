@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Azure/go-autorest/autorest/date"
-
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dataImport"
 	"github.com/jansorg/tom/go-tom/model"
@@ -108,7 +106,7 @@ func (macImporter) Import(filename string, ctx *context.TomContext) (dataImport.
 }
 
 func parseTime(value string) (time.Time, error) {
-	d, err := date.ParseTime("2006-01-02 15:04:05", value)
+	d, err := time.Parse("2006-01-02 15:04:05", value)
 	return d, err
 }
 
