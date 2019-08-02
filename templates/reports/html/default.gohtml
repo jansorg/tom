@@ -69,7 +69,7 @@
             {{if $opts.ShowTracked }}
             <th class="time-header">{{template "trackedInfo" $bucket.GetDailyTracked}}</th>
             {{end}}
-            <th class="time time-header">{{minDuation $bucket.Duration.Get}}</th>
+            <th class="time time-header">{{minDuration $bucket.Duration.Get}}</th>
             {{if $showExact}}
                 {{if $opts.ShowSales}}
                 <th class="money money-header">{{template "moneyList" $bucket.Sales.Exact}}</th>{{end}}
