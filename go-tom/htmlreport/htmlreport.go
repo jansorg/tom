@@ -5,6 +5,7 @@ import (
 	"fmt"
 	htmlTemplate "html/template"
 	"io/ioutil"
+	"log"
 	"path"
 	"path/filepath"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/report"
-	"github.com/jansorg/tom/go-tom/util"
 )
 
 type Report struct {
@@ -41,7 +41,8 @@ type Options struct {
 	TemplateFilePath   *string          `json:"template_path"`
 	CustomCSS          htmlTemplate.CSS `json:"css"`
 	CustomCSSFile      string           `json:"css_file"`
-	Report             report.Config    `json:"report"`
+
+	Report report.Config `json:"report"`
 }
 
 var DefaultOptions = Options{
@@ -70,8 +71,8 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 		"inlineCSS": func(filename string) htmlTemplate.CSS {
 			file, err := ioutil.ReadFile(filename)
 			if err != nil {
-				util.Fatal(fmt.Errorf("error reading CSS file %s", filename))
-				return ""
+				log.Println(fmt.Errorf("error reading CSS file %s", filename))
+				return htmlTemplate.CSS(fmt.Sprintf("/* file not found: %s*/", filename))
 			}
 			return htmlTemplate.CSS(file)
 		},

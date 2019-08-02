@@ -46,6 +46,7 @@ type flags struct {
 	showUnTracked     bool
 	shortTitles       bool
 	projectDelimiter  string
+	customCSSFile     string
 }
 
 var defaultFlags = flags{
@@ -143,6 +144,11 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
 	cmd.Flags().StringVarP(&opts.templateFilePath, "template-file", "", "", "Custom gohtml template file to use for rendering. See the website for more details.")
 	cmd.Flag("template-file").Annotations = templateAnnotations
+
+	cssAnnotations := make(map[string][]string)
+	cssAnnotations[cobra.BashCompFilenameExt] = []string{"css"}
+	cmd.Flags().StringVarP(&opts.customCSSFile, "css-file", "", "", "Path to a file with custom CSS to use for the report. It will be inlined into the generated HTML page.")
+	cmd.Flag("css-file").Annotations = templateAnnotations
 
 	// fixme add defaults?
 	// cmd.Flags().BoolVarP(&includeActiveFrames, "current", "c", false, "(Don't) Include currently running frame in report.")
@@ -247,6 +253,9 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	if cmd.Flag("project-delimiter").Changed {
 		target.Report.ProjectDelimiter = source.Report.ProjectDelimiter
 	}
+	if cmd.Flag("css-file").Changed {
+		target.CustomCSSFile = source.CustomCSSFile
+	}
 }
 
 func loadJsonConfig(ctx *context.TomContext, filePath string) (htmlreport.Options, error) {
@@ -334,6 +343,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 		ShowSales:         opts.showSales,
 		ShowTracked:       opts.showTracked,
 		ShowUnTracked:     opts.showUnTracked,
+		CustomCSSFile:     opts.customCSSFile,
 		Report: report.Config{
 			// fixme missing timezone
 			ProjectIDs:         projectIDs,
