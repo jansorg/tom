@@ -139,6 +139,9 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 
 			return sum
 		},
+		"safeHTML": func(html string) htmlTemplate.HTML {
+			return htmlTemplate.HTML(html)
+		},
 	}
 
 	if r.options.TemplateFilePath != nil && *r.options.TemplateFilePath != "" {
