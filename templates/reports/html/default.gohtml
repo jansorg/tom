@@ -4,6 +4,7 @@
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
     {{$showExact := reportOptions.ShowExactDurations }}
+    {{$showEmpty := reportOptions.Report.ShowEmpty}}
 
     {{- /*gotype: github.com/jansorg/tom/go-tom/htmlreport/Options*/ -}}
     {{$opts := reportOptions }}
@@ -31,28 +32,30 @@
         </thead>
         <tbody>
         {{range $bucket.ChildBuckets}}
-            <tr>
-                <td>{{.Title}}</td>
+            {{if or (not .EmptySource) $showEmpty}}
+                <tr>
+                    <td>{{.Title}}</td>
 
-                {{if $opts.ShowSales}}
-                <td class="money">{{template "moneyList" .Sales.Rounded}}</td>
-                {{end}}
-                {{if $opts.ShowUnTracked}}
-                <td class="time">{{template "trackedInfo" .GetDailyUnTracked}}</td>
-                {{end}}
-                {{if $opts.ShowTracked}}
-                <td class="time">{{template "trackedInfo" .GetDailyTracked}}</td>
-                {{end}}
-
-                <td class="time">{{minDuration .Duration.Get}}</td>
-
-                {{if $showExact}}
                     {{if $opts.ShowSales}}
-                    <td class="money">{{template "moneyList" .Sales.Exact}}</td>
+                    <td class="money">{{template "moneyList" .Sales.Rounded}}</td>
                     {{end}}
-                    <td class="time">{{minDuration .Duration.GetExact}}</td>
-                {{end}}
-            </tr>
+                    {{if $opts.ShowUnTracked}}
+                    <td class="time">{{template "trackedInfo" .GetDailyUnTracked}}</td>
+                    {{end}}
+                    {{if $opts.ShowTracked}}
+                    <td class="time">{{template "trackedInfo" .GetDailyTracked}}</td>
+                    {{end}}
+
+                    <td class="time">{{template "duration" .Duration}}</td>
+
+                    {{if $showExact}}
+                        {{if $opts.ShowSales}}
+                        <td class="money">{{template "moneyList" .Sales.Exact}}</td>
+                        {{end}}
+                        <td class="time">{{minDuration .Duration.GetExact}}</td>
+                    {{end}}
+                </tr>
+            {{end}}
         {{end}}
         </tbody>
         <tfoot>
@@ -66,7 +69,7 @@
             {{if $opts.ShowTracked }}
             <th class="time-header">{{template "trackedInfo" $bucket.GetDailyTracked}}</th>
             {{end}}
-            <th class="time time-header">{{minDuration $bucket.Duration.Get}}</th>
+            <th class="time time-header">{{minDuation $bucket.Duration.Get}}</th>
             {{if $showExact}}
                 {{if $opts.ShowSales}}
                 <th class="money money-header">{{template "moneyList" $bucket.Sales.Exact}}</th>{{end}}
@@ -98,25 +101,13 @@
         </thead>
         <tbody>
         {{range $bucket.ChildBuckets}}
-            {{if or (and $showEmpty .Empty) (not .Empty)}}
+            {{if or (not .EmptySource) $showEmpty}}
                 <tr>
                     <th class="matrix-title" title="{{.Title}}">{{.Title}}</th>
 
                     {{range .ChildBuckets}}
                         <td class="time">
-                            {{if .Duration.IsRoundedZero}}
-                                <span class="duration-zero">{{minDuration .Duration.Get}}</span>
-                                {{- if $showExact -}}
-                                    <br>
-                                    <span class="duration-zero">{{minDuration .Duration.Get}}</span>
-                                {{end}}
-                            {{else}}
-                                <span>{{minDuration .Duration.Get}}</span>
-                                {{- if $showExact -}}
-                                    <br><span
-                                            class="{{ i18n "Rounded duration" }}">{{minDuration .Duration.GetExact}}</span>
-                                {{end}}
-                            {{end}}
+                            {{template "durationWithExact" .Duration}}
                         </td>
                     {{end}}
 
@@ -201,7 +192,7 @@
 {{end}}
 
 {{with $opts.CustomDescription }}
-    <p class="description">{{.}}</p>
+    <p class="description">{{safeHTML .}}</p>
 {{end}}
 
 {{if $opts.ShowSummary }}

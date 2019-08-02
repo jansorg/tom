@@ -4,6 +4,38 @@
     {{end}}
 {{end}}
 
+{{define "duration"}}
+    {{$showExact := reportOptions.ShowExactDurations }}
+
+    {{with .}}
+        {{- /*gotype: github.com/jansorg/tom/go-tom/dateTime.DurationSum*/ -}}
+        {{if .IsRoundedZero}}
+            <span class="duration-zero">{{minDuration .Get}}</span>
+        {{else}}
+            <span>{{minDuration .Get}}</span>
+        {{end}}
+    {{end}}
+{{end}}
+
+{{define "durationWithExact"}}
+    {{$showExact := reportOptions.ShowExactDurations }}
+
+    {{with .}}
+        {{- /*gotype: github.com/jansorg/tom/go-tom/dateTime.DurationSum*/ -}}
+        {{if .IsRoundedZero}}
+            <span class="duration-zero">{{minDuration .Get}}</span>
+            {{- if $showExact -}}
+                <br><span class="duration-zero">{{minDuration .Get}}</span>
+            {{end}}
+        {{else}}
+            <span>{{minDuration .Get}}</span>
+            {{- if $showExact -}}
+                <br><span class="{{ i18n "Rounded duration" }}">{{minDuration .GetExact}}</span>
+            {{end}}
+        {{end}}
+    {{end}}
+{{end}}
+
 {{define "trackedInfo"}}
     {{with .}}
         {{- /*gotype: github.com/jansorg/tom/go-tom/dateTime.TimeEntrySeries*/ -}}
@@ -77,7 +109,7 @@
             --bg-color: white;
             --title-color: #3165b4;
             --row-odd-color: #eeeeee;
-            --color-unused: #898989;
+            --color-unused: #aeaeae;
             --border-color-light: var(--color-unused);
 
             --table-width: 100%;
@@ -235,7 +267,7 @@
         }
 
         .duration-zero {
-            color: var(--color-unused);
+            opacity: 0.5;
         }
     </style>
 
