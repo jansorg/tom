@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rhymond/go-money"
+	"github.com/Rhymond/go-money"
 )
 
 func Parse(value string) (*Money, error) {
