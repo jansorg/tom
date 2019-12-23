@@ -8,10 +8,9 @@ import (
 	"github.com/jansorg/tom/go-tom/money"
 )
 
-var errPropValueNotFound = fmt.Errorf("property value not found")
-
 type ProjectProperties struct {
-	HourlyRate *money.Money `json:"hourlyRate,omitempty"`
+	HourlyRate   *money.Money `json:"hourlyRate,omitempty"`
+	NoteRequired *bool        `json:"noteRequired,omitempty"`
 }
 
 type Project struct {
@@ -54,19 +53,36 @@ func (p *Project) HourlyRate() *money.Money {
 	return p.Properties.HourlyRate
 }
 
-func (p *Project) SetHourlyRate(value *money.Money) {
-	if value == nil {
-		if p.Properties != nil {
-			// fixme only valid as long as we have a single property
-			p.Properties = nil
-		}
-		return
+func (p *Project) IsNoteRequired() *bool {
+	if p.Properties == nil || p.Properties.NoteRequired == nil {
+		return nil
 	}
+	return p.Properties.NoteRequired
+}
 
+func (p *Project) SetHourlyRate(value *money.Money) {
+	defer p.cleanupProperties()
 	if p.Properties == nil {
 		p.Properties = &ProjectProperties{}
 	}
 	p.Properties.HourlyRate = value
+}
+
+func (p *Project) SetNoteRequired(required *bool) {
+	defer p.cleanupProperties()
+	if p.Properties == nil {
+		p.Properties = &ProjectProperties{}
+	}
+	p.Properties.NoteRequired = required
+}
+
+func (p *Project) cleanupProperties() {
+	if p.Properties != nil {
+		if p.Properties.HourlyRate == nil && (p.Properties.NoteRequired == nil) {
+			p.Properties = nil
+		}
+	}
+	return
 }
 
 type DetailedProject Project

@@ -13,7 +13,7 @@ import (
 	"github.com/jansorg/tom/go-tom/test_setup"
 )
 
-func Test_ImportCSV(t *testing.T) {
+func _Test_ImportCSV(t *testing.T) {
 	ctx, err := test_setup.CreateTestContext(language.English)
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)

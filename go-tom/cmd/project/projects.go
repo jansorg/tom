@@ -46,6 +46,18 @@ func (o projectList) Get(index int, prop string, format string, ctx *context.Tom
 			return "", nil
 		}
 		return rate.ParsableString(), nil
+	case "noteRequired":
+		noteRequired := o.projects[index].IsNoteRequired()
+		if noteRequired == nil {
+			return nil, nil
+		}
+		return *noteRequired, nil
+	case "appliedNoteRequired":
+		rate, err := ctx.Query.IsNoteRequired(o.projects[index].ID)
+		if rate == nil || err != nil {
+			return false, nil
+		}
+		return *rate, nil
 	default:
 		return "", fmt.Errorf("unknown property %s", prop)
 	}
@@ -80,7 +92,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	cmd.Flags().IntVarP(&recentProjects, "recent", "", 0, "If set then only the most recently tracked projects will be returned.")
 	cmd.Flags().StringVarP(&nameDelimiter, "name-delimiter", "", "/", "Delimiter used in the full project name")
-	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "hourlyRate", "appliedHourlyRate"})
+	cmdUtil.AddListOutputFlags(cmd, "fullName", []string{"id", "fullName", "name", "parentID", "hourlyRate", "appliedHourlyRate", "noteRequired", "appliedNoteRequired"})
 
 	parent.AddCommand(cmd)
 	return cmd

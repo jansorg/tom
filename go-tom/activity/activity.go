@@ -11,6 +11,7 @@ import (
 )
 
 var ProjectNotFoundErr = fmt.Errorf("project not found")
+var NoteRequiredErr = fmt.Errorf("note required")
 
 type Control struct {
 	ctx                   *context.TomContext
@@ -78,6 +79,17 @@ func (a *Control) stopActivities(all bool, notes string, tags []*model.Tag) ([]*
 		actives = actives[:1]
 	}
 
+	// validate, that a note is defined when required
+	if notes == "" {
+		for _, frame := range actives {
+			noteRequired, err := a.ctx.Query.IsNoteRequired(frame.ProjectId)
+			if err == nil && noteRequired != nil && *noteRequired == true {
+				return nil, NoteRequiredErr
+			}
+		}
+	}
+
+	// update data
 	for _, frame := range actives {
 		frame.StopAt(a.startStopTime)
 

@@ -21,7 +21,7 @@ type PropList interface {
 
 func AddListOutputFlags(cmd *cobra.Command, defaultFormat string, supportedProps []string) {
 	cmd.Flags().StringP("output", "o", "plain", "Output format. Supported: plain | json. Default: plain")
-	cmd.Flags().StringP("format", "f", defaultFormat, fmt.Sprintf("A comma separated list of of properties to output. Default: %s. Possible values: %s", defaultFormat, strings.Join(supportedProps, ",")))
+	cmd.Flags().StringP("format", "f", defaultFormat, fmt.Sprintf("A comma separated list of properties to output. Default: %s. Possible values: %s", defaultFormat, strings.Join(supportedProps, ",")))
 	cmd.Flags().StringP("delimiter", "d", "\t", "The delimiter to add between property values. Default: TAB")
 }
 

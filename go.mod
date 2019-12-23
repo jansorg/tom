@@ -10,6 +10,7 @@ require (
 	github.com/satori/uuid v1.2.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.6.1
+	github.com/stretchr/testify v1.2.2
 	golang.org/x/text v0.3.2
 	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 )

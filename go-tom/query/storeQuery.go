@@ -36,6 +36,7 @@ type StoreQuery interface {
 	ActiveFrames() []*model.Frame
 
 	HourlyRate(projectID string) (*money.Money, error)
+	IsNoteRequired(projectID string) (*bool, error)
 
 	IsToplevelProject(id string) bool
 }
@@ -150,7 +151,7 @@ func (q *defaultStoreQuery) CollectSubprojectIDs(id string) []string {
 }
 
 func (q *defaultStoreQuery) FindRecentlyTrackedProjects(max int) (model.ProjectList, error) {
-	// frames are always sorted, collect the max distict projects
+	// frames are always sorted, collect the max distinct projects
 	result := model.ProjectList{}
 	projectMap := map[string]bool{}
 
@@ -282,6 +283,20 @@ func (q *defaultStoreQuery) HourlyRate(projectID string) (*money.Money, error) {
 
 	if result == nil {
 		return nil, fmt.Errorf("no hourly rate available")
+	}
+	return result, nil
+}
+
+func (q *defaultStoreQuery) IsNoteRequired(projectID string) (*bool, error) {
+	var result *bool
+
+	q.WithProjectAndParents(projectID, func(project *model.Project) bool {
+		result = project.IsNoteRequired()
+		return result == nil
+	})
+
+	if result == nil {
+		return nil, fmt.Errorf("no note required property available")
 	}
 	return result, nil
 }
