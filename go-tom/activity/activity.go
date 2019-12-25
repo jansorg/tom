@@ -80,7 +80,7 @@ func (a *Control) stopActivities(all bool, notes string, tags []*model.Tag) ([]*
 	}
 
 	// validate, that a note is defined when required
-	if notes == "" {
+/*	if notes == "" {
 		for _, frame := range actives {
 			noteRequired, err := a.ctx.Query.IsNoteRequired(frame.ProjectId)
 			if err == nil && noteRequired != nil && *noteRequired == true {
@@ -88,6 +88,7 @@ func (a *Control) stopActivities(all bool, notes string, tags []*model.Tag) ([]*
 			}
 		}
 	}
+*/
 
 	// update data
 	for _, frame := range actives {

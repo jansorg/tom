@@ -49,7 +49,7 @@ func (o projectList) Get(index int, prop string, format string, ctx *context.Tom
 	case "noteRequired":
 		noteRequired := o.projects[index].IsNoteRequired()
 		if noteRequired == nil {
-			return nil, nil
+			return "", nil
 		}
 		return *noteRequired, nil
 	case "appliedNoteRequired":
