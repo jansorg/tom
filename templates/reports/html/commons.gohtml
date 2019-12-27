@@ -108,9 +108,13 @@
             --color: black;
             --bg-color: white;
             --title-color: #3165b4;
-            --row-odd-color: #eeeeee;
+            --row-even-color: var(--bg-color);
+            --row-odd-color: #eee;
             --color-unused: #aeaeae;
             --border-color-light: var(--color-unused);
+
+            --summary-color: var(--color);
+            --summary-bg-color: var(--bg-color);
 
             --table-width: 100%;
             --table-data-width: 100%;
@@ -120,6 +124,25 @@
             --table-th-fontsize: 0.8rem;
 
             --summary-border-color: var(--row-odd-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color: #fafafa;
+                --bg-color: #1a1a1a;
+                --title-color: #3165b4;
+                --row-odd-color: #262626;
+                --row-even-color: #595959;
+                --color-unused: #808080;
+                --border-color-light: var(--color-unused);
+
+                --summary-bg-color: #404040;
+
+                --table-th-color: var(--color);
+                --table-th-bgcolor: #737373;
+
+                --summary-border-color: var(--row-odd-color);
+            }
         }
 
         html {
@@ -169,6 +192,9 @@
             width: var(--table-data-width);
         }
 
+        .table-odd tr:nth-child(2n) td, .table-odd tbody tr:nth-child(2n) th {
+            background-color: var(--row-even-color);
+        }
         .table-odd tr:nth-child(2n-1) td, .table-odd tbody tr:nth-child(2n-1) th {
             background-color: var(--row-odd-color);
         }
@@ -208,6 +234,8 @@
         }
 
         .summary {
+            color: var(--summary-color);
+            background-color: var(--summary-bg-color);
             width: auto;
             border: 3px solid var(--summary-border-color);
             margin: 0 0 3rem 0;
