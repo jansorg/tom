@@ -1,6 +1,6 @@
 # bash completion for tom                                  -*- shell-script -*-
 
-__debug()
+__tom_debug()
 {
     if [[ -n ${BASH_COMP_DEBUG_FILE} ]]; then
         echo "$*" >> "${BASH_COMP_DEBUG_FILE}"
@@ -9,13 +9,13 @@ __debug()
 
 # Homebrew on Macs have version 1.3 of bash-completion which doesn't include
 # _init_completion. This is a very minimal version of that function.
-__my_init_completion()
+__tom_init_completion()
 {
     COMPREPLY=()
     _get_comp_words_by_ref "$@" cur prev words cword
 }
 
-__index_of_word()
+__tom_index_of_word()
 {
     local w word=$1
     shift
@@ -27,7 +27,7 @@ __index_of_word()
     index=-1
 }
 
-__contains_word()
+__tom_contains_word()
 {
     local w word=$1; shift
     for w in "$@"; do
@@ -36,9 +36,9 @@ __contains_word()
     return 1
 }
 
-__handle_reply()
+__tom_handle_reply()
 {
-    __debug "${FUNCNAME[0]}"
+    __tom_debug "${FUNCNAME[0]}"
     case $cur in
         -*)
             if [[ $(type -t compopt) = "builtin" ]]; then
@@ -62,8 +62,8 @@ __handle_reply()
                 fi
 
                 local index flag
-                flag="${cur%%=*}"
-                __index_of_word "${flag}" "${flags_with_completion[@]}"
+                flag="${cur%=*}"
+                __tom_index_of_word "${flag}" "${flags_with_completion[@]}"
                 COMPREPLY=()
                 if [[ ${index} -ge 0 ]]; then
                     PREFIX=""
@@ -81,7 +81,7 @@ __handle_reply()
 
     # check if we are handling a flag with special work handling
     local index
-    __index_of_word "${prev}" "${flags_with_completion[@]}"
+    __tom_index_of_word "${prev}" "${flags_with_completion[@]}"
     if [[ ${index} -ge 0 ]]; then
         ${flags_completion[${index}]}
         return
@@ -107,31 +107,43 @@ __handle_reply()
     fi
 
     if [[ ${#COMPREPLY[@]} -eq 0 ]]; then
-        declare -F __custom_func >/dev/null && __custom_func
+		if declare -F __tom_custom_func >/dev/null; then
+			# try command name qualified custom func
+			__tom_custom_func
+		else
+			# otherwise fall back to unqualified for compatibility
+			declare -F __custom_func >/dev/null && __custom_func
+		fi
     fi
 
     # available in bash-completion >= 2, not always present on macOS
     if declare -F __ltrim_colon_completions >/dev/null; then
         __ltrim_colon_completions "$cur"
     fi
+
+    # If there is only 1 completion and it is a flag with an = it will be completed
+    # but we don't want a space after the =
+    if [[ "${#COMPREPLY[@]}" -eq "1" ]] && [[ $(type -t compopt) = "builtin" ]] && [[ "${COMPREPLY[0]}" == --*= ]]; then
+       compopt -o nospace
+    fi
 }
 
 # The arguments should be in the form "ext1|ext2|extn"
-__handle_filename_extension_flag()
+__tom_handle_filename_extension_flag()
 {
     local ext="$1"
     _filedir "@(${ext})"
 }
 
-__handle_subdirs_in_dir_flag()
+__tom_handle_subdirs_in_dir_flag()
 {
     local dir="$1"
     pushd "${dir}" >/dev/null 2>&1 && _filedir -d && popd >/dev/null 2>&1
 }
 
-__handle_flag()
+__tom_handle_flag()
 {
-    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
     # if a command required a flag, and we found it, unset must_have_one_flag()
     local flagname=${words[c]}
@@ -139,30 +151,34 @@ __handle_flag()
     # if the word contained an =
     if [[ ${words[c]} == *"="* ]]; then
         flagvalue=${flagname#*=} # take in as flagvalue after the =
-        flagname=${flagname%%=*} # strip everything after the =
+        flagname=${flagname%=*} # strip everything after the =
         flagname="${flagname}=" # but put the = back
     fi
-    __debug "${FUNCNAME[0]}: looking for ${flagname}"
-    if __contains_word "${flagname}" "${must_have_one_flag[@]}"; then
+    __tom_debug "${FUNCNAME[0]}: looking for ${flagname}"
+    if __tom_contains_word "${flagname}" "${must_have_one_flag[@]}"; then
         must_have_one_flag=()
     fi
 
     # if you set a flag which only applies to this command, don't show subcommands
-    if __contains_word "${flagname}" "${local_nonpersistent_flags[@]}"; then
+    if __tom_contains_word "${flagname}" "${local_nonpersistent_flags[@]}"; then
       commands=()
     fi
 
     # keep flag value with flagname as flaghash
-    if [ -n "${flagvalue}" ] ; then
-        flaghash[${flagname}]=${flagvalue}
-    elif [ -n "${words[ $((c+1)) ]}" ] ; then
-        flaghash[${flagname}]=${words[ $((c+1)) ]}
-    else
-        flaghash[${flagname}]="true" # pad "true" for bool flag
+    # flaghash variable is an associative array which is only supported in bash > 3.
+    if [[ -z "${BASH_VERSION}" || "${BASH_VERSINFO[0]}" -gt 3 ]]; then
+        if [ -n "${flagvalue}" ] ; then
+            flaghash[${flagname}]=${flagvalue}
+        elif [ -n "${words[ $((c+1)) ]}" ] ; then
+            flaghash[${flagname}]=${words[ $((c+1)) ]}
+        else
+            flaghash[${flagname}]="true" # pad "true" for bool flag
+        fi
     fi
 
     # skip the argument to a two word flag
-    if __contains_word "${words[c]}" "${two_word_flags[@]}"; then
+    if [[ ${words[c]} != *"="* ]] && __tom_contains_word "${words[c]}" "${two_word_flags[@]}"; then
+			  __tom_debug "${FUNCNAME[0]}: found a flag ${words[c]}, skip the next argument"
         c=$((c+1))
         # if we are looking for a flags value, don't show commands
         if [[ $c -eq $cword ]]; then
@@ -174,13 +190,13 @@ __handle_flag()
 
 }
 
-__handle_noun()
+__tom_handle_noun()
 {
-    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
-    if __contains_word "${words[c]}" "${must_have_one_noun[@]}"; then
+    if __tom_contains_word "${words[c]}" "${must_have_one_noun[@]}"; then
         must_have_one_noun=()
-    elif __contains_word "${words[c]}" "${noun_aliases[@]}"; then
+    elif __tom_contains_word "${words[c]}" "${noun_aliases[@]}"; then
         must_have_one_noun=()
     fi
 
@@ -188,42 +204,50 @@ __handle_noun()
     c=$((c+1))
 }
 
-__handle_command()
+__tom_handle_command()
 {
-    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
 
     local next_command
     if [[ -n ${last_command} ]]; then
         next_command="_${last_command}_${words[c]//:/__}"
     else
         if [[ $c -eq 0 ]]; then
-            next_command="_$(basename "${words[c]//:/__}")"
+            next_command="_tom_root_command"
         else
             next_command="_${words[c]//:/__}"
         fi
     fi
     c=$((c+1))
-    __debug "${FUNCNAME[0]}: looking for ${next_command}"
+    __tom_debug "${FUNCNAME[0]}: looking for ${next_command}"
     declare -F "$next_command" >/dev/null && $next_command
 }
 
-__handle_word()
+__tom_handle_word()
 {
     if [[ $c -ge $cword ]]; then
-        __handle_reply
+        __tom_handle_reply
         return
     fi
-    __debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
+    __tom_debug "${FUNCNAME[0]}: c is $c words[c] is ${words[c]}"
     if [[ "${words[c]}" == -* ]]; then
-        __handle_flag
-    elif __contains_word "${words[c]}" "${commands[@]}"; then
-        __handle_command
-    elif [[ $c -eq 0 ]] && __contains_word "$(basename "${words[c]}")" "${commands[@]}"; then
-        __handle_command
+        __tom_handle_flag
+    elif __tom_contains_word "${words[c]}" "${commands[@]}"; then
+        __tom_handle_command
+    elif [[ $c -eq 0 ]]; then
+        __tom_handle_command
+    elif __tom_contains_word "${words[c]}" "${command_aliases[@]}"; then
+        # aliashash variable is an associative array which is only supported in bash > 3.
+        if [[ -z "${BASH_VERSION}" || "${BASH_VERSINFO[0]}" -gt 3 ]]; then
+            words[c]=${aliashash[${words[c]}]}
+            __tom_handle_command
+        else
+            __tom_handle_noun
+        fi
     else
-        __handle_noun
+        __tom_handle_noun
     fi
-    __handle_word
+    __tom_handle_word
 }
 
 __tom_projects_get()
@@ -258,6 +282,9 @@ __custom_func() {
 _tom_cancel()
 {
     last_command="tom_cancel"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -267,9 +294,12 @@ _tom_cancel()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -279,6 +309,9 @@ _tom_cancel()
 _tom_config_set()
 {
     last_command="tom_config_set"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -288,9 +321,12 @@ _tom_config_set()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -305,6 +341,9 @@ _tom_config_set()
 _tom_config()
 {
     last_command="tom_config"
+
+    command_aliases=()
+
     commands=()
     commands+=("set")
 
@@ -315,12 +354,16 @@ _tom_config()
     flags_completion=()
 
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -330,6 +373,9 @@ _tom_config()
 _tom_create_project()
 {
     last_command="tom_create_project"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -339,15 +385,20 @@ _tom_create_project()
     flags_completion=()
 
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--parent=")
+    two_word_flags+=("--parent")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--parent=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -357,6 +408,9 @@ _tom_create_project()
 _tom_create_tag()
 {
     last_command="tom_create_tag"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -366,9 +420,12 @@ _tom_create_tag()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -378,6 +435,9 @@ _tom_create_tag()
 _tom_create()
 {
     last_command="tom_create"
+
+    command_aliases=()
+
     commands=()
     commands+=("project")
     commands+=("tag")
@@ -389,9 +449,12 @@ _tom_create()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -401,6 +464,9 @@ _tom_create()
 _tom_edit_frame()
 {
     last_command="tom_edit_frame"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -412,23 +478,31 @@ _tom_edit_frame()
     flags+=("--archived")
     local_nonpersistent_flags+=("--archived")
     flags+=("--end=")
+    two_word_flags+=("--end")
     two_word_flags+=("-t")
     local_nonpersistent_flags+=("--end=")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--notes=")
+    two_word_flags+=("--notes")
     two_word_flags+=("-n")
     local_nonpersistent_flags+=("--notes=")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--project=")
     flags+=("--start=")
+    two_word_flags+=("--start")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--start=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -438,6 +512,9 @@ _tom_edit_frame()
 _tom_edit_project()
 {
     last_command="tom_edit_project"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -447,19 +524,29 @@ _tom_edit_project()
     flags_completion=()
 
     flags+=("--hourly-rate=")
+    two_word_flags+=("--hourly-rate")
     local_nonpersistent_flags+=("--hourly-rate=")
     flags+=("--name=")
+    two_word_flags+=("--name")
     two_word_flags+=("-n")
     local_nonpersistent_flags+=("--name=")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
+    flags+=("--note-required=")
+    two_word_flags+=("--note-required")
+    local_nonpersistent_flags+=("--note-required=")
     flags+=("--parent=")
+    two_word_flags+=("--parent")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--parent=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -469,6 +556,9 @@ _tom_edit_project()
 _tom_edit()
 {
     last_command="tom_edit"
+
+    command_aliases=()
+
     commands=()
     commands+=("frame")
     commands+=("project")
@@ -480,9 +570,12 @@ _tom_edit()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -492,6 +585,9 @@ _tom_edit()
 _tom_frames_archive()
 {
     last_command="tom_frames_archive"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -503,14 +599,19 @@ _tom_frames_archive()
     flags+=("--include-subprojects")
     local_nonpersistent_flags+=("--include-subprojects")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--project=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -520,6 +621,9 @@ _tom_frames_archive()
 _tom_frames()
 {
     last_command="tom_frames"
+
+    command_aliases=()
+
     commands=()
     commands+=("archive")
 
@@ -532,24 +636,31 @@ _tom_frames()
     flags+=("--archived")
     local_nonpersistent_flags+=("--archived")
     flags+=("--delimiter=")
+    two_word_flags+=("--delimiter")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--delimiter=")
     flags+=("--format=")
+    two_word_flags+=("--format")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--format=")
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--project=")
     flags+=("--subprojects")
     flags+=("-s")
     local_nonpersistent_flags+=("--subprojects")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -559,6 +670,9 @@ _tom_frames()
 _tom_import_fanurio()
 {
     last_command="tom_import_fanurio"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -568,9 +682,12 @@ _tom_import_fanurio()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -580,6 +697,9 @@ _tom_import_fanurio()
 _tom_import_macTimeTracker()
 {
     last_command="tom_import_macTimeTracker"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -589,9 +709,12 @@ _tom_import_macTimeTracker()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -601,6 +724,9 @@ _tom_import_macTimeTracker()
 _tom_import_watson()
 {
     last_command="tom_import_watson"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -610,9 +736,12 @@ _tom_import_watson()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -622,6 +751,9 @@ _tom_import_watson()
 _tom_import()
 {
     last_command="tom_import"
+
+    command_aliases=()
+
     commands=()
     commands+=("fanurio")
     commands+=("macTimeTracker")
@@ -634,9 +766,12 @@ _tom_import()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -646,6 +781,9 @@ _tom_import()
 _tom_invoice_sevdesk()
 {
     last_command="tom_invoice_sevdesk"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -655,19 +793,27 @@ _tom_invoice_sevdesk()
     flags_completion=()
 
     flags+=("--key=")
+    two_word_flags+=("--key")
     two_word_flags+=("-k")
     local_nonpersistent_flags+=("--key=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
     flags+=("--dry-run")
     flags+=("-d")
     flags+=("--month=")
+    two_word_flags+=("--month")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     flags+=("--round-frames=")
+    two_word_flags+=("--round-frames")
     flags+=("--round-frames-to=")
+    two_word_flags+=("--round-frames-to")
 
     must_have_one_flag=()
     must_have_one_flag+=("--key=")
@@ -679,6 +825,9 @@ _tom_invoice_sevdesk()
 _tom_invoice()
 {
     last_command="tom_invoice"
+
+    command_aliases=()
+
     commands=()
     commands+=("sevdesk")
 
@@ -691,14 +840,21 @@ _tom_invoice()
     flags+=("--dry-run")
     flags+=("-d")
     flags+=("--month=")
+    two_word_flags+=("--month")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     flags+=("--round-frames=")
+    two_word_flags+=("--round-frames")
     flags+=("--round-frames-to=")
+    two_word_flags+=("--round-frames-to")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_flag+=("--project=")
@@ -710,6 +866,9 @@ _tom_invoice()
 _tom_projects()
 {
     last_command="tom_projects"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -719,22 +878,30 @@ _tom_projects()
     flags_completion=()
 
     flags+=("--delimiter=")
+    two_word_flags+=("--delimiter")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--delimiter=")
     flags+=("--format=")
+    two_word_flags+=("--format")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--format=")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--recent=")
+    two_word_flags+=("--recent")
     local_nonpersistent_flags+=("--recent=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -744,6 +911,9 @@ _tom_projects()
 _tom_remove_all()
 {
     last_command="tom_remove_all"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -753,9 +923,12 @@ _tom_remove_all()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -769,6 +942,9 @@ _tom_remove_all()
 _tom_remove_frame()
 {
     last_command="tom_remove_frame"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -778,9 +954,12 @@ _tom_remove_frame()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -790,6 +969,9 @@ _tom_remove_frame()
 _tom_remove_project()
 {
     last_command="tom_remove_project"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -799,11 +981,15 @@ _tom_remove_project()
     flags_completion=()
 
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -813,6 +999,9 @@ _tom_remove_project()
 _tom_remove()
 {
     last_command="tom_remove"
+
+    command_aliases=()
+
     commands=()
     commands+=("all")
     commands+=("frame")
@@ -825,9 +1014,12 @@ _tom_remove()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -837,6 +1029,9 @@ _tom_remove()
 _tom_rename()
 {
     last_command="tom_rename"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -846,9 +1041,12 @@ _tom_rename()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -858,6 +1056,9 @@ _tom_rename()
 _tom_report()
 {
     last_command="tom_report"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -866,14 +1067,22 @@ _tom_report()
     flags_with_completion=()
     flags_completion=()
 
+    flags+=("--css-file=")
+    two_word_flags+=("--css-file")
+    flags_with_completion+=("--css-file")
+    flags_completion+=("__tom_handle_filename_extension_flag gohtml")
+    local_nonpersistent_flags+=("--css-file=")
     flags+=("--day=")
+    two_word_flags+=("--day")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--day=")
     flags+=("--decimal")
     local_nonpersistent_flags+=("--decimal")
     flags+=("--description=")
+    two_word_flags+=("--description")
     local_nonpersistent_flags+=("--description=")
     flags+=("--from=")
+    two_word_flags+=("--from")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--from=")
     flags+=("--include-archived")
@@ -886,21 +1095,33 @@ _tom_report()
     flags+=("-m")
     local_nonpersistent_flags+=("--month")
     flags+=("--output-file=")
+    two_word_flags+=("--output-file")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output-file=")
     flags+=("--project=")
+    two_word_flags+=("--project")
     two_word_flags+=("-p")
     local_nonpersistent_flags+=("--project=")
+    flags+=("--project-delimiter=")
+    two_word_flags+=("--project-delimiter")
+    local_nonpersistent_flags+=("--project-delimiter=")
     flags+=("--round-frames=")
+    two_word_flags+=("--round-frames")
     local_nonpersistent_flags+=("--round-frames=")
     flags+=("--round-frames-to=")
+    two_word_flags+=("--round-frames-to")
     local_nonpersistent_flags+=("--round-frames-to=")
     flags+=("--round-totals=")
+    two_word_flags+=("--round-totals")
     local_nonpersistent_flags+=("--round-totals=")
     flags+=("--round-totals-to=")
+    two_word_flags+=("--round-totals-to")
     local_nonpersistent_flags+=("--round-totals-to=")
     flags+=("--save-config=")
+    two_word_flags+=("--save-config")
     local_nonpersistent_flags+=("--save-config=")
+    flags+=("--short-titles")
+    local_nonpersistent_flags+=("--short-titles")
     flags+=("--show-empty")
     local_nonpersistent_flags+=("--show-empty")
     flags+=("--show-sales")
@@ -912,28 +1133,37 @@ _tom_report()
     flags+=("--show-untracked")
     local_nonpersistent_flags+=("--show-untracked")
     flags+=("--split=")
+    two_word_flags+=("--split")
     two_word_flags+=("-s")
     local_nonpersistent_flags+=("--split=")
     flags+=("--subprojects")
     local_nonpersistent_flags+=("--subprojects")
     flags+=("--template=")
+    two_word_flags+=("--template")
     local_nonpersistent_flags+=("--template=")
     flags+=("--template-file=")
+    two_word_flags+=("--template-file")
     flags_with_completion+=("--template-file")
-    flags_completion+=("__handle_filename_extension_flag gohtml")
+    flags_completion+=("__tom_handle_filename_extension_flag gohtml")
     local_nonpersistent_flags+=("--template-file=")
     flags+=("--title=")
+    two_word_flags+=("--title")
     local_nonpersistent_flags+=("--title=")
     flags+=("--to=")
+    two_word_flags+=("--to")
     two_word_flags+=("-t")
     local_nonpersistent_flags+=("--to=")
     flags+=("--year=")
+    two_word_flags+=("--year")
     two_word_flags+=("-y")
     local_nonpersistent_flags+=("--year=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -943,6 +1173,9 @@ _tom_report()
 _tom_start()
 {
     last_command="tom_start"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -954,13 +1187,17 @@ _tom_start()
     flags+=("--create-missing")
     local_nonpersistent_flags+=("--create-missing")
     flags+=("--notes=")
+    two_word_flags+=("--notes")
     local_nonpersistent_flags+=("--notes=")
     flags+=("--stop-on-start")
     local_nonpersistent_flags+=("--stop-on-start")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -970,6 +1207,9 @@ _tom_start()
 _tom_status_projects()
 {
     last_command="tom_status_projects"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -981,16 +1221,20 @@ _tom_status_projects()
     flags+=("--archived")
     local_nonpersistent_flags+=("--archived")
     flags+=("--delimiter=")
+    two_word_flags+=("--delimiter")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--delimiter=")
     flags+=("--format=")
+    two_word_flags+=("--format")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--format=")
     flags+=("--include-active")
     local_nonpersistent_flags+=("--include-active")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--show-empty")
@@ -999,9 +1243,12 @@ _tom_status_projects()
     flags+=("--show-overall")
     local_nonpersistent_flags+=("--show-overall")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -1011,6 +1258,9 @@ _tom_status_projects()
 _tom_status()
 {
     last_command="tom_status"
+
+    command_aliases=()
+
     commands=()
     commands+=("projects")
 
@@ -1021,20 +1271,26 @@ _tom_status()
     flags_completion=()
 
     flags+=("--delimiter=")
+    two_word_flags+=("--delimiter")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--delimiter=")
     flags+=("--format=")
+    two_word_flags+=("--format")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--format=")
     flags+=("--name-delimiter=")
+    two_word_flags+=("--name-delimiter")
     local_nonpersistent_flags+=("--name-delimiter=")
     flags+=("--verbose")
     flags+=("-v")
     local_nonpersistent_flags+=("--verbose")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -1044,6 +1300,9 @@ _tom_status()
 _tom_stop()
 {
     last_command="tom_stop"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -1056,15 +1315,20 @@ _tom_stop()
     flags+=("-a")
     local_nonpersistent_flags+=("--all")
     flags+=("--notes=")
+    two_word_flags+=("--notes")
     two_word_flags+=("-n")
     local_nonpersistent_flags+=("--notes=")
     flags+=("--past=")
+    two_word_flags+=("--past")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--past=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -1074,6 +1338,9 @@ _tom_stop()
 _tom_tags()
 {
     last_command="tom_tags"
+
+    command_aliases=()
+
     commands=()
 
     flags=()
@@ -1083,27 +1350,36 @@ _tom_tags()
     flags_completion=()
 
     flags+=("--delimiter=")
+    two_word_flags+=("--delimiter")
     two_word_flags+=("-d")
     local_nonpersistent_flags+=("--delimiter=")
     flags+=("--format=")
+    two_word_flags+=("--format")
     two_word_flags+=("-f")
     local_nonpersistent_flags+=("--format=")
     flags+=("--output=")
+    two_word_flags+=("--output")
     two_word_flags+=("-o")
     local_nonpersistent_flags+=("--output=")
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
     noun_aliases=()
 }
 
-_tom()
+_tom_root_command()
 {
     last_command="tom"
+
+    command_aliases=()
+
     commands=()
     commands+=("cancel")
     commands+=("config")
@@ -1128,9 +1404,12 @@ _tom()
     flags_completion=()
 
     flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
     flags+=("--config=")
+    two_word_flags+=("--config")
     two_word_flags+=("-c")
     flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
 
     must_have_one_flag=()
     must_have_one_noun=()
@@ -1141,10 +1420,11 @@ __start_tom()
 {
     local cur prev words cword
     declare -A flaghash 2>/dev/null || :
+    declare -A aliashash 2>/dev/null || :
     if declare -F _init_completion >/dev/null 2>&1; then
         _init_completion -s || return
     else
-        __my_init_completion -n "=" || return
+        __tom_init_completion -n "=" || return
     fi
 
     local c=0
@@ -1159,7 +1439,7 @@ __start_tom()
     local last_command
     local nouns=()
 
-    __handle_word
+    __tom_handle_word
 }
 
 if [[ $(type -t compopt) = "builtin" ]]; then
