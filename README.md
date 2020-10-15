@@ -17,7 +17,7 @@ It's able to track time, to create HTML and PDF reports and to create invoice dr
 ## Get tom
 Instructions to get started until better documentation is available:
 ```
-go get github.com/jansorg/tom
+GO111MODULE=on go get github.com/jansorg/tom
 ```
 After that `tom` will be available, assuming that your `$GODIR/bin` is in the `$PATH`. 
 
