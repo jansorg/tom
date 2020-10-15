@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Rhymond/go-money v0.4.0
+	github.com/arschles/assert v1.0.0 // indirect
 	github.com/arschles/go-bindata-html-template v0.0.0-20170123182818-839a6918b9ff
 	github.com/go-playground/locales v0.13.0
 	github.com/mitchellh/go-homedir v1.1.0
