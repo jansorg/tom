@@ -1,5 +1,5 @@
 pkgname=tom
-pkgver=20191225
+pkgver=20191227
 pkgrel=1
 pkgdesc="Time tracking for the command line"
 arch=('i686' 'x86_64')
