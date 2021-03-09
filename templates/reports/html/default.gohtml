@@ -14,7 +14,7 @@
         <tr>
             <th class="th-wide"><span class="title">{{.Title}}</span></th>
             {{if $opts.ShowSales}}
-                <th class="money-header">{{i18n "Sales"}}</th> {{end}}
+                <th class="money-header">{{i18n "Amount"}}</th> {{end}}
             {{if $opts.ShowUnTracked}}
                 <th class="time-header">{{i18n "Daily un-tracked"}}</th>
             {{end}}
@@ -24,7 +24,7 @@
             <th class="time-header">{{i18n "Duration"}}</th>
             {{if $showExact}}
                 {{if $opts.ShowSales}}
-                    <th class="money-header">{{i18n "Exact sales"}}</th>
+                    <th class="money-header">{{i18n "Exact amount"}}</th>
                 {{end}}
                 <th class="time-header">{{i18n "Exact duration"}}</th>
             {{end}}
@@ -114,7 +114,7 @@
                     <th class="col-subtotal time time-subtotal" title="{{.Title}}">
                         {{minDuration .Duration.Get}}
                         {{- if $showExact -}}
-                            <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration .Duration.GetExact}}</span>
+                            <br><span class="{{ i18n "Exact duration" }}}">{{minDuration .Duration.GetExact}}</span>
                         {{end}}
                     </th>
                 </tr>
@@ -129,14 +129,14 @@
                 <th class="time time-subtotal">
                     <span>{{(minDuration $duration.Get)}}</span>
                     {{- if $showExact -}}
-                        <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration $duration.GetExact}}</span>
+                        <br><span class="{{ i18n "Exact duration" }}}">{{minDuration $duration.GetExact}}</span>
                     {{end}}
                 </th>
             {{end}}
             <th class="time-header col-subtotal time time-total">
                 {{minDuration $bucket.Duration.Get}}
                 {{- if $showExact -}}
-                    <br><span class="{{ i18n "Rounded duration" }}}">{{minDuration $bucket.Duration.GetExact}}</span>
+                    <br><span class="{{ i18n "Exact duration" }}}">{{minDuration $bucket.Duration.GetExact}}</span>
                 {{end}}
             </th>
         </tr>

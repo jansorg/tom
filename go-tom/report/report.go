@@ -72,10 +72,10 @@ func (b *BucketReport) Update() *ResultBucket {
 	config := b.config
 	var filterRange *dateTime.DateRange
 	if config.DateFilterRange.Empty() {
-		config.DateFilterRange = b.source.DateRange(b.ctx.Locale).In(config.Timezone)
+		config.DateFilterRange = b.source.DateRange(b.ctx.Locale).In(config.TimezoneName.AsTimezone())
 	} else {
-		if config.Timezone != nil {
-			config.DateFilterRange = config.DateFilterRange.In(config.Timezone)
+		if config.TimezoneName != "" {
+			config.DateFilterRange = config.DateFilterRange.In(config.TimezoneName.AsTimezone())
 		}
 		filterRange = &config.DateFilterRange
 	}

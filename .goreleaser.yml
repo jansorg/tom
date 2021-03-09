@@ -20,36 +20,38 @@ builds:
     goarch:
       - amd64
 
-nfpm:
-  formats:
-    - deb
-  vendor: "https://github.com/jansorg/tom"
-  homepage: "https://github.com/jansorg/tom"
-  maintainer: "Joachim Ansorg <tom@ja-dev.eu>"
-  description: "Tom is a command line tool to track time"
-  license: ""
-  name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
-  bindir: /usr/bin
-  files:
-    "scripts/completions/tom.sh": "/etc/bash_completion.d/tom.sh"
-  replacements:
-    linux: Linux
-    windows: Windows
-    darwin: macOS
-    amd64: amd64
-    386: x86
-  overrides:
-    deb:
-      dependencies:
-        - bash-completion
+nfpms:
+  -
+    formats:
+      - deb
+    vendor: "https://github.com/jansorg/tom"
+    homepage: "https://github.com/jansorg/tom"
+    maintainer: "Joachim Ansorg <tom@ja-dev.eu>"
+    description: "Tom is a command line tool to track time"
+    license: ""
+    file_name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    bindir: /usr/bin
+    files:
+      "scripts/completions/tom.sh": "/etc/bash_completion.d/tom.sh"
+    replacements:
+      linux: Linux
+      windows: Windows
+      darwin: macOS
+      amd64: amd64
+      386: x86
+    overrides:
+      deb:
+        dependencies:
+          - bash-completion
 
-archive:
-  replacements:
-    linux: Linux
-    windows: Windows
-    darwin: macOS
-    amd64: amd64
-    386: x86
+archives:
+  -
+    replacements:
+      linux: Linux
+      windows: Windows
+      darwin: macOS
+      amd64: amd64
+      386: x86
 checksum:
   name_template: 'checksums.txt'
 snapshot:

@@ -5,8 +5,6 @@
 {{end}}
 
 {{define "duration"}}
-    {{$showExact := reportOptions.ShowExactDurations }}
-
     {{with .}}
         {{- /*gotype: github.com/jansorg/tom/go-tom/dateTime.DurationSum*/ -}}
         {{if .IsRoundedZero}}
@@ -91,6 +89,12 @@
                 <td class="time">
                     {{template "trackedInfo" .GetDailyUnTracked}}
                 </td>
+            </tr>
+        {{end}}
+        {{if reportOptions.ShowSales }}
+            <tr>
+                <td>{{i18n "Total amount:"}}</td>
+                <td class="time">{{template "moneyList" .Sales.Rounded}}</td>
             </tr>
         {{end}}
         </tbody>
@@ -195,6 +199,7 @@
         .table-odd tr:nth-child(2n) td, .table-odd tbody tr:nth-child(2n) th {
             background-color: var(--row-even-color);
         }
+
         .table-odd tr:nth-child(2n-1) td, .table-odd tbody tr:nth-child(2n-1) th {
             background-color: var(--row-odd-color);
         }
@@ -226,11 +231,12 @@
         .title {
             color: var(--title-color);
             font-weight: bold;
-            font-size: 1.3rem;
+            font-size: 1.0rem;
         }
 
         .buckets > .title {
             font-size: 1.6rem;
+            margin-bottom: .5rem;
         }
 
         .summary {
@@ -301,7 +307,7 @@
 
     <style media="print">
         @page {
-            margin: 20mm;
+            margin: 15mm 20mm;
         }
 
         body {
@@ -342,6 +348,11 @@
             page-break-before: avoid;
             page-break-inside: avoid;
             display: table-row-group;
+        }
+
+        .buckets > .title {
+            page-break-before: auto;
+            page-break-after: avoid;
         }
     </style>
 {{end}}

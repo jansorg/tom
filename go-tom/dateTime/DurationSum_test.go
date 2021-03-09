@@ -26,7 +26,7 @@ func TestAddRounding(t *testing.T) {
 	// one hour overlap
 	start := time.Date(2018, time.January, 10, 12, 0, 0, 0, time.UTC)
 	end := time.Date(2018, time.January, 10, 13, 0, 0, 0, time.UTC)
-	dateRange := NewDateRange(&start, &end, i18n.FindLocale(language.English))
+	dateRange := NewDateRange(&start, &end, i18n.FindLocale(language.English, false))
 
 	a := NewDurationSumAll(RoundingUp(6*time.Minute), &dateRange, &end)
 	a.Add(10 * time.Minute)

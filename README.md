@@ -27,7 +27,7 @@ git clone https://github.com/jansorg/tom.git
 cd tom
 go build .
 ```
-The binaryy `tom` will be in the current directory.
+The binary `tom` will be in the current directory.
 
 ## Basic usage
 A typical session looks like this:
@@ -90,9 +90,6 @@ For example, `-split year` creates a report where the tracked time is grouped in
 
 ### PDF Reports
 #### api2pdf service integration
-
-## Create Invoices
-### Create invoices at sevdesk.com
 
 ## Import from other tools
 

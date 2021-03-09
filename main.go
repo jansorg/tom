@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "golang.org/x/text/message/catalog"
+	_ "time/tzdata"
 
 	"github.com/jansorg/tom/go-tom/cmd"
 )

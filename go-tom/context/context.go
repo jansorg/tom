@@ -12,6 +12,7 @@ import (
 )
 
 type OutputFormat int8
+
 const (
 	Plain OutputFormat = iota + 1
 	Json

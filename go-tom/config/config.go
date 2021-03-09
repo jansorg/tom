@@ -10,6 +10,7 @@ import (
 
 const KeyDataDir = "data_dir"
 const KeyBackupDir = "backup.directory"
+const KeyIsoDates = "iso_dates"
 const KeyMaxBackups = "backup.max_to_keep"
 const KeyActivityStopOnStart = "activity.stop_on_start"
 const KeyProjectCreateMissing = "projects.create_missing"

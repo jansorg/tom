@@ -23,21 +23,27 @@ func FindPreferredLanguages() language.Tag {
 	return tag
 }
 
-func FindLocale(lang language.Tag) locales.Translator {
-	s := lang.String()
-	switch s {
-	case "de_DE":
-		return de_DE.New()
-	}
+func FindLocale(lang language.Tag, isoDates bool) locales.Translator {
+	translator := func() locales.Translator {
+		s := lang.String()
+		switch s {
+		case "de_DE":
+			return de_DE.New()
+		}
 
-	b, _ := lang.Base()
-	switch b.String() {
-	case "de":
-		return de_DE.New()
-	}
+		b, _ := lang.Base()
+		switch b.String() {
+		case "de":
+			return de_DE.New()
+		}
 
-	// fallback
-	return en_US.New()
+		// fallback
+		return en_US.New()
+	}
+	if isoDates {
+		return &isoDelegate{locateDelegate{delegate: translator()}}
+	}
+	return translator()
 }
 
 func userPreference() []language.Tag {

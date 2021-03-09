@@ -37,6 +37,7 @@ func init() {
 	RootCmd.PersistentFlags().String("data-dir", "", "data directory (default is $HOME/.tom)")
 	RootCmd.PersistentFlags().String("backup-dir", "", "backup directory (default is $HOME/.tom/backup)")
 	RootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "", "config file (default is $HOME/.tom/tom.yaml)")
+	RootCmd.PersistentFlags().Bool("iso-dates", false, "use ISO date format instead of a locale-specific format (default is false)")
 
 	RootCmd.PersistentFlags().String("cpu-profile", "", "create a cpu profile for performance measurement")
 	RootCmd.Flag("cpu-profile").Hidden = true
@@ -65,6 +66,9 @@ func init() {
 		util.Fatal(err)
 	}
 	if err := viper.BindPFlag(config.KeyBackupDir, RootCmd.PersistentFlags().Lookup("backup-dir")); err != nil {
+		util.Fatal(err)
+	}
+	if err := viper.BindPFlag(config.KeyIsoDates, RootCmd.PersistentFlags().Lookup("iso-dates")); err != nil {
 		util.Fatal(err)
 	}
 }
@@ -98,12 +102,14 @@ func initConfig() {
 		util.Fatal(err)
 	}
 
+	isoDates := viper.GetBool(config.KeyIsoDates)
+
 	ctx.Store = dataStore
 	ctx.StoreHelper = storeHelper.NewStoreHelper(dataStore)
 	ctx.Query = query.NewStoreQuery(dataStore)
 	ctx.Language = i18n.FindPreferredLanguages()
 	ctx.LocalePrinter = message.NewPrinter(ctx.Language)
-	ctx.Locale = i18n.FindLocale(ctx.Language)
+	ctx.Locale = i18n.FindLocale(ctx.Language, isoDates)
 	ctx.DurationPrinter = i18n.NewDurationPrinter(ctx.Language)
 	ctx.DecimalDurationPrinter = i18n.NewDecimalDurationPrinter(ctx.Language)
 	ctx.DateTimePrinter = i18n.NewDateTimePrinter(ctx.Language)

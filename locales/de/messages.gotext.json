@@ -2,19 +2,19 @@
     "language": "de",
     "messages": [
         {
-            "id": "Sales",
-            "message": "Sales",
-            "translation": "Umsatz"
+            "id": "Date",
+            "message": "Date",
+            "translation": "Datum"
         },
         {
-            "id": "Daily un-tracked",
-            "message": "Daily un-tracked",
-            "translation": "Täglich unerfasst"
+            "id": "Start",
+            "message": "Start",
+            "translation": "Beginn"
         },
         {
-            "id": "Daily tracked",
-            "message": "Daily tracked",
-            "translation": "Täglich erfasst"
+            "id": "End",
+            "message": "End",
+            "translation": "Ende"
         },
         {
             "id": "Duration",
@@ -22,14 +22,9 @@
             "translation": "Dauer"
         },
         {
-            "id": "Exact sales",
-            "message": "Exact sales",
-            "translation": "Exakter Umsatz"
-        },
-        {
-            "id": "Exact duration",
-            "message": "Exact duration",
-            "translation": "Exakte Dauer"
+            "id": "Notes",
+            "message": "Notes",
+            "translation": "Anmerkungen"
         },
         {
             "id": "Total",
@@ -72,24 +67,29 @@
             "translation": "Täglich unerfasste Zeit"
         },
         {
-            "id": "Date",
-            "message": "Date",
-            "translation": "Datum"
+            "id": "Amount",
+            "message": "Amount",
+            "translation": "Betrag"
         },
         {
-            "id": "Start",
-            "message": "Start",
-            "translation": "Beginn"
+            "id": "Daily un-tracked",
+            "message": "Daily un-tracked",
+            "translation": "Täglich unerfasst"
         },
         {
-            "id": "End",
-            "message": "End",
-            "translation": "Ende"
+            "id": "Daily tracked",
+            "message": "Daily tracked",
+            "translation": "Täglich erfasst"
         },
         {
-            "id": "Notes",
-            "message": "Notes",
-            "translation": "Anmerkungen"
+            "id": "Exact amount",
+            "message": "Exact amount",
+            "translation": "Exakter Betrag"
+        },
+        {
+            "id": "Exact duration",
+            "message": "Exact duration",
+            "translation": "Exakte Dauer"
         },
         {
             "id": "{FloatValue}",
