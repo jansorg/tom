@@ -36,7 +36,7 @@ func CreateTestContext(lang language.Tag) (*context.TomContext, error) {
 		Query:           query.NewStoreQuery(store),
 		Language:        lang,
 		LocalePrinter:   message.NewPrinter(lang),
-		Locale:          i18n.FindLocale(lang),
+		Locale:          i18n.FindLocale(lang, false),
 		DurationPrinter: i18n.NewDurationPrinter(lang),
 	}, nil
 }

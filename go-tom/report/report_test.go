@@ -542,7 +542,7 @@ func TestReportTimeFilter(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		Timezone:           time.UTC,
+		TimezoneName:       time.UTC,
 	}, ctx)
 	report.Update()
 	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
@@ -555,7 +555,7 @@ func TestReportTimeFilter(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		Timezone:           time.FixedZone("UTC+8", 8*60*60),
+		TimezoneName:       time.FixedZone("UTC+8", 8*60*60),
 	}, ctx)
 	report.Update()
 	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
@@ -588,7 +588,7 @@ func TestReportTimeFilterOverlap(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		Timezone:           time.UTC,
+		TimezoneName:       time.UTC,
 	}, ctx)
 	report.Update()
 	assert.EqualValues(t, 1*time.Hour, report.Result().Duration.GetExact(), "1 hour max range expected for overlapping entries")
@@ -623,7 +623,7 @@ func TestReportTimeFilterNoOverlap(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject},
 		DateFilterRange:    dateTime.NewDateRange(&beforeStart, &afterEnd, ctx.Locale),
-		Timezone:           time.UTC,
+		TimezoneName:       time.UTC,
 	}, ctx)
 	report.Update()
 	assert.EqualValues(t, 1*time.Hour+20*time.Minute, report.Result().Duration.GetExact(), "expected full duration for non-overlapping frames")
@@ -653,7 +653,7 @@ func TestReportTimeFilterOverlapMultipleMonths(t *testing.T) {
 		ProjectIDs:         []string{p1.ID},
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByDay},
-		Timezone:           time.UTC,
+		TimezoneName:       time.UTC,
 	}, ctx)
 	report.Update()
 
@@ -696,7 +696,7 @@ func TestReportWithActiveFrame(t *testing.T) {
 	report := NewBucketReport(&frames, Config{
 		IncludeSubprojects: false,
 		Splitting:          []SplitOperation{SplitByDay},
-		Timezone:           time.UTC,
+		TimezoneName:       time.UTC,
 	}, ctx)
 	report.Update()
 

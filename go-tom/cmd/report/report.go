@@ -23,12 +23,14 @@ type flags struct {
 	title             string
 	description       string
 	showEmpty         bool
+	showStopTime      bool
 	showMatrixTables  bool
 	fromDateString    string
 	toDateString      string
 	projectFilter     []string
 	includeSubproject bool
 	day               int
+	week              int
 	month             int
 	year              int
 	splitModes        string
@@ -102,10 +104,12 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 			}
 
 			// update the time zone of the filter range to the target zone of the report
-			if config.Report.Timezone == nil {
-				config.Report.Timezone = time.Local
+			if config.Report.TimezoneName == "" {
+				config.Report.TimezoneName = report.TimezoneName(time.Local.String())
 			}
-			config.Report.DateFilterRange = config.Report.DateFilterRange.In(config.Report.Timezone)
+			if !config.Report.DateFilterRange.Empty() {
+				config.Report.DateFilterRange = config.Report.DateFilterRange.In(config.Report.TimezoneName.AsTimezone())
+			}
 
 			frameReport := report.NewBucketReport(model.NewSortedFrameList(ctx.Store.Frames()), config.Report, ctx)
 			result := frameReport.Update()
@@ -158,6 +162,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().IntVarP(&opts.year, "year", "y", 0, "Filter on a specific year. 0 is the current year, -1 is last year, etc.")
 	cmd.Flags().IntVarP(&opts.month, "month", "m", 0, "Filter on a given month. For example, 0 is the current month, -1 is last month, etc.")
 	cmd.Flag("month").NoOptDefVal = "0"
+	cmd.Flags().IntVarP(&opts.week, "week", "w", 0, "Select the date range of a given week. For example, 0 is the current week, -1 is one week ago, etc.")
 	cmd.Flags().IntVarP(&opts.day, "day", "d", 0, "Select the date range of a given day. For example, 0 is today, -1 is one day ago, etc.")
 
 	cmd.Flags().StringSliceVarP(&opts.projectFilter, "project", "p", []string{}, "ID | NAME . Reports activities only for the given project. You can add other projects by using this option multiple times.")
@@ -172,6 +177,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
 
 	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
+	cmd.Flags().BoolVarP(&opts.showStopTime, "show-stop-time", "", true, "Show stopped time in timelog reports")
 	cmd.Flags().BoolVarP(&opts.decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
 	cmd.Flags().BoolVarP(&opts.showSummary, "show-summary", "", defaultFlags.showSummary, "Show a report summary at the top of the report")
 	cmd.Flags().BoolVarP(&opts.showMatrixTables, "matrix-tables", "", defaultFlags.showMatrixTables, "Show matrix tables when applicable instead of a list of tables")
@@ -196,7 +202,7 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	if cmd.Flag("template-file").Changed {
 		target.TemplateFilePath = source.TemplateFilePath
 	}
-	if cmd.Flag("from").Changed || cmd.Flag("to").Changed || cmd.Flag("year").Changed || cmd.Flag("month").Changed || cmd.Flag("day").Changed {
+	if cmd.Flag("from").Changed || cmd.Flag("to").Changed || cmd.Flag("year").Changed || cmd.Flag("month").Changed || cmd.Flag("week").Changed || cmd.Flag("day").Changed {
 		target.Report.DateFilterRange = source.Report.DateFilterRange
 	}
 	if cmd.Flag("project").Changed {
@@ -301,6 +307,8 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 	// day, month, year params override the filter values
 	if cmd.Flag("day").Changed {
 		filterRange = dateTime.NewDayRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, opts.day)
+	} else if cmd.Flag("week").Changed {
+		filterRange = dateTime.NewWeekRange(time.Now(), ctx.Locale, time.Local).Shift(0, 0, opts.week*7)
 	} else if cmd.Flag("month").Changed {
 		filterRange = dateTime.NewMonthRange(time.Now(), ctx.Locale, time.Local).Shift(0, opts.month, 0)
 	} else if cmd.Flag("year").Changed {
@@ -352,6 +360,7 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			DateFilterRange:    filterRange,
 			Splitting:          splitOperations,
 			ShowEmpty:          opts.showEmpty,
+			ShowStopTime:       opts.showStopTime,
 			ShortTitles:        opts.shortTitles,
 			ProjectDelimiter:   opts.projectDelimiter,
 			EntryRounding: dateTime.RoundingConfig{

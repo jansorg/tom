@@ -54,6 +54,10 @@ func (d *DurationSum) IsRounded() bool {
 	return d.SumExact != d.SumRounded
 }
 
+func (d *DurationSum) CalculateRoundedDuration(duration time.Duration) time.Duration {
+	return RoundDuration(duration, d.rounding)
+}
+
 func (d *DurationSum) AddSum(r *DurationSum) {
 	// fixme handle incompatible config values of r?
 	d.SumExact += r.SumExact

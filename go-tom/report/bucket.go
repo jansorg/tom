@@ -281,7 +281,7 @@ func (b *ResultBucket) SortChildBuckets() {
 		}
 
 		return strings.Compare(strings.ToLower(b1.Title()), strings.ToLower(b2.Title())) < 0
-	});
+	})
 }
 
 func (b *ResultBucket) SplitByProjectID(splitType SplitOperation, splitValue func(frame *model.Frame) interface{}, minProjectIDs []string) {

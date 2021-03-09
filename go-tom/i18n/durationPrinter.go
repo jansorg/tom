@@ -16,9 +16,10 @@ type langDef struct {
 var supportedMapping map[string]langDef
 
 func init() {
+	// " h" is a thin-space character, https://www.compart.com/en/unicode/U+2009
 	supportedMapping = map[string]langDef{
-		"de": {separator: ":", minSuffix: " h", short: []string{"h", "m", "s"}, long: []string{"Std.", "Min.", "Sek."}},
-		"en": {separator: ":", short: []string{"h", "m", "s"}, long: []string{"hrs.", "min", "sec"}},
+		"de": {separator: ":", minSuffix: " h", short: []string{"h", "m", "s"}, long: []string{"Std.", "Min.", "Sek."}},
+		"en": {separator: ":", minSuffix: " h", short: []string{"h", "m", "s"}, long: []string{"hrs.", "min", "sec"}},
 	}
 }
 
@@ -35,5 +36,5 @@ func NewDurationPrinter(lang language.Tag) DurationPrinter {
 
 func NewDecimalDurationPrinter(lang language.Tag) DurationPrinter {
 	base, _ := lang.Base()
-	return &decimalDurationPrinter{printer: FindLocale(lang), spec: supportedMapping[base.String()]}
+	return &decimalDurationPrinter{printer: FindLocale(lang, false), spec: supportedMapping[base.String()]}
 }

@@ -3,7 +3,9 @@
 {{define "Bucket"}}
     {{- /*gotype: github.com/jansorg/tom/go-tom/report.ResultBucket*/ -}}
     {{$bucket := .}}
+    {{$showExact := reportOptions.ShowExactDurations }}
     {{$showEmpty := reportOptions.Report.ShowEmpty}}
+    {{$showStopTime := reportOptions.Report.ShowStopTime }}
 
     <div class="bucket">
         {{if $bucket.Empty}}
@@ -17,7 +19,7 @@
                     <tr>
                         <th class="date-header">{{i18n "Date"}}</th>
                         <th class="date-header">{{i18n "Start"}}</th>
-                        <th class="date-header">{{i18n "End"}}</th>
+                        {{if $showStopTime}}<th class="date-header">{{i18n "End"}}</th>{{end}}
                         <th class="time-header">{{i18n "Duration"}}</th>
                         <th class="th-wide">{{i18n "Notes"}}</th>
                     </tr>
@@ -27,7 +29,8 @@
                         <tr>
                             <td class="start-day">{{formatDate .Start}}</td>
                             <td class="start-time">{{formatTime .Start}}</td>
-                            <td class="stop-time">
+                            {{if $showStopTime}}
+                                <td class="stop-time">
                                 {{if .IsStopped}}
                                     {{if .IsSingleDay}}
                                         {{formatTime .End}}
@@ -35,16 +38,17 @@
                                         {{formatDateTime .End}}
                                     {{end}}
                                 {{end}}
-                            </td>
-                            <td class="time">{{minDuration .Duration}}</td>
+                                </td>
+                            {{end}}
+                            <td class="time">{{minDuration (roundedDuration .Duration $bucket)}}</td>
                             <td class="notes">{{.Notes}}</td>
                         </tr>
                     {{end}}
                     </tbody>
                     <tfoot class="subtotal">
                     <tr class="row-subtotal">
-                        <th colspan="3">{{i18n "Total"}}</th>
-                        <th class="col-subtotal time time-subtotal">{{minDuration .Duration.GetExact}}</th>
+                        <th colspan="{{if $showStopTime}}3{{else}}2{{end}}">{{i18n "Total"}}</th>
+                        <th class="col-subtotal time time-subtotal">{{minDuration .Duration.Get}}</th>
                         <th></th>
                     </tr>
                     </tfoot>
@@ -80,7 +84,7 @@
 {{end}}
 
 {{with $opts.CustomDescription }}
-    <p class="description">{{.}}</p>
+    <p class="description">{{safeHTML .}}</p>
 {{end}}
 
 {{if $opts.ShowSummary }}

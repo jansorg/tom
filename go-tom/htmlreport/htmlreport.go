@@ -91,10 +91,10 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			return r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
-			return r.ctx.DateTimePrinter.Time(date)
+			return r.ctx.Locale.FmtTimeShort(date)
 		},
 		"formatDate": func(date time.Time) string {
-			return r.ctx.DateTimePrinter.Date(date)
+			return r.ctx.Locale.FmtDateShort(date)
 		},
 		"formatDateTime": func(date time.Time) string {
 			return r.ctx.DateTimePrinter.DateTime(date)
@@ -105,6 +105,9 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			}
 			// fixme make i18n aware
 			return money.Currency().Formatter().Format(money.Amount())
+		},
+		"roundedDuration": func(duration time.Duration, bucket report.ResultBucket) time.Duration {
+			return bucket.Duration.CalculateRoundedDuration(duration)
 		},
 		"minDuration": func(duration time.Duration) string {
 			if r.options.DecimalDuration {

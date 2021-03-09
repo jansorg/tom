@@ -2,40 +2,23 @@
     "language": "en",
     "messages": [
         {
-            "id": "{FloatValue}",
-            "message": "{FloatValue}",
-            "translation": "{FloatValue}",
-            "translatorComment": "Copied from source.",
-            "placeholders": [
-                {
-                    "id": "FloatValue",
-                    "string": "%.2[1]f",
-                    "type": "float64",
-                    "underlyingType": "float64",
-                    "argNum": 1,
-                    "expr": "floatValue"
-                }
-            ],
-            "fuzzy": true
-        },
-        {
-            "id": "Sales",
-            "message": "Sales",
-            "translation": "Sales",
+            "id": "Date",
+            "message": "Date",
+            "translation": "Date",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "Daily un-tracked",
-            "message": "Daily un-tracked",
-            "translation": "Daily un-tracked",
+            "id": "Start",
+            "message": "Start",
+            "translation": "Start",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "Daily tracked",
-            "message": "Daily tracked",
-            "translation": "Daily tracked",
+            "id": "End",
+            "message": "End",
+            "translation": "End",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -47,16 +30,9 @@
             "fuzzy": true
         },
         {
-            "id": "Exact sales",
-            "message": "Exact sales",
-            "translation": "Exact sales",
-            "translatorComment": "Copied from source.",
-            "fuzzy": true
-        },
-        {
-            "id": "Exact duration",
-            "message": "Exact duration",
-            "translation": "Exact duration",
+            "id": "Notes",
+            "message": "Notes",
+            "translation": "Notes",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
@@ -117,31 +93,55 @@
             "fuzzy": true
         },
         {
-            "id": "Date",
-            "message": "Date",
-            "translation": "Date",
+            "id": "Amount",
+            "message": "Amount",
+            "translation": "Amount",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "Start",
-            "message": "Start",
-            "translation": "Start",
+            "id": "Daily un-tracked",
+            "message": "Daily un-tracked",
+            "translation": "Daily un-tracked",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "End",
-            "message": "End",
-            "translation": "End",
+            "id": "Daily tracked",
+            "message": "Daily tracked",
+            "translation": "Daily tracked",
             "translatorComment": "Copied from source.",
             "fuzzy": true
         },
         {
-            "id": "Notes",
-            "message": "Notes",
-            "translation": "Notes",
+            "id": "Exact amount",
+            "message": "Exact amount",
+            "translation": "Exact amount",
             "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "Exact duration",
+            "message": "Exact duration",
+            "translation": "Exact duration",
+            "translatorComment": "Copied from source.",
+            "fuzzy": true
+        },
+        {
+            "id": "{FloatValue}",
+            "message": "{FloatValue}",
+            "translation": "{FloatValue}",
+            "translatorComment": "Copied from source.",
+            "placeholders": [
+                {
+                    "id": "FloatValue",
+                    "string": "%.2[1]f",
+                    "type": "float64",
+                    "underlyingType": "float64",
+                    "argNum": 1,
+                    "expr": "floatValue"
+                }
+            ],
             "fuzzy": true
         }
     ]

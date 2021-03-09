@@ -10,7 +10,7 @@ import (
 
 func NewDateRange(start *time.Time, end *time.Time, locale locales.Translator) DateRange {
 	if locale == nil {
-		panic("locale not set")
+		panic(fmt.Sprintf("locale not set for %v - %v", start, end))
 	}
 
 	dateRange := DateRange{
@@ -109,9 +109,9 @@ func (r DateRange) ShortString() string {
 
 func (r DateRange) MinimalString() string {
 	if r.Start != nil && r.End == nil {
-		return fmt.Sprintf("%s -", r.locale.FmtDateShort(*r.Start))
+		return fmt.Sprintf("%s –", r.locale.FmtDateShort(*r.Start))
 	} else if r.Start == nil && r.End != nil {
-		return fmt.Sprintf("- %s", r.locale.FmtDateShort(*r.End))
+		return fmt.Sprintf("– %s", r.locale.FmtDateShort(*r.End))
 	} else if r.Start == nil && r.End == nil {
 		// fixme return error?
 		return ""
@@ -134,7 +134,7 @@ func (r DateRange) MinimalString() string {
 	}
 
 	// fallback: print the range, subtract one millisecond from end to be at the end of the day before (day a to day b does not include b)
-	return fmt.Sprintf("%s - %s", r.locale.FmtDateShort(*r.Start), r.locale.FmtDateShort(r.End.Add(-1*time.Millisecond)))
+	return fmt.Sprintf("%s – %s", r.locale.FmtDateShort(*r.Start), r.locale.FmtDateShort(r.End.Add(-1*time.Millisecond)))
 }
 
 func (r DateRange) Shift(years, months, days int) DateRange {
