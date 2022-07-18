@@ -11,7 +11,6 @@ import (
 	"time"
 
 	assetTemplate "github.com/arschles/go-bindata-html-template"
-	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 
 	"github.com/jansorg/tom/go-tom"
@@ -82,8 +81,7 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 		},
 		"formatNumber": func(n interface{}) string {
 			if floatValue, ok := n.(float64); ok {
-				p := message.NewPrinter(language.German)
-				return p.Sprintf("%.2f", floatValue)
+				return r.ctx.LocalePrinter.Sprintf(message.Key("float-format", "%.2f"), floatValue)
 			}
 			if floatValue, ok := n.(float32); ok {
 				return r.ctx.LocalePrinter.Sprintf(message.Key("float-format", "%.2f"), floatValue)
@@ -91,6 +89,9 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			return r.ctx.LocalePrinter.Sprint(n)
 		},
 		"formatTime": func(date time.Time) string {
+			if r.showSeconds() {
+				return r.ctx.Locale.FmtTimeMedium(date)
+			}
 			return r.ctx.Locale.FmtTimeShort(date)
 		},
 		"formatDate": func(date time.Time) string {
@@ -111,21 +112,21 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 		},
 		"minDuration": func(duration time.Duration) string {
 			if r.options.DecimalDuration {
-				return r.ctx.DecimalDurationPrinter.Minimal(duration)
+				return r.ctx.DecimalDurationPrinter.Minimal(duration, r.showSeconds())
 			}
-			return r.ctx.DurationPrinter.Minimal(duration)
+			return r.ctx.DurationPrinter.Minimal(duration, r.showSeconds())
 		},
 		"shortDuration": func(duration time.Duration) string {
 			if r.options.DecimalDuration {
-				return r.ctx.DecimalDurationPrinter.Short(duration)
+				return r.ctx.DecimalDurationPrinter.Short(duration, r.showSeconds())
 			}
-			return r.ctx.DurationPrinter.Short(duration)
+			return r.ctx.DurationPrinter.Short(duration, r.showSeconds())
 		},
 		"longDuration": func(duration time.Duration) string {
 			if r.options.DecimalDuration {
-				return r.ctx.DecimalDurationPrinter.Long(duration)
+				return r.ctx.DecimalDurationPrinter.Long(duration, r.showSeconds())
 			}
-			return r.ctx.DurationPrinter.Long(duration)
+			return r.ctx.DurationPrinter.Long(duration, r.showSeconds())
 		},
 		"isMatrix": report.IsMatrix,
 		"sumChildValues": func(parent *report.ResultBucket, childIndex int) *dateTime.DurationSum {
@@ -188,4 +189,9 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 	} else {
 		return nil, fmt.Errorf("template undefined")
 	}
+}
+
+// showSeconds returns if durations and timestamps should display seconds in the report
+func (r *Report) showSeconds() bool {
+	return r.options.Report.EntryRounding.IsSecondPrecision()
 }

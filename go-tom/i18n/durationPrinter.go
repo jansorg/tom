@@ -24,9 +24,9 @@ func init() {
 }
 
 type DurationPrinter interface {
-	Minimal(duration time.Duration) string
-	Short(duration time.Duration) string
-	Long(duration time.Duration) string
+	Minimal(duration time.Duration, showSeconds bool) string
+	Short(duration time.Duration, showSeconds bool) string
+	Long(duration time.Duration, showSeconds bool) string
 }
 
 func NewDurationPrinter(lang language.Tag) DurationPrinter {
