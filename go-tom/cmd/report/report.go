@@ -105,7 +105,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 			// update the time zone of the filter range to the target zone of the report
 			if config.Report.TimezoneName == "" {
-				config.Report.TimezoneName = report.TimezoneName(time.Local.String())
+				config.Report.TimezoneName = report.NewTimezoneNameLocal()
 			}
 			if !config.Report.DateFilterRange.Empty() {
 				config.Report.DateFilterRange = config.Report.DateFilterRange.In(config.Report.TimezoneName.AsTimezone())

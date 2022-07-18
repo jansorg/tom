@@ -104,7 +104,7 @@ func (r DateRange) ShortString() string {
 	if r.End != nil {
 		end = ShortDateString(*r.End)
 	}
-	return strings.TrimSpace(fmt.Sprintf("%s - %s", start, end))
+	return strings.TrimSpace(fmt.Sprintf("%s – %s", start, end))
 }
 
 func (r DateRange) MinimalString() string {
