@@ -35,9 +35,7 @@ type flags struct {
 	year              int
 	splitModes        string
 	roundFrames       time.Duration
-	roundTotals       time.Duration
 	roundModeFrames   string
-	roundModeTotal    string
 	decimalDurations  bool
 	showSales         bool
 	showSummary       bool
@@ -173,9 +171,6 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().DurationVarP(&opts.roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
 	cmd.Flags().StringVarP(&opts.roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest")
 
-	cmd.Flags().DurationVarP(&opts.roundTotals, "round-totals-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().StringVarP(&opts.roundModeTotal, "round-totals", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest.")
-
 	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
 	cmd.Flags().BoolVarP(&opts.showStopTime, "show-stop-time", "", true, "Show stopped time in timelog reports")
 	cmd.Flags().BoolVarP(&opts.decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
@@ -219,12 +214,6 @@ func applyFlags(cmd *cobra.Command, source htmlreport.Options, target *htmlrepor
 	}
 	if cmd.Flag("round-frames").Changed {
 		target.Report.EntryRounding.Mode = source.Report.EntryRounding.Mode
-	}
-	if cmd.Flag("round-totals-to").Changed {
-		target.Report.SumRounding.Size = source.Report.SumRounding.Size
-	}
-	if cmd.Flag("round-totals").Changed {
-		target.Report.SumRounding.Mode = source.Report.SumRounding.Mode
 	}
 	if cmd.Flag("decimal").Changed {
 		target.DecimalDuration = source.DecimalDuration
@@ -366,10 +355,6 @@ func configByFlags(opts flags, cmd *cobra.Command, ctx *context.TomContext) (htm
 			EntryRounding: dateTime.RoundingConfig{
 				Mode: dateTime.RoundingByName(opts.roundModeFrames),
 				Size: opts.roundFrames,
-			},
-			SumRounding: dateTime.RoundingConfig{
-				Mode: dateTime.RoundingByName(opts.roundModeTotal),
-				Size: opts.roundTotals,
 			},
 		},
 	}, nil

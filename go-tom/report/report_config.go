@@ -20,7 +20,6 @@ type Config struct {
 	IncludeArchived    bool                    `json:"include_archived"`
 	ShortTitles        bool                    `json:"short_titles"`
 	EntryRounding      dateTime.RoundingConfig `json:"rounding_entry"`
-	SumRounding        dateTime.RoundingConfig `json:"rounding_total"`
 }
 
 func NewTimezoneName(location *time.Location) TimezoneName {

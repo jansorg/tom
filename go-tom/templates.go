@@ -102,7 +102,7 @@ func bindataReportsHtmlCommonsGohtml() (*asset, error) {
 		size: 9779,
 		md5checksum: "",
 		mode: os.FileMode(420),
-		modTime: time.Unix(1658143551, 0),
+		modTime: time.Unix(1658145145, 0),
 	}
 
 	a := &asset{bytes: bytes, info: info}
