@@ -2,11 +2,8 @@ package dateTime
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 )
-
-var errUnknownRounding = fmt.Errorf("unknown rounding mode")
 
 type RoundingMode int8
 
@@ -16,8 +13,8 @@ const (
 	RoundUp
 )
 
-func (r RoundingMode) String() string {
-	switch r {
+func (r *RoundingMode) String() string {
+	switch *r {
 	case RoundNone:
 		return "none"
 	case RoundNearest:
@@ -29,7 +26,7 @@ func (r RoundingMode) String() string {
 	}
 }
 
-func (r RoundingMode) MarshalJSON() ([]byte, error) {
+func (r *RoundingMode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(r.String())
 }
 
@@ -56,7 +53,7 @@ func RoundingByName(name string) RoundingMode {
 
 func RoundingNone() RoundingConfig {
 	return RoundingConfig{
-		Mode: RoundUp,
+		Mode: RoundNone,
 		Size: 0,
 	}
 }
@@ -80,7 +77,7 @@ type RoundingConfig struct {
 	Size time.Duration `json:"size"`
 }
 
-func (r RoundingConfig) MarshalJSON() ([]byte, error) {
+func (r *RoundingConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Mode string `json:"mode"`
 		Size string `json:"size"`
