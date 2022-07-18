@@ -10,15 +10,18 @@
 # tom
 
 tom is a command line application to track time and to simplify office work.
-It's able to track time, to create HTML and PDF reports and to create invoice drafts for a few web-based invoicing application.
+It's able to track time and to create HTML and PDF reports.
 
-`tom` tracks time locally. Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
+`tom` tracks time locally. 
+Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
 
 ## Get tom
 Instructions to get started until better documentation is available:
+
+```bash
+go install github.com/jansorg/tom@latest
 ```
-GO111MODULE=on go get github.com/jansorg/tom
-```
+
 After that `tom` will be available, assuming that your `$GODIR/bin` is in the `$PATH`. 
 
 If you want to build in place, then run this:

@@ -57,7 +57,6 @@ func init() {
 	report.NewCommand(&ctx, RootCmd)
 	imports.NewCommand(&ctx, RootCmd)
 	status.NewCommand(&ctx, RootCmd)
-	newInvoiceCommand(&ctx, RootCmd)
 	_config.NewCommand(&ctx, RootCmd)
 	// hidden command
 	newCompletionCommand(&ctx, RootCmd)
