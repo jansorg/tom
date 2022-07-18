@@ -13,11 +13,6 @@ import (
 
 type OutputFormat int8
 
-const (
-	Plain OutputFormat = iota + 1
-	Json
-)
-
 type TomContext struct {
 	Store                  model.Store
 	StoreHelper            *storeHelper.Helper

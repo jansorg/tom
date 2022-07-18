@@ -140,7 +140,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	cmd.Flags().StringVarP(&saveConfigFile, "save-config", "", "", "Path where the options are saved as a template")
 	cmd.Flags().StringVarP(&htmlOutputFile, "output-file", "o", "", "Path where the rendered data will be written")
 
-	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Template to use for rendering. This may either be a full path to a template file or the name (without extension) of a template shipped with tom.")
+	cmd.Flags().StringVarP(&opts.templateName, "template", "", opts.templateName, "Built-in template to use for the report. Use --template-file to use a custom gohtml template file. Built-in templates: default,timelog")
 
 	templateAnnotations := make(map[string][]string)
 	templateAnnotations[cobra.BashCompFilenameExt] = []string{"gohtml"}
@@ -168,11 +168,11 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 
 	cmd.Flags().StringVarP(&opts.splitModes, "split", "s", "project", "Split the report into groups. Multiple values are possible. Possible values: year,month,week,day,project")
 
+	cmd.Flags().StringVarP(&opts.roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up,nearest")
 	cmd.Flags().DurationVarP(&opts.roundFrames, "round-frames-to", "", time.Minute, "Round durations of each frame to the nearest multiple of this duration")
-	cmd.Flags().StringVarP(&opts.roundModeFrames, "round-frames", "", "", "Rounding mode for sums of durations. Default: no rounding. Possible values: up|nearest")
 
 	cmd.Flags().BoolVarP(&opts.showEmpty, "show-empty", "", false, "Show empty groups")
-	cmd.Flags().BoolVarP(&opts.showStopTime, "show-stop-time", "", true, "Show stopped time in timelog reports")
+	cmd.Flags().BoolVarP(&opts.showStopTime, "show-stop-time", "", true, "Show end time in timelog reports")
 	cmd.Flags().BoolVarP(&opts.decimalDurations, "decimal", "", false, "Print durations as decimals 1.5h instead of 1:30h")
 	cmd.Flags().BoolVarP(&opts.showSummary, "show-summary", "", defaultFlags.showSummary, "Show a report summary at the top of the report")
 	cmd.Flags().BoolVarP(&opts.showMatrixTables, "matrix-tables", "", defaultFlags.showMatrixTables, "Show matrix tables when applicable instead of a list of tables")

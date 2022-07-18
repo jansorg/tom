@@ -45,7 +45,7 @@ func newStopCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comma
 			// translate
 			fmt.Printf("Stopped %d timers at %s\n", len(frames), ctx.DateTimePrinter.Time(time.Now()))
 			for _, frame := range frames {
-				fmt.Printf("\t%s\n", ctx.DurationPrinter.Minimal(frame.Duration()))
+				fmt.Printf("\t%s\n", ctx.DurationPrinter.Minimal(frame.Duration(), true))
 			}
 		},
 	}

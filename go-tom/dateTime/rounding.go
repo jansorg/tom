@@ -77,6 +77,11 @@ type RoundingConfig struct {
 	Size time.Duration `json:"size"`
 }
 
+// IsSecondPrecision returns if the rounding is using a time-unit less than a minute
+func (r *RoundingConfig) IsSecondPrecision() bool {
+	return r.Mode != RoundNone && r.Size.Milliseconds()%(60*1000) != 0
+}
+
 func (r *RoundingConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		Mode string `json:"mode"`
