@@ -38,7 +38,6 @@ type DurationSum struct {
 	SumRounded    time.Duration `json:"sum_rounded"`
 	SumExact      time.Duration `json:"sum_exact"`
 	rounding      RoundingConfig
-	roundingSize  time.Duration
 	acceptedRange *DateRange
 }
 
@@ -52,6 +51,10 @@ func (d *DurationSum) IsRoundedZero() bool {
 
 func (d *DurationSum) IsRounded() bool {
 	return d.SumExact != d.SumRounded
+}
+
+func (d *DurationSum) IsRounding() bool {
+	return d.rounding.Mode != RoundNone
 }
 
 func (d *DurationSum) CalculateRoundedDuration(duration time.Duration) time.Duration {
