@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateTime"
@@ -84,6 +85,18 @@ func (b *ResultBucket) Update() {
 			}
 		}
 	}
+}
+
+func (b *ResultBucket) SumOfSubDurations() time.Duration {
+	if b.Empty() {
+		return b.Duration.Get()
+	}
+
+	var result time.Duration
+	for _, c := range b.ChildBuckets {
+		result += c.Duration.Get()
+	}
+	return result
 }
 
 func (b *ResultBucket) AppliedFilterRange() dateTime.DateRange {

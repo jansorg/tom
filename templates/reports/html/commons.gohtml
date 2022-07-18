@@ -67,7 +67,7 @@
         {{end}}
         <tr>
             <td>{{i18n "Tracked time:"}}</td>
-            <td class="time">{{minDuration .Duration.Get}}</td>
+            <td class="time">{{minDuration .SumOfSubDurations}}</td>
         </tr>
         {{if reportOptions.ShowExactDurations }}
             <tr>
