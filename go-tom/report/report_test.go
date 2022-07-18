@@ -5,13 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
+
 	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/model"
 	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/test_setup"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"golang.org/x/text/language"
 )
 
 func TestSplitEmptyReport(t *testing.T) {
@@ -24,8 +25,8 @@ func TestSplitEmptyReport(t *testing.T) {
 	p2, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top", "child")
 	require.NoError(t, err)
 
-	start := newDate(2018, time.March, 10, 10, 0)
-	end := newDate(2018, time.March, 10, 12, 0)
+	start := newLocalDate(2018, time.March, 10, 10, 0)
+	end := newLocalDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*model.Frame{{
 		Start: start, End: end, ProjectId: p2.ID,
@@ -54,8 +55,8 @@ func TestReport(t *testing.T) {
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
 
-	start := newDate(2018, time.March, 10, 10, 0)
-	end := newDate(2018, time.March, 10, 12, 0)
+	start := newLocalDate(2018, time.March, 10, 10, 0)
+	end := newLocalDate(2018, time.March, 10, 12, 0)
 
 	frameList := []*model.Frame{{Start: start, End: end}}
 	report := NewBucketReport(model.NewFrameList(frameList), Config{}, ctx)
@@ -87,20 +88,22 @@ func TestReportSplitYear(t *testing.T) {
 	require.NoError(t, err)
 	defer test_setup.CleanupTestContext(ctx)
 
-	// two hours, 10th of march 2018
-	start := newDate(2018, time.March, 10, 10, 0)
-	end := newDate(2018, time.March, 10, 12, 0)
+	// two hours, 10th of March 2018
+	start := newLocalDate(2018, time.March, 10, 10, 0)
+	end := newLocalDate(2018, time.March, 10, 12, 0)
 
-	// one hour. 9th of march 2019
-	start2 := newDate(2019, time.March, 10, 9, 0)
-	end2 := newDate(2019, time.March, 10, 10, 0)
+	// one hour. 9th of March 2019
+	start2 := newLocalDate(2019, time.March, 10, 9, 0)
+	end2 := newLocalDate(2019, time.March, 10, 10, 0)
 
 	frameList := []*model.Frame{
 		{Start: start2, End: end2},
 		{Start: start, End: end},
 	}
 
-	report := NewBucketReport(model.NewSortedFrameList(frameList), Config{Splitting: []SplitOperation{SplitByYear}}, ctx)
+	report := NewBucketReport(model.NewSortedFrameList(frameList),
+		Config{TimezoneName: NewTimezoneNameLocal(), Splitting: []SplitOperation{SplitByYear}},
+		ctx)
 	report.Update()
 
 	require.NotNil(t, report.result, "expected one top-level group (containing two years)")
@@ -109,22 +112,22 @@ func TestReportSplitYear(t *testing.T) {
 	assert.EqualValues(t, 2, report.result.FrameCount)
 	assert.EqualValues(t, 3*time.Hour, report.result.Duration.Get())
 	assert.EqualValues(t, 3*time.Hour, report.result.Duration.GetExact())
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), report.result.DateRange().Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), report.result.DateRange().End)
+	assert.EqualValues(t, newLocalDate(2018, time.January, 1, 0, 0), report.result.DateRange().Start)
+	assert.EqualValues(t, newLocalDate(2020, time.January, 1, 0, 0), report.result.DateRange().End)
 	assert.EqualValues(t, start, report.result.TrackedDateRange().Start)
 	assert.EqualValues(t, end2, report.result.TrackedDateRange().End)
 	assert.EqualValues(t, frameList, report.source.Frames())
 
 	firstYear := report.result.ChildBuckets[0]
-	assert.EqualValues(t, newDate(2018, time.January, 1, 0, 0), firstYear.DateRange().Start)
-	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), firstYear.DateRange().End)
+	assert.EqualValues(t, newLocalDate(2018, time.January, 1, 0, 0), firstYear.DateRange().Start)
+	assert.EqualValues(t, newLocalDate(2019, time.January, 1, 0, 0), firstYear.DateRange().End)
 	assert.EqualValues(t, 1, firstYear.FrameCount)
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.Get())
 	assert.EqualValues(t, 2*time.Hour, firstYear.Duration.GetExact())
 
 	secondYear := report.result.ChildBuckets[1]
-	assert.EqualValues(t, newDate(2019, time.January, 1, 0, 0), secondYear.DateRange().Start)
-	assert.EqualValues(t, newDate(2020, time.January, 1, 0, 0), secondYear.DateRange().End)
+	assert.EqualValues(t, newLocalDate(2019, time.January, 1, 0, 0), secondYear.DateRange().Start)
+	assert.EqualValues(t, newLocalDate(2020, time.January, 1, 0, 0), secondYear.DateRange().End)
 	assert.EqualValues(t, 1, secondYear.FrameCount)
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.Get())
 	assert.EqualValues(t, 1*time.Hour, secondYear.Duration.GetExact())
@@ -136,12 +139,12 @@ func TestReportDateRanges(t *testing.T) {
 	defer test_setup.CleanupTestContext(ctx)
 
 	// two hours
-	start := newDate(2018, time.March, 10, 10, 0)
-	end := newDate(2018, time.March, 10, 12, 0)
+	start := newLocalDate(2018, time.March, 10, 10, 0)
+	end := newLocalDate(2018, time.March, 10, 12, 0)
 
 	// one hour
-	start2 := newDate(2019, time.March, 10, 9, 0)
-	end2 := newDate(2019, time.March, 10, 10, 0)
+	start2 := newLocalDate(2019, time.March, 10, 9, 0)
+	end2 := newLocalDate(2019, time.March, 10, 10, 0)
 
 	frameList := []*model.Frame{
 		{Start: start2, End: end2},
@@ -170,14 +173,14 @@ func TestReportSplitDifferentZones(t *testing.T) {
 	defer test_setup.CleanupTestContext(ctx)
 
 	// two hours, UTC+0
-	start := newDate(2018, time.March, 10, 10, 0).UTC()
-	end := newDate(2018, time.March, 10, 12, 0).UTC()
+	start := newLocalDate(2018, time.March, 10, 10, 0).UTC()
+	end := newLocalDate(2018, time.March, 10, 12, 0).UTC()
 
 	// one hour, UTC+2
 	utc2, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
-	start2 := newDate(2018, time.March, 10, 9, 0).In(utc2)
-	end2 := newDate(2018, time.March, 10, 10, 0).In(utc2)
+	start2 := newLocalDate(2018, time.March, 10, 9, 0).In(utc2)
+	end2 := newLocalDate(2018, time.March, 10, 10, 0).In(utc2)
 
 	frameList := []*model.Frame{
 		{Start: &start, End: &end},
@@ -200,14 +203,14 @@ func TestReportSplitDifferentZonesYear(t *testing.T) {
 	defer test_setup.CleanupTestContext(ctx)
 
 	// two hours, UTC+0
-	start := newDate(2018, time.January, 10, 10, 0).UTC()
-	end := newDate(2018, time.January, 10, 12, 0).UTC()
+	start := newLocalDate(2018, time.January, 10, 10, 0).UTC()
+	end := newLocalDate(2018, time.January, 10, 12, 0).UTC()
 
 	// one hour, UTC+2
 	utc2, err := time.LoadLocation("Europe/Berlin")
 	require.NoError(t, err)
-	start2 := newDate(2018, time.January, 10, 9, 0).In(utc2)
-	end2 := newDate(2018, time.January, 10, 10, 0).In(utc2)
+	start2 := newLocalDate(2018, time.January, 10, 9, 0).In(utc2)
+	end2 := newLocalDate(2018, time.January, 10, 10, 0).In(utc2)
 
 	frameList := []*model.Frame{
 		{Start: &start, End: &end},
@@ -242,8 +245,8 @@ func TestReportProjectHierarchySum(t *testing.T) {
 
 	// adding 3*10*2 hours = 60 hours, 20 for each project
 	frames := model.NewEmptyFrameList()
-	start := newDate(2017, time.January, 10, 10, 0).UTC()
-	end := newDate(2017, time.January, 10, 12, 0).UTC()
+	start := newLocalDate(2017, time.January, 10, 10, 0).UTC()
+	end := newLocalDate(2017, time.January, 10, 12, 0).UTC()
 	for i := 0; i < 10; i++ {
 		frames.Append(&model.Frame{Start: &start, End: &end, ProjectId: pTop.ID})
 		frames.Append(&model.Frame{Start: &start, End: &end, ProjectId: p1.ID})
@@ -352,8 +355,8 @@ func TestReportSplitYearProjectMonth(t *testing.T) {
 
 	// adding 3*16*2 hours = 96 hours, 32 for each project spread across 16 months
 	frames := model.NewEmptyFrameList()
-	start := newDate(2017, time.May, 10, 10, 0).UTC()
-	end := newDate(2017, time.May, 10, 12, 0).UTC()
+	start := newLocalDate(2017, time.May, 10, 10, 0).UTC()
+	end := newLocalDate(2017, time.May, 10, 12, 0).UTC()
 	for i := 0; i < 16; i++ {
 		newStart := start.AddDate(0, i, 0)
 		newEnd := end.AddDate(0, i, 0)
@@ -402,8 +405,8 @@ func TestReportSplitProjectMonthMatrix(t *testing.T) {
 
 	// adding 10*2 hours = 20 hours on project p1
 	frames := model.NewEmptyFrameList()
-	start := newDate(2017, time.May, 10, 10, 0).UTC()
-	end := newDate(2017, time.May, 10, 12, 0).UTC()
+	start := newLocalDate(2017, time.May, 10, 10, 0).UTC()
+	end := newLocalDate(2017, time.May, 10, 12, 0).UTC()
 	for i := 0; i < 10; i++ {
 		newStart := start.AddDate(0, 0, 1)
 		newEnd := end.AddDate(0, 0, 1)
@@ -443,8 +446,8 @@ func TestReportWithoutArchived(t *testing.T) {
 	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("project1", "child1")
 	require.NoError(t, err)
 
-	start := newDate(2017, time.May, 10, 10, 0).UTC()
-	end := newDate(2017, time.May, 10, 12, 0).UTC()
+	start := newLocalDate(2017, time.May, 10, 10, 0).UTC()
+	end := newLocalDate(2017, time.May, 10, 12, 0).UTC()
 
 	// adding 5*2 hours = 10 hours on project p1, UNARCHIVED
 	frames := model.NewEmptyFrameList()
@@ -497,8 +500,8 @@ func TestSalesStats(t *testing.T) {
 	p2.SetHourlyRate(money.NewMoney(75*100, "USD"))
 
 	// 2 hours
-	start := newDate(2017, time.May, 10, 10, 0).UTC()
-	end := newDate(2017, time.May, 10, 12, 0).UTC()
+	start := newLocalDate(2017, time.May, 10, 10, 0).UTC()
+	end := newLocalDate(2017, time.May, 10, 12, 0).UTC()
 
 	// adding 5*2 hours = 10 hours each on projects pTop, p1, p2
 	frames := model.NewEmptyFrameList()
@@ -542,7 +545,7 @@ func TestReportTimeFilter(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		TimezoneName:       time.UTC,
+		TimezoneName:       NewTimezoneNameUTC(),
 	}, ctx)
 	report.Update()
 	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
@@ -555,7 +558,7 @@ func TestReportTimeFilter(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject, SplitByMonth},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		TimezoneName:       time.FixedZone("UTC+8", 8*60*60),
+		TimezoneName:       NewTimezoneName(time.FixedZone("UTC+8", 8*60*60)),
 	}, ctx)
 	report.Update()
 	assert.NotNil(t, report.config.DateFilterRange.Start, "start must be not non nil")
@@ -588,7 +591,7 @@ func TestReportTimeFilterOverlap(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject},
 		DateFilterRange:    dateTime.NewDateRange(&start, &end, ctx.Locale),
-		TimezoneName:       time.UTC,
+		TimezoneName:       NewTimezoneNameUTC(),
 	}, ctx)
 	report.Update()
 	assert.EqualValues(t, 1*time.Hour, report.Result().Duration.GetExact(), "1 hour max range expected for overlapping entries")
@@ -623,7 +626,7 @@ func TestReportTimeFilterNoOverlap(t *testing.T) {
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByProject},
 		DateFilterRange:    dateTime.NewDateRange(&beforeStart, &afterEnd, ctx.Locale),
-		TimezoneName:       time.UTC,
+		TimezoneName:       NewTimezoneNameUTC(),
 	}, ctx)
 	report.Update()
 	assert.EqualValues(t, 1*time.Hour+20*time.Minute, report.Result().Duration.GetExact(), "expected full duration for non-overlapping frames")
@@ -653,7 +656,7 @@ func TestReportTimeFilterOverlapMultipleMonths(t *testing.T) {
 		ProjectIDs:         []string{p1.ID},
 		IncludeSubprojects: true,
 		Splitting:          []SplitOperation{SplitByDay},
-		TimezoneName:       time.UTC,
+		TimezoneName:       NewTimezoneNameUTC(),
 	}, ctx)
 	report.Update()
 
@@ -696,7 +699,7 @@ func TestReportWithActiveFrame(t *testing.T) {
 	report := NewBucketReport(&frames, Config{
 		IncludeSubprojects: false,
 		Splitting:          []SplitOperation{SplitByDay},
-		TimezoneName:       time.UTC,
+		TimezoneName:       NewTimezoneNameUTC(),
 	}, ctx)
 	report.Update()
 
@@ -704,7 +707,7 @@ func TestReportWithActiveFrame(t *testing.T) {
 	require.EqualValues(t, 1, len(report.Result().ChildBuckets))
 }
 
-func newDate(year int, month time.Month, day, hour, minute int) *time.Time {
+func newLocalDate(year int, month time.Month, day, hour, minute int) *time.Time {
 	date := time.Date(year, month, day, hour, minute, 0, 0, time.Local)
 	return &date
 }

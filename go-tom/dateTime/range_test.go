@@ -47,14 +47,14 @@ func TestOpenRange(t *testing.T) {
 	// 2018-01-02, 4pm --> 28 hours
 
 	r := NewDateRange(&start, nil, i18n.FindLocale(language.English, false))
-	require.EqualValues(t, "1/5/18 -", r.MinimalString())
-	require.EqualValues(t, "2018-01-05 -", r.ShortString())
+	require.EqualValues(t, "1/5/18 –", r.MinimalString())
+	require.EqualValues(t, "2018-01-05 –", r.ShortString())
 
 	r = NewDateRange(nil, &end, i18n.FindLocale(language.English, false))
-	require.EqualValues(t, "- 1/6/18", r.MinimalString())
-	require.EqualValues(t, "- 2018-01-06", r.ShortString())
+	require.EqualValues(t, "– 1/6/18", r.MinimalString())
+	require.EqualValues(t, "– 2018-01-06", r.ShortString())
 
 	r = NewDateRange(&start, &end, i18n.FindLocale(language.English, false))
-	require.EqualValues(t, "1/5/18 - 1/6/18", r.MinimalString())
-	require.EqualValues(t, "2018-01-05 - 2018-01-06", r.ShortString())
+	require.EqualValues(t, "1/5/18 – 1/6/18", r.MinimalString())
+	require.EqualValues(t, "2018-01-05 – 2018-01-06", r.ShortString())
 }

@@ -52,10 +52,11 @@ func Test_ActivityNoteRequired(t *testing.T) {
 	require.EqualValues(t, "my new activity", frame.Notes)
 	require.True(t, frame.IsActive())
 
-	stoppedFrame, err := control.StopNewest("", []*model.Tag{})
-	require.EqualValues(t, NoteRequiredErr, err)
+	// fixme: for now, we're treating the flag as a hint for the UI
+	//stoppedFrame, err := control.StopNewest("", []*model.Tag{})
+	//require.EqualValues(t, NoteRequiredErr, err)
 
-	stoppedFrame, err = control.StopNewest("note with content", []*model.Tag{})
+	stoppedFrame, err := control.StopNewest("note with content", []*model.Tag{})
 	require.NoError(t, err)
 	require.EqualValues(t, "note with content", stoppedFrame.Notes)
 }
