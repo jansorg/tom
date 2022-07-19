@@ -34,6 +34,7 @@ The binary `tom` will be in the current directory.
 
 ## Basic usage
 A typical session looks like this:
+
 ```bash
 tom create project acme
 tom start acme
