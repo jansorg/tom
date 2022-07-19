@@ -1,20 +1,13 @@
 pkgname=tom
-pkgver=20210309
+pkgver=20220719
 pkgrel=1
 pkgdesc="Time tracking for the command line"
 arch=('i686' 'x86_64')
 license=('GPL')
 url='https://github.com/jansorg/tom'
 makedepends=('go' 'git')
-
-source=(
-	"git://github.com/jansorg/tom.git"
-)
-
-md5sums=(
-	'SKIP'
-)
-
+source=("git+https://github.com/jansorg/tom.git")
+md5sums=('SKIP')
 backup=()
 
 pkgver() {
