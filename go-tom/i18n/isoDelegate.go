@@ -24,3 +24,15 @@ func (i *isoDelegate) FmtDateLong(t time.Time) string {
 func (i *isoDelegate) FmtDateFull(t time.Time) string {
 	return fmt.Sprintf("%s, %02d %s %04d", i.delegate.WeekdayWide(t.Weekday()), t.Day(), i.delegate.MonthWide(t.Month()), t.Year())
 }
+
+func (i *isoDelegate) FmtTimeShort(t time.Time) string {
+	return fmt.Sprintf("%02d:%02d", t.Hour(), t.Minute())
+}
+
+func (i *isoDelegate) FmtTimeMedium(t time.Time) string {
+	return fmt.Sprintf("%02d:%02d:%02d", t.Hour(), t.Minute(), t.Second())
+}
+
+func (i *isoDelegate) FmtTimeLong(t time.Time) string {
+	return i.FmtTimeMedium(t)
+}
