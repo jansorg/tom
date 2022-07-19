@@ -91,3 +91,30 @@ func TestEditFrameErrors(t *testing.T) {
 	err = doEditFrameCommand(ctx, []string{"does not exist"}, nil, nil, nil, &empty, "/", nil)
 	require.Error(t, err, "invalid frame id must not be accepted")
 }
+
+func TestEditFrameStartStopTimeZone(t *testing.T) {
+	ctx, err := test_setup.CreateTestContext(language.English)
+	require.NoError(t, err)
+	defer test_setup.CleanupTestContext(ctx)
+
+	p1, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames("top", "p1")
+	require.NoError(t, err)
+
+	var sourceTimezone = time.FixedZone("UTC+7", 7*60*60)
+	start := time.Date(2018, time.January, 10, 0, 0, 0, 0, sourceTimezone)
+	end := start.Add(6 * time.Hour)
+
+	frame, err := ctx.Store.AddFrame(model.Frame{Start: &start, End: &end, ProjectId: p1.ID})
+	require.NoError(t, err)
+
+	var timezone = time.UTC
+	newStartString := start.Add(1 * time.Hour).In(timezone).Format(time.RFC3339)
+	newEndString := end.Add(1 * time.Hour).In(timezone).Format(time.RFC3339)
+	err = doEditFrameCommand(ctx, []string{frame.ID}, &newStartString, &newEndString, nil, nil, "/", nil)
+	require.NoError(t, err)
+
+	updatedFrame, err := ctx.Query.FrameByID(frame.ID)
+	require.NoError(t, err)
+	require.EqualValues(t, newStartString, updatedFrame.Start.Format(time.RFC3339))
+	require.EqualValues(t, newEndString, updatedFrame.End.Format(time.RFC3339))
+}

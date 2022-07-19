@@ -75,7 +75,7 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 	return cmd
 }
 
-func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string, archived * bool) error {
+func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string, archived *bool) error {
 	// make sure that all frames exist before applying updates
 	frames, err := ctx.Query.FramesByID(frameIDs...)
 	if err != nil {
