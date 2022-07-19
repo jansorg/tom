@@ -68,7 +68,7 @@ func (b *BucketReport) Update() *ResultBucket {
 		})
 	}
 
-	// setup the date filter range in the target timezone
+	// set up the date filter range in the target timezone
 	config := b.config
 	var filterRange *dateTime.DateRange
 	if config.DateFilterRange.Empty() {

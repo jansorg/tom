@@ -57,6 +57,8 @@ func NewReport(workingDir string, opts Options, ctx *context.TomContext) *Report
 }
 
 func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
+	timezone := r.options.Report.TimezoneName.AsTimezone()
+
 	functionMap := map[string]interface{}{
 		"reportOptions": func() *Options {
 			return &r.options
@@ -90,15 +92,15 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 		},
 		"formatTime": func(date time.Time) string {
 			if r.showSeconds() {
-				return r.ctx.Locale.FmtTimeMedium(date)
+				return r.ctx.Locale.FmtTimeMedium(date.In(timezone))
 			}
-			return r.ctx.Locale.FmtTimeShort(date)
+			return r.ctx.Locale.FmtTimeShort(date.In(timezone))
 		},
 		"formatDate": func(date time.Time) string {
-			return r.ctx.Locale.FmtDateShort(date)
+			return r.ctx.Locale.FmtDateShort(date.In(timezone))
 		},
 		"formatDateTime": func(date time.Time) string {
-			return r.ctx.DateTimePrinter.DateTime(date)
+			return r.ctx.DateTimePrinter.DateTime(date.In(timezone))
 		},
 		"formatMoney": func(money *money.Money) string {
 			if money == nil {
