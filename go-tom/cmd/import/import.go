@@ -15,6 +15,7 @@ func NewCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
 	newFanurioCommand(ctx, cmd)
 	newWatsonCommand(ctx, cmd)
 	newMacTimeTrackCommand(ctx, cmd)
+	newTomImportCommand(ctx, cmd)
 
 	parent.AddCommand(cmd)
 	return cmd
