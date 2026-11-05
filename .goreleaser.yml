@@ -14,6 +14,15 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
+    # macOS: Apple Silicon only, Linux and Windows: amd64 only
+    ignore:
+      - goos: darwin
+        goarch: amd64
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
   - main: ./go-tom-pdf
     id: tom-pdf
     binary: tom-pdf
@@ -25,6 +34,15 @@ builds:
       - linux
     goarch:
       - amd64
+      - arm64
+    # macOS: Apple Silicon only, Linux and Windows: amd64 only
+    ignore:
+      - goos: darwin
+        goarch: amd64
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
 
 # Signs and notarizes the macOS binaries. This runs on Linux, no macOS machine is needed.
 # Skipped if the signing secrets are not available, e.g. for local snapshot builds.
