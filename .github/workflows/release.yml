@@ -1,21 +1,120 @@
-name: goreleaser
+name: release
 
 on:
+  # Pushing a tag builds a release for that tag.
   push:
-    # run only against tags
     tags:
       - '*'
+
+  # Manual release from the Actions tab or via
+  #   gh workflow run release.yml -f version=0.13.0
+  # Updates the version, shell completions and documentation on master,
+  # creates the tag and builds the release.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, without leading "v" (e.g. 0.13.0)'
+        required: true
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
+  prepare:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+    steps:
+      - name: Validate version
+        id: version
+        env:
+          VERSION: ${{ inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          if [[ "$REF" != "refs/heads/master" ]]; then
+            echo "::error::Releases can only be created from master, not $REF"
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '$VERSION', expected e.g. 0.13.0"
+            exit 1
+          fi
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Check that the tag does not exist
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG already exists"
+            exit 1
+          fi
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Update version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          sed -i "s/^var version = \".*\"/var version = \"$VERSION\"/" main.go
+          git diff --quiet main.go || git commit -m "prep: updating version for release of v$VERSION" main.go
+
+      - name: Update completions script
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          go build -o "$RUNNER_TEMP/tom" .
+          "$RUNNER_TEMP/tom" completion > scripts/completions/tom.sh
+          chmod u+x scripts/completions/tom.sh
+          git diff --quiet scripts/completions || git commit -m "prep: updating completions script for release of v$VERSION" scripts/completions
+
+      - name: Update documentation
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          bash ./update_docs.bash
+          git diff --cached --quiet docs || git commit -m "prep: updating documentation for release of v$VERSION" docs
+
+      - name: Push commits and tag
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git tag "$TAG"
+          git push origin HEAD:master "$TAG"
+
   goreleaser:
+    needs: prepare
+    # runs for tag pushes (prepare is skipped) and after a successful manual prepare
+    if: ${{ !cancelled() && (needs.prepare.result == 'success' || needs.prepare.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v7
         with:
+          # tags pushed with GITHUB_TOKEN don't trigger new workflow runs, so a manual run builds its new tag itself
+          ref: ${{ needs.prepare.outputs.tag || github.ref }}
           fetch-depth: 0
 
       - name: Set up Go
