@@ -8,7 +8,7 @@ import (
 	"github.com/jansorg/tom/go-tom/cmd"
 )
 
-var version = "0.13.0"
+var version = "0.13.1"
 var commit = "unknown"
 var date = "unknown"
 
