@@ -1,20 +1,24 @@
-before:
-  hooks:
-    - go generate ./...
+version: 2
+
 release:
   draft: true
+
 builds:
   - main: .
     id: tom
+    env:
+      - CGO_ENABLED=0
     goos:
       - windows
       - darwin
       - linux
     goarch:
       - amd64
-  - main: ./go-tom-pdf/.
+  - main: ./go-tom-pdf
     id: tom-pdf
     binary: tom-pdf
+    env:
+      - CGO_ENABLED=0
     goos:
       - windows
       - darwin
@@ -30,33 +34,31 @@ nfpms:
     maintainer: "Joachim Ansorg <tom@ja-dev.eu>"
     description: "Tom is a command line tool to track time"
     license: ""
-    file_name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    file_name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macOS{{ else }}{{ title .Os }}{{ end }}-
+      {{- if eq .Arch "386" }}x86{{ else }}{{ .Arch }}{{ end }}
     bindir: /usr/bin
     contents:
       - src: "scripts/completions/tom.sh"
         dst: "/etc/bash_completion.d/tom.sh"
-    replacements:
-      linux: Linux
-      windows: Windows
-      darwin: macOS
-      amd64: amd64
-      386: x86
     overrides:
       deb:
         dependencies:
           - bash-completion
 
 archives:
-  - replacements:
-      linux: Linux
-      windows: Windows
-      darwin: macOS
-      amd64: amd64
-      386: x86
+  - name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_
+      {{- if eq .Os "darwin" }}macOS{{ else }}{{ title .Os }}{{ end }}_
+      {{- if eq .Arch "386" }}x86{{ else }}{{ .Arch }}{{ end }}
+
 checksum:
   name_template: 'checksums.txt'
+
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
+
 changelog:
   sort: asc
   filters:
