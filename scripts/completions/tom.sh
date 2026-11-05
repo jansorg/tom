@@ -49,7 +49,7 @@ __tom_handle_go_custom_completion()
     local out requestComp lastParam lastChar comp directive args
 
     # Prepare the command to request completions for the program.
-    # Calling ${words[0]} instead of directly tom allows to handle aliases
+    # Calling ${words[0]} instead of directly tom allows handling aliases
     args=("${words[@]:1}")
     # Disable ActiveHelp which is not supported for bash completion v1
     requestComp="TOM_ACTIVE_HELP=0 ${words[0]} __completeNoDesc ${args[*]}"
@@ -907,6 +907,34 @@ _tom_import_macTimeTracker()
     noun_aliases=()
 }
 
+_tom_import_tom()
+{
+    last_command="tom_import_tom"
+
+    command_aliases=()
+
+    commands=()
+
+    flags=()
+    two_word_flags=()
+    local_nonpersistent_flags=()
+    flags_with_completion=()
+    flags_completion=()
+
+    flags+=("--backup-dir=")
+    two_word_flags+=("--backup-dir")
+    flags+=("--config=")
+    two_word_flags+=("--config")
+    two_word_flags+=("-c")
+    flags+=("--data-dir=")
+    two_word_flags+=("--data-dir")
+    flags+=("--iso-dates")
+
+    must_have_one_flag=()
+    must_have_one_noun=()
+    noun_aliases=()
+}
+
 _tom_import_watson()
 {
     last_command="tom_import_watson"
@@ -944,6 +972,7 @@ _tom_import()
     commands=()
     commands+=("fanurio")
     commands+=("macTimeTracker")
+    commands+=("tom")
     commands+=("watson")
 
     flags=()
@@ -1185,6 +1214,10 @@ _tom_report()
     flags_with_completion=()
     flags_completion=()
 
+    flags+=("--config=")
+    two_word_flags+=("--config")
+    local_nonpersistent_flags+=("--config")
+    local_nonpersistent_flags+=("--config=")
     flags+=("--css-file=")
     two_word_flags+=("--css-file")
     flags_with_completion+=("--css-file")
@@ -1303,9 +1336,6 @@ _tom_report()
     local_nonpersistent_flags+=("-y")
     flags+=("--backup-dir=")
     two_word_flags+=("--backup-dir")
-    flags+=("--config=")
-    two_word_flags+=("--config")
-    two_word_flags+=("-c")
     flags+=("--data-dir=")
     two_word_flags+=("--data-dir")
     flags+=("--iso-dates")
