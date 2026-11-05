@@ -16,6 +16,6 @@ git commit -m "prep: updating documentation for release of v$VERSION" . && git p
 #git commit -m "prep: updating translations for release of v$VERSION" . && git push
 
 git tag "v$VERSION"
-#goreleaser --rm-dist
+#goreleaser release --clean
 git push --tags
 echo "The release will be built by GitHub Actions"
