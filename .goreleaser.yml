@@ -26,6 +26,26 @@ builds:
     goarch:
       - amd64
 
+# Signs and notarizes the macOS binaries. This runs on Linux, no macOS machine is needed.
+# Skipped if the signing secrets are not available, e.g. for local snapshot builds.
+notarize:
+  macos:
+    - enabled: '{{ isEnvSet "MACOS_SIGN_P12" }}'
+      ids:
+        - tom
+        - tom-pdf
+      sign:
+        # base64-encoded .p12 file with the "Developer ID Application" certificate and its private key
+        certificate: "{{ .Env.MACOS_SIGN_P12 }}"
+        password: "{{ .Env.MACOS_SIGN_PASSWORD }}"
+      notarize:
+        # App Store Connect API key, the .p8 key file is base64-encoded
+        issuer_id: "{{ .Env.MACOS_NOTARY_ISSUER_ID }}"
+        key_id: "{{ .Env.MACOS_NOTARY_KEY_ID }}"
+        key: "{{ .Env.MACOS_NOTARY_KEY }}"
+        wait: true
+        timeout: 20m
+
 nfpms:
   - formats:
       - deb
