@@ -4,20 +4,19 @@ import (
 	"bytes"
 	"fmt"
 	htmlTemplate "html/template"
-	"io/ioutil"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"time"
 
-	assetTemplate "github.com/arschles/go-bindata-html-template"
 	"golang.org/x/text/message"
 
-	"github.com/jansorg/tom/go-tom"
 	"github.com/jansorg/tom/go-tom/context"
 	"github.com/jansorg/tom/go-tom/dateTime"
 	"github.com/jansorg/tom/go-tom/money"
 	"github.com/jansorg/tom/go-tom/report"
+	"github.com/jansorg/tom/templates"
 )
 
 type Report struct {
@@ -70,7 +69,7 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			return r.ctx.LocalePrinter.Sprintf(key)
 		},
 		"inlineCSS": func(filename string) htmlTemplate.CSS {
-			file, err := ioutil.ReadFile(filename)
+			file, err := os.ReadFile(filename)
 			if err != nil {
 				log.Println(fmt.Errorf("error reading CSS file %s", filename))
 				return htmlTemplate.CSS(fmt.Sprintf("/* file not found: %s*/", filename))
@@ -178,7 +177,17 @@ func (r *Report) Render(results *report.BucketReport) ([]byte, error) {
 			path.Join(baseDir, "commons.gohtml"),
 		}
 
-		tmpl, err := assetTemplate.New(templatePath, tom.Asset).Funcs(functionMap).ParseFiles(templateFiles...)
+		// the built-in templates are concatenated and parsed as a single template
+		var source []byte
+		for _, file := range templateFiles {
+			content, err := templates.FS.ReadFile(file)
+			if err != nil {
+				return nil, err
+			}
+			source = append(source, content...)
+		}
+
+		tmpl, err := htmlTemplate.New(templatePath).Funcs(functionMap).Parse(string(source))
 		if err != nil {
 			return nil, err
 		}
