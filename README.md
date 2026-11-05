@@ -1,6 +1,6 @@
 
 [![GoDoc](https://godoc.org/github.com/jansorg/tom?status.svg)](https://godoc.org/github.com/jansorg/tom)
-[![Linux and macOS Build Status](https://api.travis-ci.org/jansorg/tom.svg?branch=master&label=Windows+and+Linux+and+macOS+build "Windows, Linux and macOS Build Status")](https://travis-ci.org/jansorg/tom)
+[![Release](https://github.com/jansorg/tom/actions/workflows/release.yml/badge.svg)](https://github.com/jansorg/tom/actions/workflows/release.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jansorg/tom)](https://goreportcard.com/report/github.com/jansorg/tom)
 
 **This project is still in an early phase. It's usable and working but not yet recommended for production.**
@@ -16,21 +16,22 @@ It's able to track time and to create HTML and PDF reports.
 Instead of implementing billing, etc. it will rely on 3rd-party tools, i.e. mostly cloud-based services.
 
 ## Get tom
-Instructions to get started until better documentation is available:
+Prebuilt binaries are available on the [releases page](https://github.com/jansorg/tom/releases):
+
+- Linux (amd64): `.tar.gz` archive or `.deb` package, which also installs the bash completion
+- macOS (Apple Silicon): `.tar.gz` archive, signed and notarized
+- Windows (amd64): `.tar.gz` archive, signed
+
+Each archive contains `tom` and `tom-pdf`.
+
+With Go 1.27 or later installed, you can also install tom with:
 
 ```bash
 go install github.com/jansorg/tom@latest
 ```
 
-After that `tom` will be available, assuming that your `$GODIR/bin` is in the `$PATH`. 
-
-If you want to build in place, then run this:
-```bash
-git clone https://github.com/jansorg/tom.git
-cd tom
-go build .
-```
-The binary `tom` will be in the current directory.
+After that `tom` will be available, assuming that `$(go env GOPATH)/bin` is in your `$PATH`.
+See [Building](#building) to build tom from source.
 
 ## Basic usage
 A typical session looks like this:
@@ -114,6 +115,65 @@ This imports the CSV format exported by Mac Time Tracker.
 tom import macTimeTracker export.csv
 ```
 
+
+## Development
+
+### Building
+Requirements: Go 1.27 or later. No other tools are needed, the report templates in [`templates/`](./templates) are embedded into the binary with `go:embed`.
+
+```bash
+git clone https://github.com/jansorg/tom.git
+cd tom
+go build .                        # builds ./tom
+go build -o tom-pdf ./go-tom-pdf  # builds ./tom-pdf, the PDF converter
+go test ./...
+```
+
+To build the release artifacts locally without publishing anything, install [GoReleaser](https://goreleaser.com) v2 and run:
+
+```bash
+goreleaser check
+goreleaser release --snapshot --clean --skip=publish
+```
+
+The archives and the `.deb` package are written to `dist/`.
+
+Generated files, updated automatically for each release:
+- `scripts/completions/tom.sh`: bash completion, created by `tom completion`
+- `docs/markdown` and `docs/man`: command line documentation, created by [`update_docs.bash`](./update_docs.bash)
+
+### Releasing
+Releases are built by the GitHub Actions workflow [`release.yml`](./.github/workflows/release.yml) with GoReleaser.
+Every release is created as a **draft** and must be published manually.
+
+1. Start the release workflow on `master`, either from the Actions tab or with:
+   ```bash
+   gh workflow run release.yml -f version=0.14.0
+   ```
+   The workflow runs the tests, updates the version in `main.go`, the bash completion and the documentation (as `prep:` commits on `master`),
+   creates and pushes the tag `v0.14.0` and builds the draft release.
+   The macOS binaries are signed and notarized during the build.
+2. Sign the Windows binaries of the draft release with the code signing certificate on the YubiKey:
+   ```bash
+   ./sign-windows.bash v0.14.0
+   ```
+   The script asks for the YubiKey PIN, signs `tom.exe` and `tom-pdf.exe`, and replaces the Windows archive and `checksums.txt` of the draft release.
+   Use `--dry-run` to sign without uploading. It needs `gh`, `jsign`, `java` and `yubico-piv-tool`.
+   If jsign doesn't find the certificate, set `JSIGN_ALIAS`, e.g. `JSIGN_ALIAS="X.509 Certificate for Digital Signature"` for PIV slot 9c.
+3. Review the draft on the [releases page](https://github.com/jansorg/tom/releases) and publish it.
+   Published releases can't be signed anymore by `sign-windows.bash`.
+
+Pushing a tag (e.g. with [`release.bash`](./release.bash)) also builds a draft release, but doesn't update the version in `main.go`.
+
+macOS signing and notarization needs these repository secrets. Without them, the macOS binaries are not signed.
+
+| Secret | Content |
+|---|---|
+| `MACOS_SIGN_P12` | "Developer ID Application" certificate with private key as `.p12`, base64-encoded (`base64 -w0 cert.p12`) |
+| `MACOS_SIGN_PASSWORD` | Password of the `.p12` file |
+| `MACOS_NOTARY_ISSUER_ID` | App Store Connect API issuer ID |
+| `MACOS_NOTARY_KEY_ID` | App Store Connect API key ID |
+| `MACOS_NOTARY_KEY` | App Store Connect API key (`AuthKey_XXXX.p8`), base64-encoded |
 
 ## License
 To be decided
