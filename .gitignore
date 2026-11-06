@@ -4,3 +4,8 @@
 /tom-pdf
 .idea/workspace.xml
 go-tom/dataImport/macTimeTracker/test/
+# makepkg build output
+/packages/pkg/
+/packages/src/
+/packages/tom/
+/packages/*.pkg.tar.*
