@@ -68,8 +68,7 @@ func newEditProjectCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 	return cmd
 }
 
-func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, hourlyRate *string, noteRequired *tristate.Tristate, projectIDsOrNames []string, ctx *context.TomContext) error {
-	var err error
+func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter string, hourlyRate *string, noteRequired *tristate.Tristate, projectIDsOrNames []string, ctx *context.TomContext) (err error) {
 	var parentProjectID string
 
 	// a non-nil, but empty parentNameOrID points to the top-level
@@ -88,14 +87,18 @@ func doEditProjectCommand(newName string, parentNameOrID *string, nameDelimiter 
 			parsedHourlyRate = nil
 		} else {
 			if parsedHourlyRate, err = money.Parse(*hourlyRate); err != nil {
-				return nil
+				return fmt.Errorf("invalid hourly rate %s: %v", *hourlyRate, err)
 			}
 		}
 	}
 
 	// batch mode to handle many projects at once
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	var projects []*model.Project
 	for _, idOrName := range projectIDsOrNames {

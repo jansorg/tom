@@ -18,7 +18,7 @@ func NewCSVImporter() dataImport.Handler {
 
 type fanurioImporter struct{}
 
-func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (dataImport.Result, error) {
+func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (result dataImport.Result, err error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return dataImport.Result{}, err
@@ -26,7 +26,11 @@ func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (dataImp
 	defer file.Close()
 
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	reader := csv.NewReader(file)
 	reader.TrimLeadingSpace = true

@@ -19,7 +19,7 @@ func NewImporter() dataImport.Handler {
 
 type watsonImporter struct{}
 
-func (watsonImporter) Import(filename string, ctx *context.TomContext) (dataImport.Result, error) {
+func (watsonImporter) Import(filename string, ctx *context.TomContext) (result dataImport.Result, err error) {
 	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return dataImport.Result{}, err
@@ -36,7 +36,11 @@ func (watsonImporter) Import(filename string, ctx *context.TomContext) (dataImpo
 	createdFrames := 0
 
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	for _, f := range frames {
 		start := f[0].(float64)

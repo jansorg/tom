@@ -29,20 +29,14 @@ func newAPI2PDFCommand() *cobra.Command {
 			var input io.Reader
 			if len(args) == 1 {
 				html, err := os.OpenFile(args[0], os.O_RDONLY, 0600)
-				defer html.Close()
 				if err != nil {
 					log.Fatal(err)
 				}
+				defer html.Close()
 
 				input = html
 			} else {
 				input = os.Stdin
-			}
-
-			file, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-			defer file.Close()
-			if err != nil {
-				log.Fatal(err)
 			}
 
 			requestType := api2pdf.RequestChrome
@@ -54,6 +48,12 @@ func newAPI2PDFCommand() *cobra.Command {
 			default:
 				log.Fatal("unknown engine type", engine)
 			}
+
+			file, err := os.OpenFile(outFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer file.Close()
 
 			conv := api2pdf.NewConverter(apiKey, requestType, api2pdf.Request{
 				FileName:  filepath.Base(outFile),

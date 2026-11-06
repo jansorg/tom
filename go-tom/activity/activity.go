@@ -90,6 +90,12 @@ func (a *Control) stopActivities(all bool, notes string, tags []*model.Tag) ([]*
 	}
 */
 
+	for _, frame := range actives {
+		if frame.Start != nil && a.startStopTime.Before(*frame.Start) {
+			return nil, fmt.Errorf("stop time %s is before the start time %s of frame %s", a.startStopTime.Format(time.RFC3339), frame.Start.Format(time.RFC3339), frame.ID)
+		}
+	}
+
 	// update data
 	for _, frame := range actives {
 		frame.StopAt(a.startStopTime)

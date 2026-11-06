@@ -13,7 +13,10 @@ import (
 func Parse(value string) (*Money, error) {
 	var amount float64
 	var code string
-	parts := strings.Split(value, " ")
+	parts := strings.Fields(value)
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("unable to parse money value %s, expected an amount and a currency code, e.g. '100 EUR'", value)
+	}
 
 	var err error
 	if amount, err = parseNumber(parts[0]); err == nil {
@@ -25,7 +28,10 @@ func Parse(value string) (*Money, error) {
 	}
 
 	curr := money.GetCurrency(code)
-	return NewMoney(int64(amount*math.Pow10(curr.Fraction)), code), err
+	if curr == nil {
+		return nil, fmt.Errorf("unknown currency %s", code)
+	}
+	return NewMoney(int64(math.Round(amount*math.Pow10(curr.Fraction))), code), nil
 }
 
 func parseNumber(s string) (float64, error) {
@@ -84,7 +90,7 @@ func (m *Money) Add(v *Money) error {
 }
 
 func (m *Money) Multiple(factor float64) *Money {
-	result := int64(float64(m.Amount()) * factor)
+	result := int64(math.Round(float64(m.Amount()) * factor))
 	return NewMoney(result, m.CurrencyCode())
 }
 

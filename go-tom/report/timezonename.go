@@ -26,8 +26,7 @@ func (t *TimezoneName) UnmarshalJSON(bytes []byte) error {
 		return err
 	}
 
-	if _, err := time.LoadLocation(name); err != nil {
-		panic(fmt.Sprintf("error locating time zone %s: %v", name, err))
+	if _, err := parseTimezone(name); err != nil {
 		return err
 	}
 
@@ -36,20 +35,26 @@ func (t *TimezoneName) UnmarshalJSON(bytes []byte) error {
 }
 
 func (t *TimezoneName) AsTimezone() *time.Location {
-	name := string(*t)
+	loc, err := parseTimezone(string(*t))
+	if err != nil {
+		panic(err.Error())
+	}
+	return loc
+}
 
+func parseTimezone(name string) (*time.Location, error) {
 	var offset int
 	if n, err := fmt.Sscanf(name, "UTC+%d", &offset); err == nil && n == 1 {
-		return time.FixedZone(name, offset*60*60)
+		return time.FixedZone(name, offset*60*60), nil
 	}
 
 	if n, err := fmt.Sscanf(name, "UTC-%d", &offset); err == nil && n == 1 {
-		return time.FixedZone(name, -offset*60*60)
+		return time.FixedZone(name, -offset*60*60), nil
 	}
 
 	loc, err := time.LoadLocation(name)
 	if err != nil {
-		panic(fmt.Sprintf("unable to load timezone with name %s", name))
+		return nil, fmt.Errorf("unable to load timezone with name %s: %v", name, err)
 	}
-	return loc
+	return loc, nil
 }

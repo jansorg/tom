@@ -24,15 +24,15 @@ func newCancelCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 						util.Fatal(err)
 					}
 				}
-				fmt.Printf("Successfully removed %d frames", len(frames))
+				fmt.Printf("Successfully removed %d frames\n", len(frames))
 			} else if len(frames) > 0 {
 				sort.SliceStable(frames, func(i, j int) bool {
-					return frames[i].IsBefore(frames[j])
+					return frames[i].IsAfter(frames[j])
 				})
 				if err := ctx.Store.RemoveFrame(frames[0].ID); err != nil {
 					util.Fatal(err)
 				}
-				fmt.Println("Successfully stopped frame")
+				fmt.Println("Successfully cancelled frame")
 			} else {
 				fmt.Println("no active frame found")
 			}

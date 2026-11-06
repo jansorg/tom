@@ -54,10 +54,12 @@ func newStartCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comm
 			var stoppedFrames []*model.Frame
 			if stopActives {
 				// fixme tags for stop?
-				stoppedFrames, _ = control.StopAll("", nil)
+				if stoppedFrames, err = control.StopAll("", nil); err != nil {
+					util.Fatal(err)
+				}
 			}
 
-			frame, err := control.Start(projectName, "", tags)
+			frame, err := control.Start(projectName, notes, tags)
 			if err == activity.ProjectNotFoundErr {
 				util.Fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
 			} else if err != nil {

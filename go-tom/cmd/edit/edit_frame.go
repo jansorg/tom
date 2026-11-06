@@ -75,7 +75,7 @@ func newEditFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.
 	return cmd
 }
 
-func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string, archived *bool) error {
+func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, endTime, notes, projectIDOrName *string, nameDelimiter string, archived *bool) (err error) {
 	// make sure that all frames exist before applying updates
 	frames, err := ctx.Query.FramesByID(frameIDs...)
 	if err != nil {
@@ -93,7 +93,11 @@ func doEditFrameCommand(ctx *context.TomContext, frameIDs []string, startTime, e
 	}
 
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	for _, frame := range frames {
 		if startTime != nil {

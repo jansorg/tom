@@ -7,11 +7,14 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/jansorg/tom/go-tom-pdf/converter"
 )
 
 const baseURL = "https://v2018.api2pdf.com"
+
+var httpClient = &http.Client{Timeout: 2 * time.Minute}
 
 type RequestType int8
 
@@ -60,6 +63,9 @@ func (a *api2pdf) ConvertHTML(in io.Reader, out io.Writer) error {
 	}
 
 	body, err := json.Marshal(a.requestConfig)
+	if err != nil {
+		return err
+	}
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s%s", a.baseURL, path), bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("error sending HTTP POST: %v", err)
@@ -68,7 +74,7 @@ func (a *api2pdf) ConvertHTML(in io.Reader, out io.Writer) error {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Authorization", a.key)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending HTTP POST: %v", err)
 	}
@@ -93,10 +99,11 @@ func (a *api2pdf) ConvertHTML(in io.Reader, out io.Writer) error {
 		return fmt.Errorf("response indicated that it wasn't successful")
 	}
 
-	pdfResp, err := http.DefaultClient.Get(r.PDFUrl)
+	pdfResp, err := httpClient.Get(r.PDFUrl)
 	if err != nil {
-		return fmt.Errorf("PDF url returned unexpected status code: %s", err)
+		return fmt.Errorf("error retrieving PDF: %v", err)
 	}
+	defer pdfResp.Body.Close()
 	if pdfResp.StatusCode != http.StatusOK {
 		return fmt.Errorf("PDF url returned unexpected status code: %d", pdfResp.StatusCode)
 	}

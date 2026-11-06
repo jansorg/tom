@@ -110,7 +110,7 @@ func CreateProjectReports(referenceDay time.Time, showEmpty bool, includeArchive
 	result := map[string]*ProjectSummary{}
 	if showEmpty {
 		for _, p := range ctx.Store.Projects() {
-			result[p.ID] = &ProjectSummary{Project: p}
+			result[p.ID] = NewProjectSummary(&year, &month, &week, &yesterday, &day, activeEndRef, p)
 		}
 	}
 
