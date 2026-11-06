@@ -54,7 +54,7 @@ func (macImporter) Import(filename string, ctx *context.TomContext) (result data
 		}
 
 		if len(row) != 7 {
-			return dataImport.Result{}, fmt.Errorf("unexpected number of columns %d instead of 7 expected", len(row))
+			return dataImport.Result{}, fmt.Errorf("line %d: unexpected number of columns %d instead of 7 expected", i+1, len(row))
 		}
 
 		projectName := strings.TrimSpace(row[0])
@@ -115,7 +115,10 @@ func parseTime(value string) (time.Time, error) {
 }
 
 func parseDuration(value string) (time.Duration, error) {
-	values := strings.Split(value, ":")
+	values := strings.Split(strings.TrimSpace(value), ":")
+	if len(values) != 3 {
+		return 0, fmt.Errorf("invalid duration %q, expected hh:mm:ss", value)
+	}
 
 	var hours, minutes, seconds int
 	var err error

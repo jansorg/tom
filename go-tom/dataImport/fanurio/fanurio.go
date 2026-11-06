@@ -49,6 +49,10 @@ func (fanurioImporter) Import(filePath string, ctx *context.TomContext) (result 
 			continue
 		}
 
+		if len(row) < 7 {
+			return dataImport.Result{}, fmt.Errorf("line %d: unexpected number of columns %d, expected at least 7", i+1, len(row))
+		}
+
 		clientName := strings.TrimSpace(row[0])
 		projectName := strings.TrimSpace(row[1])
 		taskName := strings.TrimSpace(row[2])
