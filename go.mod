@@ -2,6 +2,8 @@ module github.com/jansorg/tom
 
 go 1.27.0
 
+toolchain go1.27.3
+
 require (
 	github.com/Rhymond/go-money v1.0.15
 	github.com/go-playground/locales v0.14.2
