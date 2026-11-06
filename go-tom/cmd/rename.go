@@ -32,16 +32,20 @@ func newRenameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Com
 					util.Fatalf("project %s not found", idOrOldName)
 				}
 
+				if strings.Contains(newName, "/") {
+					util.Fatalf("the new name %s must not contain '/'. Use 'tom edit project --parent' to move a project", newName)
+				}
+
 				if _, err := ctx.StoreHelper.RenameProject(project, []string{newName}, false); err != nil {
 					util.Fatalf("rename failed: %s", err.Error())
 				}
 			case "tag":
 				if tag, err := ctx.Query.TagByName(idOrOldName); err != nil {
-					util.Fatal("tag %s not found", idOrOldName)
+					util.Fatalf("tag %s not found", idOrOldName)
 				} else {
 					tag.Name = newName
 					if _, err := ctx.Store.UpdateTag(*tag); err != nil {
-						util.Fatal("unable to rename tag %s to %s", idOrOldName, newName)
+						util.Fatalf("unable to rename tag %s to %s: %v", idOrOldName, newName, err)
 					}
 				}
 			default:

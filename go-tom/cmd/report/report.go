@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -372,4 +373,26 @@ func parseDate(dateString *string) (*time.Time, error) {
 		return nil, err
 	}
 	return &result, nil
+}
+
+var negativeNumber = regexp.MustCompile(`^-[0-9]+$`)
+
+// NormalizeArgs rewrites "--month -1" and "-m -1" into "--month=-1".
+// --month has an optional value, which makes pflag treat a following negative number as a flag.
+func NormalizeArgs(args []string) []string {
+	result := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--" {
+			return append(result, args[i:]...)
+		}
+
+		if (arg == "--month" || arg == "-m") && i+1 < len(args) && negativeNumber.MatchString(args[i+1]) {
+			result = append(result, "--month="+args[i+1])
+			i++
+			continue
+		}
+		result = append(result, arg)
+	}
+	return result
 }

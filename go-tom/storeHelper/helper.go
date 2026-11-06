@@ -122,6 +122,10 @@ func (s *Helper) RenameProject(project *model.Project, newName []string, allowHi
 
 	// now a nested project
 	parentNames := newName[:len(newName)-1]
+	if isPrefix(project.FullName, parentNames) {
+		return nil, fmt.Errorf("moving a project into its own child scope is not allowed")
+	}
+
 	parent, _, err := s.GetOrCreateNestedProjectNames(parentNames...)
 	if err != nil {
 		return nil, err
@@ -179,4 +183,17 @@ func (s *Helper) RemoveProject(project *model.Project) (int, int, error) {
 	}
 
 	return removedProjects, removedFrames, nil
+}
+
+// isPrefix returns true if fullName is equal to the first elements of names
+func isPrefix(fullName []string, names []string) bool {
+	if len(fullName) > len(names) {
+		return false
+	}
+	for i, n := range fullName {
+		if names[i] != n {
+			return false
+		}
+	}
+	return true
 }

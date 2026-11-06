@@ -146,7 +146,10 @@ func (d *DataStore) loadLocked() error {
 	// update internal data
 	d.updateProjectsMapping()
 	for _, p := range d.projects {
-		d.updateProjectInternals(p)
+		if err := d.updateProjectInternals(p); err != nil {
+			// don't make all commands fail because of inconsistent data, the user has to be able to fix it
+			_, _ = fmt.Fprintf(os.Stderr, "warning: %v\n", err)
+		}
 	}
 	d.sortProjects()
 	d.sortTags()
@@ -276,39 +279,69 @@ func (d *DataStore) AddProject(project model.Project) (*model.Project, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
+	if err := d.validateParentLocked("", project.ParentID); err != nil {
+		return nil, err
+	}
+
 	project.ID = model.NextID()
-	d.updateProjectInternals(&project)
 	d.projects = append(d.projects, &project)
 	d.updateProjectsMapping()
+	_ = d.updateProjectInternals(&project)
 
 	return &project, d.saveLocked()
 }
 
-func (d *DataStore) updateProjectInternals(p *model.Project) {
+// updateProjectInternals updates the cached full name of p.
+// It returns an error if a parent is missing or if the parents form a cycle.
+// In both cases the full name contains the parents which could be resolved.
+func (d *DataStore) updateProjectInternals(p *model.Project) error {
 	p.Store = d
 
-	p.FullName = []string{p.Name}
-	if p.ParentID == "" {
-		return
-	}
-
-	parents := []string{p.Name}
+	names := []string{p.Name}
+	visited := map[string]bool{p.ID: true}
 
 	id := p.ParentID
 	for id != "" {
-		parent, err := d.findFirstProjectLocked(func(current *model.Project) bool {
-			return current.ID == id
-		})
+		if visited[id] {
+			p.FullName = names
+			return fmt.Errorf("project %s is its own ancestor", p.ID)
+		}
+		visited[id] = true
 
-		if err != nil {
-			log.Fatal(fmt.Errorf("unable to find project %s", id))
+		parent, ok := d.projectsMap[id]
+		if !ok {
+			p.FullName = names
+			return fmt.Errorf("parent project %s of project %s not found", id, p.ID)
 		}
 
 		id = parent.ParentID
-		parents = append([]string{parent.Name}, parents...)
+		names = append([]string{parent.Name}, names...)
 	}
 
-	p.FullName = parents
+	p.FullName = names
+	return nil
+}
+
+// validateParentLocked returns an error if parentID does not exist
+// or if setting it as parent of the project with ID projectID would create a cycle.
+func (d *DataStore) validateParentLocked(projectID, parentID string) error {
+	visited := map[string]bool{}
+	for id := parentID; id != ""; {
+		if projectID != "" && id == projectID {
+			return fmt.Errorf("a project can't be moved into itself or into one of its subprojects")
+		}
+		if visited[id] {
+			return fmt.Errorf("the parents of project %s form a cycle", parentID)
+		}
+		visited[id] = true
+
+		parent, ok := d.projectsMap[id]
+		if !ok {
+			return fmt.Errorf("parent project %s not found", id)
+		}
+		id = parent.ParentID
+	}
+	return nil
 }
 
 func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error) {
@@ -316,13 +349,26 @@ func (d *DataStore) UpdateProject(project model.Project) (*model.Project, error)
 		return nil, err
 	}
 
-	existing, err := d.ProjectByID(project.ID)
-	if err != nil {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	existing, ok := d.projectsMap[project.ID]
+	if !ok {
+		return nil, fmt.Errorf("no project found for %s", project.ID)
+	}
+	if err := d.validateParentLocked(project.ID, project.ParentID); err != nil {
 		return nil, err
 	}
+
 	*existing = project
-	d.updateProjectInternals(existing)
-	return existing, d.save()
+
+	// the full names of all subprojects depend on the name and parent of this project
+	for _, p := range d.projects {
+		if err := d.updateProjectInternals(p); err != nil {
+			return nil, err
+		}
+	}
+	return existing, d.saveLocked()
 }
 
 func (d *DataStore) RemoveProject(id string) error {

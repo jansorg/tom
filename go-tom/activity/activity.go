@@ -31,12 +31,20 @@ func NewActivityControl(ctx *context.TomContext, createMissing bool, allowMultip
 	}
 }
 
-func (a *Control) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
+// FindProject returns the project with the given ID or full name, or ProjectNotFoundErr.
+func (a *Control) FindProject(projectNameOrID string) (*model.Project, error) {
 	project, err := a.ctx.Query.ProjectByID(projectNameOrID)
 	if err != nil {
 		project, err = a.ctx.Query.ProjectByFullName(strings.Split(projectNameOrID, "/"))
 	}
+	if err != nil || project == nil {
+		return nil, ProjectNotFoundErr
+	}
+	return project, nil
+}
 
+func (a *Control) Start(projectNameOrID string, notes string, tags []*model.Tag) (*model.Frame, error) {
+	project, err := a.FindProject(projectNameOrID)
 	if project == nil && a.createMissingProjects == false {
 		return nil, ProjectNotFoundErr
 	} else if project == nil {
