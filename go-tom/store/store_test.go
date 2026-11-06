@@ -124,10 +124,9 @@ func TestBackups(t *testing.T) {
 		_, _, err := ctx.StoreHelper.GetOrCreateNestedProjectNames(fmt.Sprintf("project-%d", i))
 		require.NoError(t, err)
 
-		if i == 1 {
-			require.EqualValues(t, 1, countBackups(ctx.Store.BackupDirPath()))
-		} else if i <= ctx.Store.MaxBackups() {
-			require.EqualValues(t, i, countBackups(ctx.Store.BackupDirPath()))
+		// the first save has no previous data to back up
+		if i <= ctx.Store.MaxBackups()+1 {
+			require.EqualValues(t, i-1, countBackups(ctx.Store.BackupDirPath()))
 		} else {
 			require.EqualValues(t, ctx.Store.MaxBackups(), countBackups(ctx.Store.BackupDirPath()))
 		}
@@ -158,10 +157,13 @@ func TestBackupsBatchMode(t *testing.T) {
 		require.EqualValues(t, 0, countBackups(ctx.Store.BackupDirPath()))
 	}
 
-	ctx.Store.StopBatch()
-	require.EqualValues(t, 1, countBackups(ctx.Store.BackupDirPath()))
+	// no previous data on disk, nothing to back up
+	require.NoError(t, ctx.Store.StopBatch())
+	require.EqualValues(t, 0, countBackups(ctx.Store.BackupDirPath()))
 
 	_, _, err = ctx.StoreHelper.GetOrCreateNestedProjectNames(fmt.Sprintf("project-%d", 21))
+	require.NoError(t, err)
+	require.EqualValues(t, 1, countBackups(ctx.Store.BackupDirPath()))
 
 	// open latest dir and check number of projects
 	dirs, err := sortedBackupDirs(ctx.Store.BackupDirPath())

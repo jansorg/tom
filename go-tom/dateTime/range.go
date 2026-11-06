@@ -176,31 +176,26 @@ func (r DateRange) ContainsP(date *time.Time) bool {
 	return date != nil && r.Contains(*date)
 }
 
+// Intersection returns the duration of start->end which is inside of this range.
+// A missing start or end of this range is treated as unbounded.
 func (r DateRange) Intersection(start *time.Time, end *time.Time) time.Duration {
-	if start == nil || end == nil || r.IsOpen() {
+	if start == nil || end == nil {
 		return 0
 	}
 
-	containsStart := r.ContainsP(start)
-	containsEnd := r.ContainsP(end)
-
-	if containsStart && containsEnd {
-		return end.Sub(*start)
+	s := *start
+	e := *end
+	if r.Start != nil && s.Before(*r.Start) {
+		s = *r.Start
+	}
+	if r.End != nil && e.After(*r.End) {
+		e = *r.End
 	}
 
-	if containsStart && !containsEnd {
-		return r.End.Sub(*start)
+	if !e.After(s) {
+		return 0
 	}
-
-	if !containsStart && containsEnd {
-		return end.Sub(*r.Start)
-	}
-
-	if start.Before(*r.Start) && end.After(*r.End) {
-		return r.End.Sub(*r.Start)
-	}
-
-	return 0
+	return e.Sub(s)
 }
 
 func (r DateRange) Intersects(start *time.Time, end *time.Time) bool {

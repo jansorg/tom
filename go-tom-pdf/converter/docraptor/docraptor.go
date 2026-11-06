@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
-	"net/url"
+	"time"
 
 	"github.com/jansorg/tom/go-tom-pdf/converter"
 )
+
+var httpClient = &http.Client{Timeout: 2 * time.Minute}
 
 const baseURL = "https://docraptor.com/docs"
 
@@ -29,24 +30,19 @@ type docraptor struct {
 }
 
 func (a *docraptor) ConvertHTML(in io.Reader, out io.Writer) error {
-	parsedURL, err := url.Parse(a.baseURL)
+	body, err := json.Marshal(a.requestConfig)
 	if err != nil {
 		return err
 	}
-	parsedURL.User = url.User(a.key)
 
-	body, err := json.Marshal(a.requestConfig)
-	requestURL := parsedURL.String()
-	log.Print(requestURL)
-	//log.Print(string(body))
-
-	req, err := http.NewRequest("POST", requestURL, bytes.NewReader(body))
+	req, err := http.NewRequest("POST", a.baseURL, bytes.NewReader(body))
 	if err != nil {
 		return fmt.Errorf("error sending HTTP POST: %v", err)
 	}
+	req.SetBasicAuth(a.key, "")
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("error sending HTTP POST: %v", err)
 	}

@@ -32,7 +32,11 @@ func newRemoveProjectCommand(ctx *context.TomContext, parent *cobra.Command) *co
 
 func doRemoveProjects(ctx *context.TomContext, nameDelimiter string, idOrNames []string) (removedProjects, removedFrames int, err error) {
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	for _, idOrName := range idOrNames {
 		projects, err := ctx.Query.ProjectByFullNameOrID(idOrName, nameDelimiter)

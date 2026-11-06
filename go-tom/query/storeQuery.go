@@ -74,7 +74,7 @@ func (q *defaultStoreQuery) ProjectByID(id string) (*model.Project, error) {
 
 func (q *defaultStoreQuery) IsToplevelProject(id string) bool {
 	p, err := q.ProjectByID(id)
-	return err != nil && p.ParentID == ""
+	return err == nil && p.ParentID == ""
 }
 
 func (q *defaultStoreQuery) ProjectByFullName(name []string) (*model.Project, error) {
@@ -261,6 +261,11 @@ func (q *defaultStoreQuery) FramesByProject(id string, includeSubprojects bool) 
 
 func (q *defaultStoreQuery) FramesByTag(id string) []*model.Frame {
 	frames, _ := q.store.FindFrames(func(f *model.Frame) (bool, error) {
+		for _, tagID := range f.TagIDs {
+			if tagID == id {
+				return true, nil
+			}
+		}
 		return false, nil
 	})
 	return frames

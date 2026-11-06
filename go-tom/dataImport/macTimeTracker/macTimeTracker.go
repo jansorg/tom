@@ -19,7 +19,7 @@ func NewImporter() dataImport.Handler {
 
 type macImporter struct{}
 
-func (macImporter) Import(filename string, ctx *context.TomContext) (dataImport.Result, error) {
+func (macImporter) Import(filename string, ctx *context.TomContext) (result dataImport.Result, err error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return dataImport.Result{}, err
@@ -27,7 +27,11 @@ func (macImporter) Import(filename string, ctx *context.TomContext) (dataImport.
 	defer file.Close()
 
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	reader := csv.NewReader(file)
 	reader.TrimLeadingSpace = true

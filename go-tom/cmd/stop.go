@@ -22,7 +22,11 @@ func newStopCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comma
 		Use:   "stop [--past <duration>] [--all] [--notes \"override notes\"]",
 		Short: "stops the newest active timer. If --all is specified, then all active timers are stopped.",
 		Run: func(cmd *cobra.Command, args []string) {
-			a := activity.NewActivityControl(ctx, false, false, time.Now().Add(shiftedStop))
+			if shiftedStop > 0 {
+				shiftedStop = -shiftedStop
+			}
+			stopTime := time.Now().Add(shiftedStop)
+			a := activity.NewActivityControl(ctx, false, false, stopTime)
 
 			tags, err := argsToTags(ctx, args)
 			if err != nil {
@@ -43,7 +47,7 @@ func newStopCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comma
 			}
 
 			// translate
-			fmt.Printf("Stopped %d timers at %s\n", len(frames), ctx.DateTimePrinter.Time(time.Now()))
+			fmt.Printf("Stopped %d timers at %s\n", len(frames), ctx.DateTimePrinter.Time(stopTime))
 			for _, frame := range frames {
 				fmt.Printf("\t%s\n", ctx.DurationPrinter.Minimal(frame.Duration(), true))
 			}

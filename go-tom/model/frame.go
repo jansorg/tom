@@ -87,7 +87,7 @@ func (f *Frame) IsSingleDay() bool {
 	}
 
 	y1, m1, d1 := f.Start.Date()
-	y2, m2, d2 := f.Start.Date()
+	y2, m2, d2 := f.End.Date()
 
 	return y1 == y2 && m1 == m2 && d1 == d2
 }
@@ -156,9 +156,6 @@ func (f *Frame) Contains(ref *time.Time) bool {
 	}
 
 	if f.Start != nil && f.End != nil {
-		debug := fmt.Sprintf("%s -> %s <- %s", f.Start.String(), ref.String(), f.End.String())
-		fmt.Println(debug)
-
 		return ref.Equal(*f.Start) ||
 			ref.Equal(*f.End) ||
 			ref.After(*f.Start) && ref.Before(*f.End)

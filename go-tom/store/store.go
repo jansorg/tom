@@ -78,13 +78,13 @@ func (d *DataStore) StartBatch() {
 	}
 }
 
-func (d *DataStore) StopBatch() {
+func (d *DataStore) StopBatch() error {
 	swapped := atomic.CompareAndSwapInt32(&d.batchMode, 1, 0)
 	if !swapped {
 		log.Fatal(fmt.Errorf("StopBatch() called without prior StartBatch()"))
 	}
 
-	_ = d.save()
+	return d.save()
 }
 
 func (d *DataStore) sortProjects() {
@@ -166,7 +166,9 @@ func (d *DataStore) saveLocked() error {
 		return nil
 	}
 
-	d.backupLocked()
+	if err := d.backupLocked(); err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "warning: unable to create backup: %v\n", err)
+	}
 
 	d.sortProjects()
 	d.sortTags()
@@ -179,7 +181,7 @@ func (d *DataStore) saveLocked() error {
 	if data, err = json.Marshal(d.projects); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.ProjectFile, data, 0600); err != nil {
+	if err := writeFileAtomic(d.ProjectFile, data, 0600); err != nil {
 		return err
 	}
 
@@ -187,7 +189,7 @@ func (d *DataStore) saveLocked() error {
 	if data, err = json.Marshal(d.tags); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.TagFile, data, 0600); err != nil {
+	if err := writeFileAtomic(d.TagFile, data, 0600); err != nil {
 		return err
 	}
 
@@ -195,11 +197,39 @@ func (d *DataStore) saveLocked() error {
 	if data, err = json.Marshal(d.frames); err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(d.FrameFile, data, 0600); err != nil {
+	if err := writeFileAtomic(d.FrameFile, data, 0600); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+// writeFileAtomic writes data into a temporary file next to path and renames it to path,
+// so that a crash or a full disk never leaves a truncated data file behind.
+func writeFileAtomic(path string, data []byte, perm os.FileMode) error {
+	tmp, err := ioutil.TempFile(filepath.Dir(path), filepath.Base(path)+".tmp")
+	if err != nil {
+		return err
+	}
+	tmpName := tmp.Name()
+
+	_, err = tmp.Write(data)
+	if err == nil {
+		err = tmp.Sync()
+	}
+	if closeErr := tmp.Close(); err == nil {
+		err = closeErr
+	}
+	if err == nil {
+		err = os.Chmod(tmpName, perm)
+	}
+	if err == nil {
+		err = os.Rename(tmpName, path)
+	}
+	if err != nil {
+		_ = os.Remove(tmpName)
+	}
+	return err
 }
 
 func (d *DataStore) Reset(projects, tags, frames bool) (int, int, int, error) {
@@ -391,6 +421,9 @@ func (d *DataStore) UpdateTag(tag model.Tag) (*model.Tag, error) {
 		return nil, err
 	}
 
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
 	*existing = tag
 	return existing, d.saveLocked()
 }
@@ -402,7 +435,7 @@ func (d *DataStore) RemoveTag(id string) error {
 	for i, t := range d.tags {
 		if t.ID == id {
 			d.tags = append(d.tags[:i], d.tags[i+1:]...)
-			return nil
+			return d.saveLocked()
 		}
 	}
 	return fmt.Errorf("tag %s not found", id)
@@ -533,13 +566,28 @@ func (d *DataStore) backupLocked() error {
 		return nil
 	}
 
-	targetDir := filepath.Join(d.backupPath, fmt.Sprintf("tom-%s", time.Now().Format(time.RFC3339Nano)))
-	err := os.MkdirAll(targetDir, 0700)
-	if os.IsExist(err) {
-		return fmt.Errorf("backup directory already exists: %s", err.Error())
+	var sourceFiles []string
+	for _, sourceFile := range []string{d.ProjectFile, d.FrameFile, d.TagFile} {
+		if _, err := os.Stat(sourceFile); err == nil {
+			sourceFiles = append(sourceFiles, sourceFile)
+		}
+	}
+	if len(sourceFiles) == 0 {
+		// nothing saved yet
+		return nil
 	}
 
-	for _, sourceFile := range []string{d.ProjectFile, d.FrameFile, d.TagFile} {
+	// UTC and no colons: valid on Windows and sorts chronologically
+	targetDir := filepath.Join(d.backupPath, fmt.Sprintf("tom-%s", time.Now().UTC().Format("20060102T150405.000000000Z")))
+	if _, err := os.Stat(targetDir); err == nil {
+		return fmt.Errorf("backup directory already exists: %s", targetDir)
+	}
+	err := os.MkdirAll(targetDir, 0700)
+	if err != nil {
+		return err
+	}
+
+	for _, sourceFile := range sourceFiles {
 		if err = util.CopyFile(sourceFile, filepath.Join(targetDir, filepath.Base(sourceFile)), false); err != nil {
 			// fixme cleanup?
 			return err

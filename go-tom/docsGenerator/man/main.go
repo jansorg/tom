@@ -13,8 +13,8 @@ import (
 // to be called from the main directory
 func main() {
 	target := "./docs/man"
-	if len(os.Args) == 1 {
-		target = os.Args[0]
+	if len(os.Args) > 1 {
+		target = os.Args[1]
 	}
 
 	cmd := cmd.RootCmd

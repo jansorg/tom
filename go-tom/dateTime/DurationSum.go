@@ -110,8 +110,8 @@ func (d *DurationSum) add(a *time.Time, b *time.Time) {
 	var overlap time.Duration
 	if d.acceptedRange != nil {
 		overlap = d.acceptedRange.Intersection(start, end)
-	} else {
-		overlap = b.Sub(*a)
+	} else if start != nil {
+		overlap = end.Sub(*start)
 	}
 
 	d.Add(overlap)

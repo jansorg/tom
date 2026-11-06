@@ -18,7 +18,7 @@ func NewImporter() dataImport.Handler {
 
 type tomImporter struct{}
 
-func (tomImporter) Import(directoryPath string, ctx *context.TomContext) (dataImport.Result, error) {
+func (tomImporter) Import(directoryPath string, ctx *context.TomContext) (result dataImport.Result, err error) {
 	if status, err := os.Stat(directoryPath); err != nil || !status.IsDir() {
 		return dataImport.Result{}, fmt.Errorf("import path does not exist or is not a directory: %s", directoryPath)
 	}
@@ -29,7 +29,11 @@ func (tomImporter) Import(directoryPath string, ctx *context.TomContext) (dataIm
 	}
 
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	createdFrames := 0
 	createdTags := 0
@@ -52,22 +56,27 @@ func (tomImporter) Import(directoryPath string, ctx *context.TomContext) (dataIm
 	}
 
 	// import tags, match by name
+	tagMapping := make(map[string]string)
 	for _, t := range importStore.Tags() {
 		existingTag, _ := ctx.Store.FindFirstTag(func(tag *model.Tag) bool {
 			return tag.Name == t.Name
 		})
 
-		if existingTag == nil {
-			if _, err := ctx.Store.AddTag(*t); err != nil {
+		if existingTag != nil {
+			tagMapping[t.ID] = existingTag.ID
+		} else {
+			added, err := ctx.Store.AddTag(*t)
+			if err != nil {
 				return dataImport.Result{}, err
 			}
+			tagMapping[t.ID] = added.ID
 			createdTags += 1
 		}
 	}
 
 	// import frames
 	for _, f := range importStore.Frames() {
-		created, err := importFrame(*f, projectMapping, importStore, ctx)
+		created, err := importFrame(*f, projectMapping, tagMapping, importStore, ctx)
 		if err != nil {
 			return dataImport.Result{}, err
 		}
@@ -110,7 +119,7 @@ func importProject(p model.Project, importStore model.Store, ctx *context.TomCon
 	return 1, 0, err
 }
 
-func importFrame(f model.Frame, projectMapping map[string]string, importStore model.Store, ctx *context.TomContext) (int, error) {
+func importFrame(f model.Frame, projectMapping map[string]string, tagMapping map[string]string, importStore model.Store, ctx *context.TomContext) (int, error) {
 	mappedProject := projectMapping[f.ProjectId]
 	if mappedProject == "" {
 		p, _ := importStore.ProjectByID(f.ProjectId)
@@ -118,6 +127,14 @@ func importFrame(f model.Frame, projectMapping map[string]string, importStore mo
 	}
 
 	f.ProjectId = mappedProject
+
+	var tagIDs []string
+	for _, id := range f.TagIDs {
+		if mapped, ok := tagMapping[id]; ok {
+			tagIDs = append(tagIDs, mapped)
+		}
+	}
+	f.TagIDs = tagIDs
 	if _, err := ctx.Store.AddFrame(f); err != nil {
 		return 0, err
 	}

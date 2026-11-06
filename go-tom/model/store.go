@@ -5,7 +5,7 @@ type Store interface {
 	BackupDirPath() string
 	MaxBackups() int
 	StartBatch()
-	StopBatch()
+	StopBatch() error
 
 	Reset(projects, tags, frames bool) (int, int, int, error)
 

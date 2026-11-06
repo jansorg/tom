@@ -45,7 +45,7 @@ func newDocraptorCommand() *cobra.Command {
 			case string(docraptor.XLSX):
 				docType = docraptor.XLSX
 			case string(docraptor.XLS):
-				docType = docraptor.XLSX
+				docType = docraptor.XLS
 			default:
 				log.Fatalf("unknown document type %s", documentType)
 			}

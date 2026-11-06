@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/jansorg/tom/go-tom/context"
+	"github.com/jansorg/tom/go-tom/util"
 )
 
 func newRemoveFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Command {
@@ -18,17 +19,18 @@ func newRemoveFrameCommand(ctx *context.TomContext, parent *cobra.Command) *cobr
 			notFound := 0
 
 			ctx.Store.StartBatch()
-			defer ctx.Store.StopBatch()
-
 			for _, id := range args {
 				if err := ctx.Store.RemoveFrame(id); err != nil {
-					notFound ++
+					notFound++
 				} else {
 					removed++
 				}
 			}
+			if err := ctx.Store.StopBatch(); err != nil {
+				util.Fatal(err)
+			}
 
-			fmt.Printf("%d frames removed, %d frames not found.", removed, notFound)
+			fmt.Printf("%d frames removed, %d frames not found.\n", removed, notFound)
 		},
 	}
 	parent.AddCommand(cmd)

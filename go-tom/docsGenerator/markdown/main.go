@@ -13,8 +13,8 @@ import (
 // to be called from the main directory
 func main() {
 	target := "./docs/markdown"
-	if len(os.Args) == 1 {
-		target = os.Args[0]
+	if len(os.Args) > 1 {
+		target = os.Args[1]
 	}
 
 	c := cmd.RootCmd

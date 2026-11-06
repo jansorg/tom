@@ -34,9 +34,13 @@ func newArchiveCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Co
 	return cmd
 }
 
-func archiveFrames(projectIDOrName string, nameDelimiter string, includeSubprojects bool, ctx *context.TomContext) error {
+func archiveFrames(projectIDOrName string, nameDelimiter string, includeSubprojects bool, ctx *context.TomContext) (err error) {
 	ctx.Store.StartBatch()
-	defer ctx.Store.StopBatch()
+	defer func() {
+		if stopErr := ctx.Store.StopBatch(); err == nil && stopErr != nil {
+			err = stopErr
+		}
+	}()
 
 	project, err := ctx.Query.ProjectByFullNameOrID(projectIDOrName, nameDelimiter)
 	if err != nil {
