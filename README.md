@@ -3,8 +3,6 @@
 [![Linux and macOS Build Status](https://api.travis-ci.org/jansorg/tom.svg?branch=master&label=Windows+and+Linux+and+macOS+build "Windows, Linux and macOS Build Status")](https://travis-ci.org/jansorg/tom)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jansorg/tom)](https://goreportcard.com/report/github.com/jansorg/tom)
 
-**This project is still in an early phase. It's usable and working but not yet recommended for production.**
-
 **A simple UI is developed at https://github.com/jansorg/tom-ui (Qt5 tested on Linux and macOS). A preview for mac is available there.**
 
 # tom
