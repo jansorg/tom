@@ -42,13 +42,11 @@ func (watsonImporter) Import(filename string, ctx *context.TomContext) (result d
 		}
 	}()
 
-	for _, f := range frames {
-		start := f[0].(float64)
-		stop := f[1].(float64)
-		projectName := f[2].(string)
-		// ignoring frameID f[3]
-		tagNames := f[4].([]interface{})
-		updated := f[5].(float64)
+	for i, f := range frames {
+		start, stop, projectName, tagNames, updated, err := parseFrame(f)
+		if err != nil {
+			return dataImport.Result{}, fmt.Errorf("invalid frame #%d in %s: %v", i+1, filename, err)
+		}
 
 		startTime := epoch.Add(time.Duration(start) * time.Second)
 		stopTime := epoch.Add(time.Duration(stop) * time.Second)
@@ -67,7 +65,7 @@ func (watsonImporter) Import(filename string, ctx *context.TomContext) (result d
 
 		var tagIDs []string
 		for _, tagName := range tagNames {
-			tag, createdTag, err := ctx.StoreHelper.GetOrCreateTag(tagName.(string))
+			tag, createdTag, err := ctx.StoreHelper.GetOrCreateTag(tagName)
 			if err != nil {
 				return dataImport.Result{}, err
 			}
@@ -88,7 +86,7 @@ func (watsonImporter) Import(filename string, ctx *context.TomContext) (result d
 		if err != nil {
 			return dataImport.Result{}, err
 		}
-		createdFrames++;
+		createdFrames++
 	}
 
 	return dataImport.Result{
@@ -96,4 +94,46 @@ func (watsonImporter) Import(filename string, ctx *context.TomContext) (result d
 		CreatedTags:     createdTags,
 		CreatedFrames:   createdFrames,
 	}, err
+}
+
+// parseFrame parses a Watson frame: [start, stop, project, id, tags, updated]
+// tags may be null, updated is optional and defaults to stop
+func parseFrame(f []interface{}) (start, stop float64, project string, tags []string, updated float64, err error) {
+	if len(f) < 5 {
+		return 0, 0, "", nil, 0, fmt.Errorf("expected at least 5 values, found %d", len(f))
+	}
+
+	var ok bool
+	if start, ok = f[0].(float64); !ok {
+		return 0, 0, "", nil, 0, fmt.Errorf("start is not a number: %v", f[0])
+	}
+	if stop, ok = f[1].(float64); !ok {
+		return 0, 0, "", nil, 0, fmt.Errorf("stop is not a number: %v", f[1])
+	}
+	if project, ok = f[2].(string); !ok || project == "" {
+		return 0, 0, "", nil, 0, fmt.Errorf("project is not a valid name: %v", f[2])
+	}
+
+	if f[4] != nil {
+		tagValues, ok := f[4].([]interface{})
+		if !ok {
+			return 0, 0, "", nil, 0, fmt.Errorf("tags are not a list: %v", f[4])
+		}
+		for _, v := range tagValues {
+			name, ok := v.(string)
+			if !ok {
+				return 0, 0, "", nil, 0, fmt.Errorf("tag is not a string: %v", v)
+			}
+			tags = append(tags, name)
+		}
+	}
+
+	updated = stop
+	if len(f) >= 6 && f[5] != nil {
+		if updated, ok = f[5].(float64); !ok {
+			return 0, 0, "", nil, 0, fmt.Errorf("updated is not a number: %v", f[5])
+		}
+	}
+
+	return start, stop, project, tags, updated, nil
 }
