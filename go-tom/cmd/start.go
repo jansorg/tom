@@ -51,6 +51,14 @@ func newStartCommand(ctx *context.TomContext, parent *cobra.Command) *cobra.Comm
 				util.Fatal(err)
 			}
 
+			// validate the project before stopping the running activities,
+			// a misspelled project name must not stop the current activity
+			if !createMissingProject {
+				if _, err := control.FindProject(projectName); err != nil {
+					util.Fatal(fmt.Errorf("project %s not found. Use --create-missing to create missing projects on-the-fly", projectName))
+				}
+			}
+
 			var stoppedFrames []*model.Frame
 			if stopActives {
 				// fixme tags for stop?

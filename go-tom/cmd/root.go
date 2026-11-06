@@ -189,6 +189,7 @@ var RootCmd = &cobra.Command{
 
 func Execute(version, commit, date string) {
 	RootCmd.Version = version
+	RootCmd.SetArgs(report.NormalizeArgs(os.Args[1:]))
 
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
